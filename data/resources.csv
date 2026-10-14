@@ -1,0 +1,36 @@
+id,name,domain,url,category,layer,official_status,notes
+uefi-forum,UEFI Forum,uefi.org,https://uefi.org/,standards,firmware,official-candidate,UEFI specifications and industry forum
+tianocore,TianoCore,tianocore.org,https://www.tianocore.org/,open-source,firmware,official-candidate,EDK II community and documentation
+edk2,EDK II,github.com,https://github.com/tianocore/edk2,source-code,firmware,official-candidate,UEFI development framework repository
+coreboot,coreboot,coreboot.org,https://www.coreboot.org/,open-source,firmware,official-candidate,Open-source firmware project
+coreboot-docs,coreboot documentation,doc.coreboot.org,https://doc.coreboot.org/,documentation,firmware,official-candidate,Project documentation
+microsoft-accessibility,Microsoft Accessibility,microsoft.com,https://www.microsoft.com/accessibility,accessibility,operating-system,official-candidate,Microsoft accessibility portal
+windows-hardware,Microsoft Windows Hardware,learn.microsoft.com,https://learn.microsoft.com/en-us/windows-hardware/,documentation,operating-system,official-candidate,Windows hardware and driver documentation
+nvda,NV Access / NVDA,nvaccess.org,https://www.nvaccess.org/,assistive-technology,screen-reader,official-candidate,NVDA screen reader project
+nvda-source, NVDA source repository,github.com,https://github.com/nvaccess/nvda,source-code,screen-reader,official-candidate,NVDA source code
+freedom-scientific,Freedom Scientific,freedomscientific.com,https://www.freedomscientific.com/,assistive-technology,screen-reader,official-candidate,JAWS and assistive technology
+gnome-accessibility,GNOME Accessibility,gnome.org,https://www.gnome.org/,accessibility,desktop,official-candidate,GNOME desktop ecosystem
+orca-source,Orca screen reader,gitlab.gnome.org,https://gitlab.gnome.org/GNOME/orca,source-code,screen-reader,official-candidate,Orca source repository
+w3c-wai,W3C Web Accessibility Initiative,w3.org,https://www.w3.org/WAI/,standards,web,official-candidate,Web accessibility standards and guidance
+wcag,WCAG,w3.org,https://www.w3.org/WAI/standards-guidelines/wcag/,standards,web,official-candidate,Web Content Accessibility Guidelines
+aria,WAI-ARIA,w3.org,https://www.w3.org/WAI/standards-guidelines/aria/,standards,web,official-candidate,Accessible Rich Internet Applications
+access-board,US Access Board,access-board.gov,https://www.access-board.gov/ict/,standards,policy,official-candidate,US ICT accessibility standards
+rgaa,RGAA,accessibilite.numerique.gouv.fr,https://accessibilite.numerique.gouv.fr/,standards,policy,official-candidate,French digital accessibility reference
+nist-csrc,NIST CSRC,csrc.nist.gov,https://csrc.nist.gov/,security,firmware-security,official-candidate,Security standards and publications
+nist-193,NIST SP 800-193,csrc.nist.gov,https://csrc.nist.gov/pubs/sp/800/193/final,security,firmware-security,official-candidate,Platform firmware resiliency
+chipsec,CHIPSEC,chipsec.github.io,https://chipsec.github.io/,security-tool,firmware-security,official-candidate,Firmware and platform security assessment toolkit
+nvd,NIST NVD,nvd.nist.gov,https://nvd.nist.gov/,vulnerability-database,security,official-candidate,National Vulnerability Database
+cisa-kev,CISA KEV,cisa.gov,https://www.cisa.gov/known-exploited-vulnerabilities-catalog,vulnerability-database,security,official-candidate,Known exploited vulnerabilities catalog
+linux-kernel,Linux kernel,kernel.org,https://www.kernel.org/,operating-system,kernel,official-candidate,Linux kernel project
+freebsd,FreeBSD,freebsd.org,https://www.freebsd.org/,operating-system,operating-system,official-candidate,FreeBSD project
+qemu,QEMU,qemu.org,https://www.qemu.org/,emulator,testing,official-candidate,Virtualized testing; not physical hardware proof
+github,GitHub,github.com,https://github.com/,development,development,official-candidate,Source hosting and automation
+github-actions,GitHub Actions,docs.github.com,https://docs.github.com/en/actions,ci-cd,development,official-candidate,Workflow automation documentation
+amd,AMD,amd.com,https://www.amd.com/,hardware-vendor,hardware,official-candidate,Processor and platform resources
+intel,Intel,intel.com,https://www.intel.com/,hardware-vendor,hardware,official-candidate,Processor and platform resources
+asus,ASUS,asus.com,https://www.asus.com/,hardware-vendor,hardware,official-candidate,OEM support and firmware resources
+dell,Dell,dell.com,https://www.dell.com/,hardware-vendor,hardware,official-candidate,OEM support and firmware resources
+hp,HP Support,support.hp.com,https://support.hp.com/,hardware-vendor,hardware,official-candidate,OEM support and firmware resources
+lenovo,Lenovo Support,support.lenovo.com,https://support.lenovo.com/,hardware-vendor,hardware,official-candidate,OEM support and firmware resources
+ami,AMI,ami.com,https://www.ami.com/,firmware-vendor,firmware,official-candidate,Commercial firmware vendor
+insyde,Insyde Software,insyde.com,https://www.insyde.com/,firmware-vendor,firmware,official-candidate,Commercial firmware vendor
