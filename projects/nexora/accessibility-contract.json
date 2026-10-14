@@ -1,0 +1,109 @@
+{
+  "schema_version": 1,
+  "language_id": "nexora",
+  "status": "CONTRACT_ONLY_NOT_IMPLEMENTED",
+  "purpose": "Language-neutral accessibility boundary for future NEXORA runtime adapters",
+  "safety": {
+    "model_output_is_untrusted": true,
+    "actions_require_explicit_permission": true,
+    "password_values_must_not_be_announced": true,
+    "core_navigation_must_work_without_ai": true,
+    "firmware_access_disabled_by_default": true
+  },
+  "node": {
+    "required": [
+      "id",
+      "role"
+    ],
+    "optional": [
+      "name",
+      "value",
+      "states",
+      "bounds",
+      "parent_id",
+      "child_ids"
+    ],
+    "roles": [
+      "application",
+      "window",
+      "group",
+      "text",
+      "button",
+      "checkbox",
+      "radio",
+      "textbox",
+      "link",
+      "heading",
+      "list",
+      "list_item",
+      "table",
+      "row",
+      "cell",
+      "menu",
+      "menu_item",
+      "unknown"
+    ],
+    "states": [
+      "focused",
+      "focusable",
+      "enabled",
+      "disabled",
+      "selected",
+      "checked",
+      "expanded",
+      "collapsed",
+      "required",
+      "invalid",
+      "password",
+      "busy",
+      "live"
+    ]
+  },
+  "event": {
+    "required": [
+      "type",
+      "source_id",
+      "sequence"
+    ],
+    "types": [
+      "focus_changed",
+      "structure_changed",
+      "name_changed",
+      "value_changed",
+      "state_changed",
+      "text_changed",
+      "selection_changed",
+      "live_region_changed",
+      "window_opened",
+      "window_closed",
+      "keyboard_command"
+    ]
+  },
+  "commands": {
+    "allowed_initial": [
+      "focus_next",
+      "focus_previous",
+      "read_current",
+      "read_heading_next",
+      "read_heading_previous",
+      "stop_speech",
+      "repeat_last_announcement"
+    ],
+    "prohibited_without_platform_adapter_and_explicit_permission": [
+      "activate_control",
+      "write_value",
+      "launch_process",
+      "network_access",
+      "firmware_access",
+      "nvram_write",
+      "reboot",
+      "flash_firmware"
+    ]
+  },
+  "limits": {
+    "maximum_name_utf8_bytes": 4096,
+    "maximum_value_utf8_bytes": 16384,
+    "maximum_children_per_node": 10000,
+    "sequence_numbers_monotonic_per_source": true
+  }
+}
