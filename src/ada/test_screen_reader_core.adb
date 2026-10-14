@@ -22,6 +22,30 @@ begin
       raise Program_Error with "queue must preserve owned FIFO snapshot";
    end if;
    if Pop (Queue, Got) then raise Program_Error with "empty queue returned event"; end if;
+   -- Exercise FIFO preservation while the circular queue wraps around.
+   Item.Name (1 .. 1) := "A"; Item.Name_Last := 1;
+   for I in 1 .. 12 loop
+      if not Push (Queue, Focus, Item) then raise Program_Error with "wrap initial push failed"; end if;
+   end loop;
+   for I in 1 .. 8 loop
+      if not Pop (Queue, Got) or else Got.Item.Name (1 .. Got.Item.Name_Last) /= "A" then
+         raise Program_Error with "wrap initial FIFO mismatch";
+      end if;
+   end loop;
+   Item.Name (1 .. 1) := "B"; Item.Name_Last := 1;
+   for I in 1 .. 12 loop
+      if not Push (Queue, Focus, Item) then raise Program_Error with "wrap push failed"; end if;
+   end loop;
+   for I in 1 .. 4 loop
+      if not Pop (Queue, Got) or else Got.Item.Name (1 .. Got.Item.Name_Last) /= "A" then
+         raise Program_Error with "wrap remaining FIFO mismatch";
+      end if;
+   end loop;
+   for I in 1 .. 12 loop
+      if not Pop (Queue, Got) or else Got.Item.Name (1 .. Got.Item.Name_Last) /= "B" then
+         raise Program_Error with "wrap second FIFO mismatch";
+      end if;
+   end loop;
    for I in 1 .. Queue_Capacity loop
       if not Push (Queue, State_Changed, Item) then raise Program_Error with "queue fill failed"; end if;
    end loop;
