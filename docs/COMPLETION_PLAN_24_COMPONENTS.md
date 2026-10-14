@@ -4,7 +4,7 @@ This plan is the execution contract for the language/component matrix currently 
 
 ## Scope
 
-Language tracks currently include C, Rust, Go, D, Ada, Zig, Nim, Swift, C++, Free Pascal, Odin, Fortran and Objective-C. Each track has three separate deliverables, with infeasible combinations explicitly BLOCKED rather than silently counted as complete:
+Language tracks currently include C, Rust, Go, D, Ada, Zig, Nim, Swift, C++, Free Pascal, Odin, Fortran, Objective-C and C#. Each track has three separate deliverables, with infeasible combinations explicitly BLOCKED rather than silently counted as complete:
 
 1. **Native screen reader** — platform accessibility API adapter, semantic event model, focus/navigation, speech output, keyboard controls, recovery, and tests.
 2. **UEFI/pre-OS application** — EFI application that reads firmware-provided input and display protocols and announces accessible setup/navigation information. Audio remains BLOCKED until a real device-specific path is demonstrated.
