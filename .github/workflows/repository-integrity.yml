@@ -48,7 +48,7 @@ jobs:
                   json.loads(path.read_text(encoding="utf-8"))
               except Exception as exc:
                   errors.append(f"{path}: invalid JSON: {exc}")
-          pattern = re.compile(r'(?<!!)\\[[^\\]]*\\]\\(([^)]+)\\)')
+          pattern = re.compile(r'(?<!!)\[[^\]]*\]\(([^)]+)\)')
           for source in Path(".").rglob("*.md"):
               if ".git" in source.parts:
                   continue
@@ -65,7 +65,7 @@ jobs:
                   if not resolved.exists():
                       errors.append(f"{source}: broken local link: {target}")
           if errors:
-              print("\\n".join(errors))
+              print("\n".join(errors))
               raise SystemExit(f"FAIL: {len(errors)} validation error(s)")
           print("PASS: JSON manifests and local Markdown links")
           PY
