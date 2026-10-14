@@ -1,0 +1,61 @@
+name: Polyglot CI (Go, C, Rust)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "cmd/**"
+      - "components/core-c/**"
+      - "crates/**"
+      - "data/resources.csv"
+      - "go.mod"
+      - ".github/workflows/polyglot-ci.yml"
+  pull_request:
+    paths:
+      - "cmd/**"
+      - "components/core-c/**"
+      - "crates/**"
+      - "data/resources.csv"
+      - "go.mod"
+      - ".github/workflows/polyglot-ci.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  go:
+    name: Go validator
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.23.x"
+      - name: Test Go code
+        run: go test ./...
+      - name: Validate resource catalog
+        run: go run ./cmd/catalog-validator data/resources.csv
+
+  c:
+    name: C11 core
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure
+        run: cmake -S components/core-c -B build/core-c
+      - name: Build
+        run: cmake --build build/core-c --parallel 2
+      - name: Test
+        run: ctest --test-dir build/core-c --output-on-failure
+
+  rust:
+    name: Rust no_std core
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Test
+        run: cargo test --manifest-path crates/accessibility-core/Cargo.toml
+      - name: Check no_std library
+        run: cargo check --manifest-path crates/accessibility-core/Cargo.toml --lib
