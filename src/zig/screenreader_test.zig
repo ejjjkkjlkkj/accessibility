@@ -29,3 +29,16 @@ test "bounded event queue copies fields and preserves FIFO" {
     for (0..sr.queue_capacity) |_| try std.testing.expect(q.pop() != null);
     try std.testing.expect(q.pop() == null);
 }
+
+test "event queue ring wraparound preserves FIFO" {
+    var q = sr.EventQueue{};
+    const a = sr.Node{ .role = "bouton", .name = "A", .focused = true };
+    const b = sr.Node{ .role = "bouton", .name = "B", .focused = true };
+    for (0..12) |_| try q.push(.focus, a);
+    for (0..8) |_| try std.testing.expectEqualStrings("A", q.pop().?.nameText());
+    for (0..12) |_| try q.push(.focus, b);
+    try std.testing.expectEqual(sr.queue_capacity, q.count);
+    for (0..4) |_| try std.testing.expectEqualStrings("A", q.pop().?.nameText());
+    for (0..12) |_| try std.testing.expectEqualStrings("B", q.pop().?.nameText());
+    try std.testing.expect(q.pop() == null);
+}
