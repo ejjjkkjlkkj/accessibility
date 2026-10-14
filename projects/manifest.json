@@ -16,7 +16,7 @@
         },
         "uefi_pre_os": {
           "status": "NOT_VALIDATED",
-          "evidence": "Console-only EDK2 source and validation gates documented; no confirmed EFI build/run."
+          "evidence": "EDK2 source now has an interactive arrow-key menu using UEFI text input; no confirmed EFI build/run, semantic HII/IFR reader, or audio output."
         },
         "operating_system_kernel": {
           "status": "NOT_IMPLEMENTED",
@@ -33,7 +33,7 @@
         },
         "uefi_pre_os": {
           "status": "NOT_VALIDATED",
-          "evidence": "Console-only Rust UEFI source and CI build job added; current build result not yet confirmed."
+          "evidence": "Console-only Rust UEFI source and CI build job added; current build result not confirmed."
         },
         "operating_system_kernel": {
           "status": "NOT_IMPLEMENTED",
