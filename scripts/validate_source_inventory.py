@@ -71,6 +71,18 @@ TRACKS = {
         "uefi": "src/odin/uefi/README.md",
         "kernel": "src/odin/kernel/README.md",
     },
+    "Fortran": {
+        "core": "src/fortran/screenreader_core.f90",
+        "tests": "src/fortran/test_screenreader_core.f90",
+        "uefi": "src/fortran/uefi/README.md",
+        "kernel": "src/fortran/kernel/README.md",
+    },
+    "Objective-C": {
+        "core": "src/objc/ScreenReaderCore.m",
+        "header": "src/objc/ScreenReaderCore.h",
+        "uefi": "src/objc/uefi/README.md",
+        "kernel": "src/objc/kernel/README.md",
+    },
 }
 
 
