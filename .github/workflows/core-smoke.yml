@@ -38,3 +38,48 @@ jobs:
       - name: Run Rust core tests
         working-directory: src/rust
         run: cargo test
+
+  d-core:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dlang-community/setup-dlang@v2
+        with:
+          compiler: ldc-latest
+      - name: Compile and run D unit tests
+        run: ldc2 -unittest -main -I=src/d src/d/screenreader.d src/d/test_screenreader.d -of=/tmp/test-screenreader-d && /tmp/test-screenreader-d
+
+  ada-core:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install GNAT
+        run: sudo apt-get update && sudo apt-get install -y gnat
+      - name: Compile and run Ada core tests
+        run: gnatmake -Isrc/ada -o /tmp/test-screenreader-ada src/ada/test_screen_reader_core.adb && /tmp/test-screenreader-ada
+
+  zig-core:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: mlugg/setup-zig@v2
+        with:
+          version: 0.14.1
+      - name: Run Zig core tests
+        run: zig test src/zig/screenreader_test.zig
+
+  nim-core:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Nim
+        run: sudo apt-get update && sudo apt-get install -y nim
+      - name: Compile and run Nim core tests
+        run: nim c -r --path:src/nim -o:/tmp/test-screenreader-nim src/nim/test_screenreader_core.nim
+
+  swift-core:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile and run Swift core tests
+        run: swiftc src/swift/ScreenReaderCore.swift src/swift/test_screen_reader_core.swift -o /tmp/test-screenreader-swift && /tmp/test-screenreader-swift
