@@ -1,0 +1,173 @@
+name: Polyglot functional CI
+
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - "cmd/**"
+      - "components/**"
+      - "crates/**"
+      - "internal/**"
+      - "data/**"
+      - "go.mod"
+      - "go.sum"
+      - ".github/workflows/polyglot-multi-os.yml"
+  pull_request:
+    paths:
+      - "cmd/**"
+      - "components/**"
+      - "crates/**"
+      - "internal/**"
+      - "data/**"
+      - "go.mod"
+      - "go.sum"
+      - ".github/workflows/polyglot-multi-os.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: polyglot-functional-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  go:
+    name: Go / ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 12
+    strategy:
+      fail-fast: false
+      max-parallel: 20
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-26]
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.23.x"
+          cache: true
+      - name: Test Go packages
+        run: go test ./...
+      - name: Validate resource catalogue
+        run: go run ./cmd/catalog-validator data/resources.csv
+
+  rust:
+    name: Rust / ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      max-parallel: 20
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-26]
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: crates/accessibility-core
+      - name: Unit tests
+        run: cargo test --manifest-path crates/accessibility-core/Cargo.toml
+      - name: Library check
+        run: cargo check --manifest-path crates/accessibility-core/Cargo.toml --lib
+
+  c11:
+    name: C11 / ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 12
+    strategy:
+      fail-fast: false
+      max-parallel: 20
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-26]
+    steps:
+      - uses: actions/checkout@v6
+      - name: Configure CMake
+        run: cmake -S components/core-c -B build/core-c -DCMAKE_BUILD_TYPE=Release
+      - name: Compile
+        run: cmake --build build/core-c --config Release --parallel 2
+      - name: Run tests
+        run: ctest --test-dir build/core-c -C Release --output-on-failure
+
+  swift:
+    name: Swift package (native macOS)
+    runs-on: macos-26
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+      - name: Report Swift toolchain
+        run: swift --version
+      - name: Run package tests
+        working-directory: components/core-swift
+        run: swift test
+
+  d:
+    name: D language tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dlang-community/setup-dlang@v2
+        with:
+          compiler: dmd
+      - name: Run D tests
+        working-directory: components/core-d
+        run: dub test
+
+  ada:
+    name: Ada language tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v6
+      - name: Install GNAT
+        run: sudo apt-get update && sudo apt-get install -y gnat
+      - name: Compile and test event contract
+        working-directory: components/core-ada
+        run: |
+          gnatmake -gnata test_accessibility_event.adb
+          ./test_accessibility_event
+      - name: Compile and test cursor contract
+        working-directory: components/core-ada
+        run: |
+          gnatmake -gnata test_screenreader_cursor.adb
+          ./test_screenreader_cursor
+
+  zig:
+    name: Zig language tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v6
+      - uses: mlugg/setup-zig@v1
+        with:
+          version: "0.13.0"
+      - run: zig test components/core-zig/src/accessibility_event.zig
+      - run: zig test components/core-zig/src/screenreader_cursor.zig
+
+  nim:
+    name: Nim language tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v6
+      - name: Install Nim
+        run: sudo apt-get update && sudo apt-get install -y nim
+      - run: nim c -r --hints:off components/core-nim/src/accessibility_event.nim
+      - run: nim c -r --hints:off components/core-nim/src/screenreader_cursor.nim
+
+  resource-database:
+    name: Python resource database tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Run unit tests
+        run: python -m unittest discover -s tests -v
+      - name: Build resource database
+        run: python tools/build_resource_db.py
