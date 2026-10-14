@@ -1,0 +1,78 @@
+{
+  "schema_version": 1,
+  "roles": [
+    {
+      "name": "unknown",
+      "code": 0
+    },
+    {
+      "name": "application",
+      "code": 1
+    },
+    {
+      "name": "window",
+      "code": 2
+    },
+    {
+      "name": "group",
+      "code": 3
+    },
+    {
+      "name": "text",
+      "code": 4
+    },
+    {
+      "name": "button",
+      "code": 5
+    },
+    {
+      "name": "checkbox",
+      "code": 6
+    },
+    {
+      "name": "radio",
+      "code": 7
+    },
+    {
+      "name": "textbox",
+      "code": 8
+    },
+    {
+      "name": "link",
+      "code": 9
+    },
+    {
+      "name": "heading",
+      "code": 10
+    },
+    {
+      "name": "list",
+      "code": 11
+    },
+    {
+      "name": "list_item",
+      "code": 12
+    },
+    {
+      "name": "table",
+      "code": 13
+    },
+    {
+      "name": "row",
+      "code": 14
+    },
+    {
+      "name": "cell",
+      "code": 15
+    },
+    {
+      "name": "menu",
+      "code": 16
+    },
+    {
+      "name": "menu_item",
+      "code": 17
+    }
+  ],
+  "maximum_name_utf8_bytes": 4096
+}
