@@ -7,7 +7,7 @@ coreboot-docs,coreboot documentation,doc.coreboot.org,https://doc.coreboot.org/,
 microsoft-accessibility,Microsoft Accessibility,microsoft.com,https://www.microsoft.com/accessibility,accessibility,operating-system,official-candidate,Microsoft accessibility portal
 windows-hardware,Microsoft Windows Hardware,learn.microsoft.com,https://learn.microsoft.com/en-us/windows-hardware/,documentation,operating-system,official-candidate,Windows hardware and driver documentation
 nvda,NV Access / NVDA,nvaccess.org,https://www.nvaccess.org/,assistive-technology,screen-reader,official-candidate,NVDA screen reader project
-nvda-source, NVDA source repository,github.com,https://github.com/nvaccess/nvda,source-code,screen-reader,official-candidate,NVDA source code
+nvda-source,NVDA source repository,github.com,https://github.com/nvaccess/nvda,source-code,screen-reader,official-candidate,NVDA source code
 freedom-scientific,Freedom Scientific,freedomscientific.com,https://www.freedomscientific.com/,assistive-technology,screen-reader,official-candidate,JAWS and assistive technology
 gnome-accessibility,GNOME Accessibility,gnome.org,https://www.gnome.org/,accessibility,desktop,official-candidate,GNOME desktop ecosystem
 orca-source,Orca screen reader,gitlab.gnome.org,https://gitlab.gnome.org/GNOME/orca,source-code,screen-reader,official-candidate,Orca source repository
