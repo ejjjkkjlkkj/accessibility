@@ -20,3 +20,17 @@ unittest {
     auto longName = new char[TextCapacity];
     assert(!q.push(EventKind.focus, Node("", longName.idup, "", true, false)));
 }
+
+unittest {
+    EventQueue q;
+    auto a = Node("bouton", "A", "", true, false);
+    auto b = Node("bouton", "B", "", true, false);
+    Event e;
+    foreach (i; 0 .. 12) assert(q.push(EventKind.focus, a));
+    foreach (i; 0 .. 8) { assert(q.pop(e)); assert(e.name[0 .. e.nameLength] == "A"); }
+    foreach (i; 0 .. 12) assert(q.push(EventKind.focus, b));
+    assert(q.length == QueueCapacity);
+    foreach (i; 0 .. 4) { assert(q.pop(e)); assert(e.name[0 .. e.nameLength] == "A"); }
+    foreach (i; 0 .. 12) { assert(q.pop(e)); assert(e.name[0 .. e.nameLength] == "B"); }
+    assert(!q.pop(e));
+}
