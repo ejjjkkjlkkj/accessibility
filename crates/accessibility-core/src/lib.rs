@@ -21,7 +21,7 @@ mod tests {
     #[test]
     fn event_has_stable_version_and_values() {
         let event = AccessibleEvent::new(Role::Button, 7, "Continue");
-        assert_eq!(event.abi_version, ABI_VERSION); assert_eq!(event.role, Role::Button);
+        assert_eq!(event.abi_version, ABI_VERSION); assert_eq!(event.role, Role::Button);\n        assert_eq!(Role::Button as u32, 5); assert_eq!(Role::MenuItem as u32, 17);
         assert_eq!(event.source_id, 7); assert_eq!(event.name, "Continue"); assert_eq!(event.state_flags, 0);
     }
 }
