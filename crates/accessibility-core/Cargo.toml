@@ -1,0 +1,13 @@
+[package]
+name = "accessibility-core"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+description = "Small no_std data model for cross-layer accessibility events"
+
+[lib]
+path = "src/lib.rs"
+
+[features]
+default = []
+std = []
