@@ -10,6 +10,20 @@ package Screen_Reader_Core is
       Disabled : Boolean := False;
    end record;
 
-   -- Pure formatting core; no OS API or audio backend is connected.
+   type Event_Kind is (Focus, Value_Changed, State_Changed);
+   Queue_Capacity : constant := 16;
+   type Event is record
+      Kind : Event_Kind := Focus;
+      Item : Node;
+   end record;
+   type Event_Array is array (Positive range 1 .. Queue_Capacity) of Event;
+   type Event_Queue is record
+      Items : Event_Array;
+      Head  : Positive range 1 .. Queue_Capacity := 1;
+      Count : Natural range 0 .. Queue_Capacity := 0;
+   end record;
+
    function Announce (Item : Node) return String;
+   function Push (Queue : in out Event_Queue; Kind : Event_Kind; Item : Node) return Boolean;
+   function Pop (Queue : in out Event_Queue; Result : out Event) return Boolean;
 end Screen_Reader_Core;
