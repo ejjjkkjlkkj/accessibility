@@ -1,0 +1,123 @@
+{
+  "schema_version": 1,
+  "project_goal": "Eight independent language-specific screen-reader, UEFI/pre-OS, and OS/kernel tracks",
+  "evidence_policy": {
+    "initial_status": "NOT_IMPLEMENTED",
+    "emulator_is_physical_proof": false,
+    "require_command_and_environment_for_pass": true
+  },
+  "languages": [
+    {
+      "language": "C",
+      "components": {
+        "screen_reader": {
+          "status": "NOT_IMPLEMENTED"
+        },
+        "uefi_pre_os": {
+          "status": "NOT_IMPLEMENTED"
+        },
+        "operating_system_kernel": {
+          "status": "NOT_IMPLEMENTED"
+        }
+      }
+    },
+    {
+      "language": "Rust",
+      "components": {
+        "screen_reader": {
+          "status": "NOT_IMPLEMENTED"
+        },
+        "uefi_pre_os": {
+          "status": "NOT_IMPLEMENTED"
+        },
+        "operating_system_kernel": {
+          "status": "NOT_IMPLEMENTED"
+        }
+      }
+    },
+    {
+      "language": "Go",
+      "components": {
+        "screen_reader": {
+          "status": "NOT_IMPLEMENTED"
+        },
+        "uefi_pre_os": {
+          "status": "NOT_IMPLEMENTED"
+        },
+        "operating_system_kernel": {
+          "status": "NOT_IMPLEMENTED"
+        }
+      }
+    },
+    {
+      "language": "D",
+      "components": {
+        "screen_reader": {
+          "status": "NOT_IMPLEMENTED"
+        },
+        "uefi_pre_os": {
+          "status": "NOT_IMPLEMENTED"
+        },
+        "operating_system_kernel": {
+          "status": "NOT_IMPLEMENTED"
+        }
+      }
+    },
+    {
+      "language": "Ada",
+      "components": {
+        "screen_reader": {
+          "status": "NOT_IMPLEMENTED"
+        },
+        "uefi_pre_os": {
+          "status": "NOT_IMPLEMENTED"
+        },
+        "operating_system_kernel": {
+          "status": "NOT_IMPLEMENTED"
+        }
+      }
+    },
+    {
+      "language": "Zig",
+      "components": {
+        "screen_reader": {
+          "status": "NOT_IMPLEMENTED"
+        },
+        "uefi_pre_os": {
+          "status": "NOT_IMPLEMENTED"
+        },
+        "operating_system_kernel": {
+          "status": "NOT_IMPLEMENTED"
+        }
+      }
+    },
+    {
+      "language": "Nim",
+      "components": {
+        "screen_reader": {
+          "status": "NOT_IMPLEMENTED"
+        },
+        "uefi_pre_os": {
+          "status": "NOT_IMPLEMENTED"
+        },
+        "operating_system_kernel": {
+          "status": "NOT_IMPLEMENTED"
+        }
+      }
+    },
+    {
+      "language": "Swift",
+      "components": {
+        "screen_reader": {
+          "status": "NOT_IMPLEMENTED"
+        },
+        "uefi_pre_os": {
+          "status": "NOT_IMPLEMENTED"
+        },
+        "operating_system_kernel": {
+          "status": "NOT_IMPLEMENTED"
+        }
+      }
+    }
+  ]
+}
