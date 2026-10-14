@@ -11,7 +11,7 @@
 ## Milestone 1 — portable core quality
 - [ ] Add tests for D, Ada, Zig, Nim, and Swift.
 - [ ] Normalize announcement formatting across all eight implementations.
-- [x] Extend C core tests for empty/unfocused output, disabled state, truncation reporting, invalid inputs, queue FIFO/copy semantics, capacity, and wrap-around.\n- [ ] Reach equivalent edge-case coverage in the other seven languages.
+- [x] Extend C core tests for empty/unfocused output, disabled state, truncation reporting, invalid inputs, queue FIFO/copy semantics, capacity, and wrap-around.\n- [x] Add bounded event queues to C, Rust, Go, D, Ada, Zig, Nim, and Swift source tracks.\n- [ ] Confirm all eight languages' updated edge-case tests in CI and repair actual failures.
 - [ ] Keep core formatting independent of native accessibility APIs and speech output.
 
 ## Milestone 2 — native screen readers
@@ -33,7 +33,7 @@ For each language:
 ## Milestone 4 — independent OS/kernel
 For each language:
 - [ ] Document the boot protocol and minimal supported hardware.
-- [ ] Build a freestanding kernel entry point and linker layout.
+- [x] Add explicitly unvalidated, language-specific kernel entry sketches and validation notes for all eight languages.\n- [ ] Build a freestanding kernel entry point and linker layout for a concrete supported target.
 - [ ] Add serial diagnostics, memory initialization, exception/interrupt handling, and timer.
 - [ ] Add keyboard, display, and audio driver plans with hardware evidence.
 - [ ] Integrate the accessibility service before optional desktop layers.
