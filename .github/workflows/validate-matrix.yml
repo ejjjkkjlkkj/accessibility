@@ -1,0 +1,43 @@
+name: Validate project matrix
+
+on:
+  push:
+    branches: ["main", "work/**"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate-manifest:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Python for manifest validation
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Validate all language/component entries
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          manifest = json.loads(Path("projects/manifest.json").read_text(encoding="utf-8"))
+          expected = {"C", "Rust", "Go", "D", "Ada", "Zig", "Nim", "Swift"}
+          actual = {item["language"] for item in manifest["languages"]}
+          assert actual == expected, f"Language set mismatch: {actual!r}"
+          assert len(manifest["languages"]) == 8, "Expected exactly eight language tracks"
+          required = {"screen_reader", "uefi_pre_os", "operating_system_kernel"}
+          for item in manifest["languages"]:
+              assert set(item["components"]) == required, f"Missing component in {item['language']}"
+              for component, record in item["components"].items():
+                  assert record["status"] in {
+                      "NOT_IMPLEMENTED", "NOT_VALIDATED", "BLOCKED", "PARTIAL", "PASS", "FAIL"
+                  }, f"Invalid status: {item['language']} / {component}"
+          assert manifest["evidence_policy"]["emulator_is_physical_proof"] is False
+          print("PASS: 8 language tracks, 24 component records, evidence policy valid.")
+          print("NOTE: this validates project metadata only; it does not compile or test implementations.")
+          PY
