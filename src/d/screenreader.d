@@ -40,8 +40,9 @@ struct EventQueue {
         auto e = Event.init;
         e.kind = kind;
         e.roleLength = n.role.length; e.nameLength = n.name.length; e.valueLength = n.value.length;
-        e.role[0 .. e.roleLength] = n.role; e.name[0 .. e.nameLength] = n.name;
-        e.value[0 .. e.valueLength] = n.value;
+        foreach (i, c; n.role) e.role[i] = c;
+        foreach (i, c; n.name) e.name[i] = c;
+        foreach (i, c; n.value) e.value[i] = c;
         e.focused = n.focused; e.disabled = n.disabled;
         items[tail] = e; count++;
         return true;
