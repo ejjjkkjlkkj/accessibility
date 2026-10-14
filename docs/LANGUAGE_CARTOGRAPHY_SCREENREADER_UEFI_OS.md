@@ -97,3 +97,8 @@ NEXORA est distinct de U (ulanguage.org). Le dépôt IA contient un prototype d�
 - PASS : critères de la cible satisfaits et artefacts/logs disponibles.
 
 Un test unitaire ou une simulation ne prouve pas une validation matérielle. La cible de fiabilité du projet est 99,99 %, mais elle ne peut être revendiquée sans une méthode statistique et des données d'essai adaptées.
+
+
+## NEXORA accessibility interface
+
+The proposed language-neutral node/event/command contract is defined in `projects/nexora/accessibility-contract.json` and explained in `docs/NEXORA-ACCESSIBILITY-CONTRACT.md`. It is a design boundary only; native adapters and end-to-end behavior remain NOT_VALIDATED.
