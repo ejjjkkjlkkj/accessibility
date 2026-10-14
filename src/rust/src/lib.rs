@@ -125,6 +125,12 @@ mod tests {
     }
 
     #[test]
+    fn missing_role_and_empty_name_use_generic_label() {
+        let node = Node { role: "", name: "", value: "42", focused: true, disabled: false };
+        assert_eq!(announce(&node).unwrap().as_str(), "élément, 42");
+    }
+
+    #[test]
     fn queue_preserves_fifo_and_owns_text_snapshot() {
         let mut queue = EventQueue::new();
         let node = Node { role: "bouton", name: "Valider", value: "", focused: true, disabled: false };
