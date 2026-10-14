@@ -7,7 +7,7 @@ public enum AccessibilityRole: UInt8, Sendable {
     case button = 5
     case checkbox = 6
     case radio = 7
-    case textBox = 8
+    case textbox = 8
     case link = 9
     case heading = 10
     case list = 11
