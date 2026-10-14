@@ -4,14 +4,14 @@ Status reflects the strongest current evidence. The C and Rust UEFI prototypes a
 
 | Language | Native screen reader | UEFI / pre-OS app | OS / kernel track | Key technical boundary |
 |---|---|---|---|---|
-| C | NOT_IMPLEMENTED | NOT_VALIDATED (console-only source; no audio) | NOT_IMPLEMENTED | Native platform APIs and UEFI ABI; kernel work needs a boot path and drivers |
-| Rust | NOT_IMPLEMENTED | NOT_VALIDATED (console-only app; CI build pending) | NOT_IMPLEMENTED | `no_std` and UEFI targets are possible; kernel drivers remain separate work |
-| Go | NOT_IMPLEMENTED | NOT_IMPLEMENTED | NOT_IMPLEMENTED | Runtime/GC and standard-library assumptions must be addressed for firmware and kernel use |
-| D | NOT_IMPLEMENTED | NOT_IMPLEMENTED | NOT_IMPLEMENTED | Runtime, GC, and target support must be audited per compiler/configuration |
-| Ada | NOT_IMPLEMENTED | NOT_IMPLEMENTED | NOT_IMPLEMENTED | Runtime profile, compiler target, and firmware ABI must be validated |
-| Zig | NOT_IMPLEMENTED | NOT_IMPLEMENTED | NOT_IMPLEMENTED | Freestanding compilation is promising; UEFI ABI and driver coverage still need proof |
-| Nim | NOT_IMPLEMENTED | NOT_IMPLEMENTED | NOT_IMPLEMENTED | Generated C, runtime/GC settings, and target toolchain must be audited |
-| Swift | NOT_IMPLEMENTED | NOT_IMPLEMENTED | NOT_IMPLEMENTED | Embedded/freestanding and UEFI feasibility depends on compiler/runtime support; do not assume kernel readiness |
+| C | PARTIAL | NOT_VALIDATED (console-only source) | NOT_IMPLEMENTED |
+| Rust | PARTIAL | NOT_VALIDATED (console-only source; CI pending) | NOT_IMPLEMENTED |
+| Go | PARTIAL | NOT_IMPLEMENTED (runtime/EFI ABI gate) | NOT_IMPLEMENTED |
+| D | PARTIAL | NOT_IMPLEMENTED (runtime/EFI ABI gate) | NOT_IMPLEMENTED |
+| Ada | PARTIAL | NOT_IMPLEMENTED (GNAT runtime/EFI ABI gate) | NOT_IMPLEMENTED |
+| Zig | PARTIAL | NOT_IMPLEMENTED (EFI target/build not yet proven) | NOT_IMPLEMENTED |
+| Nim | PARTIAL | NOT_IMPLEMENTED (generated C/runtime gate) | NOT_IMPLEMENTED |
+| Swift | PARTIAL | NOT_IMPLEMENTED (runtime/EFI target gate) | NOT_IMPLEMENTED |
 
 ## Required capabilities per screen reader
 
