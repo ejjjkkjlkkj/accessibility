@@ -79,6 +79,7 @@ class AccessibilityRoleContractTests(unittest.TestCase):
             "components/core-swift/Sources/AccessibilityCore/AccessibilityEvent.swift",
             "components/core-zig/src/accessibility_event.zig",
             "crates/accessibility-core/src/lib.rs",
+            "components/core-ada/accessibility_event.adb",
         ]:
             self.assertIn("4096", (ROOT / path).read_text(encoding="utf-8"), path)
 
