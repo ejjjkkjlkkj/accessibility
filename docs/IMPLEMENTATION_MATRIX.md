@@ -1,6 +1,6 @@
 # Implementation matrix
 
-Status reflects the strongest current evidence. All eight portable screen-reader cores contain announcement formatting and bounded event queues, with navigation-cursor work being developed separately. They remain **PARTIAL** because native accessibility API adapters and speech/audio are not connected. Kernel sketches and UEFI prototypes are not complete implementations.
+Status reflects the strongest current evidence. All eight portable screen-reader cores contain announcement formatting, bounded event queues, and bounded cursor-navigation implementations with regression tests for empty, single-item, and multi-item lists. The expanded tests have been committed, but CI results must be checked per language before claiming validation. They remain **PARTIAL** because native accessibility API adapters and speech/audio are not connected. Kernel sketches and UEFI prototypes are not complete implementations.
 
 | Language | Native screen reader | UEFI / pre-OS app | OS / kernel track | Key technical boundary |
 |---|---|---|---|---|
