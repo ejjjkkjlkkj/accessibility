@@ -1,3 +1,5 @@
+import strutils
+
 type
   EventRole* = enum
     erUnknown, erWindow, erButton, erTextField, erHeading
