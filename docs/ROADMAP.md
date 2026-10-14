@@ -6,12 +6,12 @@
 - [x] Add initial focus-announcement cores in all eight languages.
 - [x] Add starter tests for C, Go, and Rust.
 - [x] Add an EDK2 C UEFI console-only entry-point prototype.
-- [ ] Execute CI and repair failures from actual logs.
+- [x] Execute initial CI: manifest validation and all eight portable-core smoke-test jobs passed on the initial revision.\n- [ ] Validate the newly added Rust UEFI build job; result pending.
 
 ## Milestone 1 — portable core quality
 - [ ] Add tests for D, Ada, Zig, Nim, and Swift.
 - [ ] Normalize announcement formatting across all eight implementations.
-- [ ] Test empty fields, disabled nodes, truncation, invalid inputs, and focus loss.
+- [x] Extend C core tests for empty/unfocused output, disabled state, truncation reporting, invalid inputs, queue FIFO/copy semantics, capacity, and wrap-around.\n- [ ] Reach equivalent edge-case coverage in the other seven languages.
 - [ ] Keep core formatting independent of native accessibility APIs and speech output.
 
 ## Milestone 2 — native screen readers
@@ -24,7 +24,7 @@ For each language independently:
 
 ## Milestone 3 — UEFI application
 For each language:
-- [ ] Prove a minimal EFI application builds for x86_64 and starts in QEMU.
+- [ ] Prove minimal C and Rust EFI applications build for x86_64; Rust CI build job added, result pending.\n- [ ] Start and verify each artifact in QEMU (emulator-only evidence).
 - [ ] Add GOP text/graphics support and keyboard input with protocol discovery.
 - [ ] Add firmware-menu navigation only where the firmware exposes usable interfaces.
 - [ ] Do not assume firmware provides generic audio.
