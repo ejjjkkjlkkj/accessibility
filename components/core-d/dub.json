@@ -1,0 +1,7 @@
+{
+  "name": "accessibility-core-d",
+  "description": "Small D implementation of the versioned accessibility event contract",
+  "license": "MIT",
+  "targetType": "library",
+  "sourcePaths": ["src"]
+}
