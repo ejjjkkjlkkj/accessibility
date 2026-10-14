@@ -102,3 +102,21 @@ CI must fail if a record claims PASS without required evidence fields. CI may ma
 ## Current truthful state
 
 The current repository manifest describes early portable cores and prototypes. Native platform adapters, connected speech, validated UEFI apps and bootable accessible kernels are not complete across all languages. This plan does not change those statuses. The user's physical PC must not be treated as tested until a separately approved physical validation procedure is actually executed and recorded.
+
+
+## Expanded execution scope — shared language catalog
+
+The execution scope is now the feasibility-driven language catalog in `LANGUAGE_CARTOGRAPHY_SCREENREADER_UEFI_OS.md`, not an arbitrary fixed number. For every eligible systems language, maintain three independent deliverables and release gates: complete native screen reader, complete UEFI/pre-OS application, and independently bootable OS/kernel. For hosted-only languages, complete the native screen reader and formally mark UEFI/kernel BLOCKED when freestanding support is not technically proven; do not fake those targets.
+
+### Work packages and acceptance criteria
+
+1. **Catalog and inventory:** assign stable IDs to every language, record compiler/runtime versions and source paths, and reconcile each status against CI evidence.
+2. **Shared reader contract:** define versioned language-neutral semantic nodes, focus and value events, navigation, bounded speech queue, cancellation, priority alerts, settings, braille/magnification adapters, failure recovery and conformance vectors.
+3. **Native reader vertical slices:** implement Windows UI Automation + real speech first, Linux AT-SPI2 + local speech next, and Apple Accessibility + supported speech APIs on Apple SDK runners. Use semantic APIs before OCR. Keep AI optional and non-blocking.
+4. **UEFI vertical slices:** prove C/EDK2 then Rust EFI builds; add explicit build and emulator tests; then implement each feasible language independently. Verify PE/COFF, EFI ABI, protocol discovery, keyboard/GOP, errors, bounds and artifact SHA-256. Firmware audio stays BLOCKED absent a proven device-specific route.
+5. **Kernel vertical slice:** prove a reproducible freestanding reference boot image, serial output and firmware memory-map ingestion; then allocator, exceptions/interrupts, timer, keyboard, display, event model and speech/audio hardware route. Port each layer only where the language/toolchain is genuinely freestanding.
+6. **Cross-language parity:** execute shared event/navigation vectors in each implementation, add property/fuzz tests and compare outputs. One language passing never promotes another.
+7. **AI repository handoff:** mirror the stable language IDs and feasibility notes into `ejjjkkjlkkj/ia`. Start with a local shared base model and language-specific parser/tool/retrieval/evaluation packages. Fine-tuning is an optional evidence-gated experiment; do not claim independent models or training unless artifacts and benchmark results exist.
+8. **Release evidence:** produce a machine-readable record per language × component with commit SHA, toolchain, exact command, exit code, tests, artifact hash, environment (HOST/EMULATOR/PHYSICAL), status, blockers and next gate. CI rejects unsupported PASS claims.
+
+No merge, release, physical boot, firmware mutation, disk mutation or unattended reboot is authorized by this plan. CI and emulator outcomes are not physical proof.
