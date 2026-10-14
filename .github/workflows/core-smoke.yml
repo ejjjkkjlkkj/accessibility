@@ -1,0 +1,40 @@
+name: Core smoke tests
+
+on:
+  push:
+    branches: ["main", "work/**"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  c-core:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile with warnings as errors
+        run: cc -std=c11 -Wall -Wextra -Werror src/c/test_screen_reader_core.c -o /tmp/test-screen-reader-c
+      - name: Run C core tests
+        run: /tmp/test-screen-reader-c
+
+  go-core:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.23"
+      - name: Run Go core tests
+        working-directory: src/go
+        run: go test ./...
+
+  rust-core:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Run Rust core tests
+        working-directory: src/rust
+        run: cargo test
