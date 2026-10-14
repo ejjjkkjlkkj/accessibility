@@ -57,7 +57,27 @@
       "password",
       "busy",
       "live"
-    ]
+    ],
+    "role_codes": {
+      "unknown": 0,
+      "application": 1,
+      "window": 2,
+      "group": 3,
+      "text": 4,
+      "button": 5,
+      "checkbox": 6,
+      "radio": 7,
+      "textbox": 8,
+      "link": 9,
+      "heading": 10,
+      "list": 11,
+      "list_item": 12,
+      "table": 13,
+      "row": 14,
+      "cell": 15,
+      "menu": 16,
+      "menu_item": 17
+    }
   },
   "event": {
     "required": [
@@ -106,4 +126,4 @@
     "maximum_children_per_node": 10000,
     "sequence_numbers_monotonic_per_source": true
   }
-}
+}\n
