@@ -41,3 +41,8 @@ func TestQueueRingWraparoundPreservesFIFO(t *testing.T) {
 	for i := 0; i < 12; i++ { got, ok := q.Pop(); if !ok || got.Name != "B" { t.Fatalf("wrapped B %d: %#v, %v", i, got, ok) } }
 	if _, ok := q.Pop(); ok { t.Fatal("queue should be empty") }
 }
+
+func TestAnnounceFallbackRoleAndEmptyName(t *testing.T) {
+	got := Announce(Node{Value: "42", Focused: true})
+	if got != "élément, 42" { t.Fatalf("got %q", got) }
+}
