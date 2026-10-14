@@ -7,7 +7,7 @@ Dépôt de référence pour cartographier et développer les composants d'access
 - **Screen reader** : navigation clavier, focus, rôles/états accessibles, événements UIA ou équivalents, braille et synthèse vocale.
 - **UEFI / bare metal** : démarrage et interfaces firmware, clavier/console, GOP, audio et limites matérielles documentées.
 - **OS** : intégration par système, API d'accessibilité, gestion audio, pilotes et installation.
-- **IA locale** : intégration facultative d'un modèle local; aucune clé cloud obligatoire.
+- **IA locale universelle** : intégration facultative du modèle partagé défini dans `ejjjkkjlkkj/ia`; mêmes poids/contrat pour les langues naturelles et le code, avec adaptateurs par runtime. Le screen reader, la navigation de base et le démarrage UEFI ne doivent pas dépendre du modèle. Aucune clé cloud obligatoire.
 - **Multi-langage** : chaque piste indique ce qui est implémenté, compilé, testé et validé sur matériel réel.
 
 ## Règles de preuve
