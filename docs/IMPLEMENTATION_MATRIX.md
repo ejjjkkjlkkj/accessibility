@@ -1,5 +1,7 @@
 # Implementation matrix
 
+The initial eight-language matrix is extended by the manifest to 13 tracks. Additional tracks: C++ (portable core/tests, UEFI not validated, kernel not implemented), Free Pascal (portable core/tests, UEFI not validated, kernel not implemented), Odin (core source added, compiler validation pending), Fortran (core/tests and CI job added, results pending), Objective-C (Foundation announcement core; Apple adapter integration pending; UEFI/kernel blocked). See `projects/manifest.json` for exact per-component status.
+
 Status reflects the strongest current evidence. All eight portable screen-reader cores contain announcement formatting, bounded event queues, and bounded cursor-navigation implementations with regression tests for empty, single-item, and multi-item lists. The expanded tests have been committed, but CI results must be checked per language before claiming validation. They remain **PARTIAL** because native accessibility API adapters and speech/audio are not connected. Kernel sketches and UEFI prototypes are not complete implementations.
 
 The expanded language feasibility map (C++, architecture-specific assembly, Free Pascal, Odin, V, Objective-C, Fortran, Crystal, Modula-2, COBOL and PL/I) is maintained in [LANGUAGE_CARTOGRAPHY_SCREENREADER_UEFI_OS.md](LANGUAGE_CARTOGRAPHY_SCREENREADER_UEFI_OS.md). These candidates are not counted as implemented tracks until their independent native-reader, UEFI and kernel gates have evidence.
