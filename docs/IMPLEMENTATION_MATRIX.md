@@ -1,11 +1,11 @@
 # Implementation matrix
 
-All rows begin as **NOT_IMPLEMENTED / NOT_VALIDATED** until source code and evidence exist. This matrix is a work ledger, not a claim that the components already work.
+Status reflects the strongest current evidence. The C and Rust UEFI prototypes are source-level console applications only; neither is yet claimed to compile, boot, navigate firmware menus, or produce audio. This matrix is a work ledger, not a claim that the components already work.
 
 | Language | Native screen reader | UEFI / pre-OS app | OS / kernel track | Key technical boundary |
 |---|---|---|---|---|
-| C | NOT_IMPLEMENTED | NOT_IMPLEMENTED | NOT_IMPLEMENTED | Native platform APIs and UEFI ABI; kernel work needs a boot path and drivers |
-| Rust | NOT_IMPLEMENTED | NOT_IMPLEMENTED | NOT_IMPLEMENTED | `no_std` and UEFI targets are possible; kernel drivers remain separate work |
+| C | NOT_IMPLEMENTED | NOT_VALIDATED (console-only source; no audio) | NOT_IMPLEMENTED | Native platform APIs and UEFI ABI; kernel work needs a boot path and drivers |
+| Rust | NOT_IMPLEMENTED | NOT_VALIDATED (console-only app; CI build pending) | NOT_IMPLEMENTED | `no_std` and UEFI targets are possible; kernel drivers remain separate work |
 | Go | NOT_IMPLEMENTED | NOT_IMPLEMENTED | NOT_IMPLEMENTED | Runtime/GC and standard-library assumptions must be addressed for firmware and kernel use |
 | D | NOT_IMPLEMENTED | NOT_IMPLEMENTED | NOT_IMPLEMENTED | Runtime, GC, and target support must be audited per compiler/configuration |
 | Ada | NOT_IMPLEMENTED | NOT_IMPLEMENTED | NOT_IMPLEMENTED | Runtime profile, compiler target, and firmware ABI must be validated |
