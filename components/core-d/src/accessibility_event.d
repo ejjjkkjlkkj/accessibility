@@ -28,6 +28,6 @@ unittest {
     assert(isValid(valid));
     auto invalid = AccessibilityEvent(2, Role.button, "Save");
     assert(!isValid(invalid));
-    auto tooLong = AccessibilityEvent(1, Role.button, cast(string) replicate('x', 257));
+    auto tooLong = AccessibilityEvent(1, Role.button, cast(string) replicate("x", 257));
     assert(!isValid(tooLong));
 }
