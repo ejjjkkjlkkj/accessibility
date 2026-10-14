@@ -1,0 +1,50 @@
+name: Multi-OS accessibility validation
+
+on:
+  push:
+    branches: [main, "**"]
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    - cron: "41 3 * * 1"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: accessibility-multi-os-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  docs-manifests-and-catalog:
+    name: Docs / ${{ matrix.os }} / Python ${{ matrix.python }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python: ["3.11", "3.12", "3.13"]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout accessibility repository
+        uses: actions/checkout@v4
+      - name: Checkout canonical IA catalog
+        uses: actions/checkout@v4
+        with:
+          repository: ejjjkkjlkkj/ia
+          ref: main
+          path: ia-repo
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Validate JSON manifests
+        run: |
+          python -c "import json; from pathlib import Path; files=[p for p in Path('.').rglob('*.json') if '.git' not in p.parts and 'ia-repo' not in p.parts]; [json.loads(p.read_text(encoding='utf-8')) for p in files]; print(f'PASS: {len(files)} JSON files')"
+      - name: Validate language ID synchronization
+        run: |
+          python -c "import json,re; from pathlib import Path; m=json.loads(Path('projects/manifest.json').read_text(encoding='utf-8')); ids={x['id'] for x in m['languages']}; s=Path('ia-repo/LANGUAGE-CATALOG.md').read_text(encoding='utf-8'); catalog={x.group(1) for line in s.splitlines() if (x:=re.match(r'^\|\s*([a-z0-9][a-z0-9_-]*)\s*\|\s*([^|]+?)\s*\|',line,re.I)) and x.group(1) not in {'ID','---'}}; print('manifest-only:',sorted(ids-catalog)); print('catalog-only:',sorted(catalog-ids)); raise SystemExit(ids != catalog)"
+      - name: Check release-gate documentation
+        run: |
+          python -c "from pathlib import Path; required=['README.md','docs/LANGUAGE_CARTOGRAPHY_SCREENREADER_UEFI_OS.md','docs/EXECUTION_PLAN_ALL_LANGUAGE_RELEASE_GATES.md','projects/manifest.json']; missing=[p for p in required if not Path(p).is_file()]; print('missing:',missing); raise SystemExit(bool(missing))"
+      - name: Record platform proof
+        run: python -c "import os,platform,sys; print('OS=',platform.platform()); print('Python=',sys.version); print('RUNNER_OS=',os.getenv('RUNNER_OS')); print('STATUS=PASS for documentation checks only')"
