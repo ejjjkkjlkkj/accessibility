@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "project_goal": "Eleven language-specific screen-reader, UEFI/pre-OS and OS/kernel tracks, plus architecture-specific assembly support",
+  "project_goal": "Thirteen language-specific screen-reader, UEFI/pre-OS and OS/kernel tracks, plus architecture-specific assembly support",
   "evidence_policy": {
     "initial_status": "NOT_IMPLEMENTED",
     "emulator_is_physical_proof": false,
@@ -191,6 +191,40 @@
         "operating_system_kernel": {
           "status": "NOT_IMPLEMENTED",
           "evidence": "No freestanding kernel or boot image; runtime/startup, linker and boot protocol are not validated."
+        }
+      }
+    },
+    {
+      "language": "Fortran",
+      "components": {
+        "screen_reader": {
+          "status": "PARTIAL",
+          "evidence": "Portable announcement formatter and fixed-capacity event queue source and test program added; compiler execution pending; no native accessibility adapter or speech backend."
+        },
+        "uefi_pre_os": {
+          "status": "NOT_VALIDATED",
+          "evidence": "UEFI ABI, PE/COFF output, startup/runtime and firmware protocol access are unproven."
+        },
+        "operating_system_kernel": {
+          "status": "NOT_IMPLEMENTED",
+          "evidence": "No freestanding kernel or boot image; runtime/startup, linker and boot protocol remain unproven."
+        }
+      }
+    },
+    {
+      "language": "Objective-C",
+      "components": {
+        "screen_reader": {
+          "status": "PARTIAL",
+          "evidence": "Foundation-based semantic announcement core added for future Apple adapter integration; no native Accessibility API adapter, speech connection or tests validated."
+        },
+        "uefi_pre_os": {
+          "status": "BLOCKED",
+          "evidence": "UEFI provides no Objective-C runtime; no freestanding runtime, EFI ABI or PE/COFF implementation demonstrated."
+        },
+        "operating_system_kernel": {
+          "status": "BLOCKED",
+          "evidence": "Objective-C runtime/startup is not proven freestanding; scope is Apple-platform accessibility integration, not a common kernel."
         }
       }
     }
