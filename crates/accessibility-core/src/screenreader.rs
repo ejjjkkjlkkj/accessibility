@@ -24,9 +24,17 @@ impl Cursor {
 mod tests {
  use super::Cursor;
  #[test] fn bounded_navigation() {
+  let mut empty = Cursor::new(0);
+  assert_eq!(empty.first(), None); assert_eq!(empty.next(), None); assert_eq!(empty.previous(), None);
+  assert_eq!(empty.current(), None);
+  let mut single = Cursor::new(1);
+  assert_eq!(single.first(), Some(0)); assert_eq!(single.current(), Some(0));
+  assert_eq!(single.next(), None); assert_eq!(single.previous(), None);
+  assert_eq!(single.first(), Some(0));
   let mut c = Cursor::new(2);
   assert_eq!(c.first(), Some(0)); assert_eq!(c.next(), Some(1));
-  assert_eq!(c.next(), None); assert_eq!(c.previous(), Some(0)); assert_eq!(c.previous(), None);
-  assert_eq!(Cursor::new(0).current(), None);
+  assert_eq!(c.next(), None); assert_eq!(c.current(), Some(1));
+  assert_eq!(c.previous(), Some(0)); assert_eq!(c.previous(), None);
+  assert_eq!(c.first(), Some(0)); assert_eq!(c.current(), Some(0));
  }
 }
