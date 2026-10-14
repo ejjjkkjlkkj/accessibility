@@ -16,44 +16,44 @@ Définir une piste de travail pour chaque ID du catalogue commun IA. Cette carto
 
 | ID | Langage | Screen reader | UEFI / bare metal | OS | Statut initial |
 |---|---|---|---|---|---|
-| c | C | PARTIAL — composants et adaptateurs selon runtime | PARTIAL — seulement si cible/compiler et interfaces firmware disponibles | PARTIAL — API natives et dépendances déclarées | NOT_VALIDATED |
-| cpp | C++ | PARTIAL — composants et adaptateurs selon runtime | PARTIAL — seulement si cible/compiler et interfaces firmware disponibles | PARTIAL — API natives et dépendances déclarées | NOT_VALIDATED |
-| rust | Rust | PARTIAL — composants et adaptateurs selon runtime | PARTIAL — seulement si cible/compiler et interfaces firmware disponibles | PARTIAL — API natives et dépendances déclarées | NOT_VALIDATED |
-| zig | Zig | PARTIAL — composants et adaptateurs selon runtime | PARTIAL — seulement si cible/compiler et interfaces firmware disponibles | PARTIAL — API natives et dépendances déclarées | NOT_VALIDATED |
-| ada | Ada | PARTIAL — composants et adaptateurs selon runtime | PARTIAL — seulement si cible/compiler et interfaces firmware disponibles | PARTIAL — API natives et dépendances déclarées | NOT_VALIDATED |
-| asm-x86_64 | x86-64 Assembly | PARTIAL — composants et adaptateurs selon runtime | PARTIAL — seulement si cible/compiler et interfaces firmware disponibles | PARTIAL — API natives et dépendances déclarées | NOT_VALIDATED |
-| asm-aarch64 | AArch64 Assembly | PARTIAL — composants et adaptateurs selon runtime | PARTIAL — seulement si cible/compiler et interfaces firmware disponibles | PARTIAL — API natives et dépendances déclarées | NOT_VALIDATED |
-| asm-riscv64 | RISC-V Assembly | PARTIAL — composants et adaptateurs selon runtime | PARTIAL — seulement si cible/compiler et interfaces firmware disponibles | PARTIAL — API natives et dépendances déclarées | NOT_VALIDATED |
-| go | Go | PARTIAL — composants et adaptateurs selon runtime | PARTIAL — seulement si cible/compiler et interfaces firmware disponibles | PARTIAL — API natives et dépendances déclarées | NOT_VALIDATED |
-| d | D | PARTIAL — composants et adaptateurs selon runtime | PARTIAL — seulement si cible/compiler et interfaces firmware disponibles | PARTIAL — API natives et dépendances déclarées | NOT_VALIDATED |
-| nim | Nim | PARTIAL — composants et adaptateurs selon runtime | PARTIAL — seulement si cible/compiler et interfaces firmware disponibles | PARTIAL — API natives et dépendances déclarées | NOT_VALIDATED |
-| swift | Swift | PARTIAL — composants et adaptateurs selon runtime | PARTIAL — seulement si cible/compiler et interfaces firmware disponibles | PARTIAL — API natives et dépendances déclarées | NOT_VALIDATED |
-| pascal | Free Pascal / Object Pascal | PARTIAL — composants et adaptateurs selon runtime | PARTIAL — seulement si cible/compiler et interfaces firmware disponibles | PARTIAL — API natives et dépendances déclarées | NOT_VALIDATED |
-| odin | Odin | PARTIAL — composants et adaptateurs selon runtime | PARTIAL — seulement si cible/compiler et interfaces firmware disponibles | PARTIAL — API natives et dépendances déclarées | NOT_VALIDATED |
-| fortran | Fortran | PARTIAL — composants et adaptateurs selon runtime | PARTIAL — seulement si cible/compiler et interfaces firmware disponibles | PARTIAL — API natives et dépendances déclarées | NOT_VALIDATED |
-| csharp | C# | PARTIAL — composants et adaptateurs selon runtime | PARTIAL — seulement si cible/compiler et interfaces firmware disponibles | PARTIAL — API natives et dépendances déclarées | NOT_VALIDATED |
-| objc | Objective-C | PARTIAL — composants et adaptateurs selon runtime | PARTIAL — seulement si cible/compiler et interfaces firmware disponibles | PARTIAL — API natives et dépendances déclarées | NOT_VALIDATED |
-| v | V | PARTIAL — composants et adaptateurs selon runtime | PARTIAL — seulement si cible/compiler et interfaces firmware disponibles | PARTIAL — API natives et dépendances déclarées | NOT_VALIDATED |
-| crystal | Crystal | PARTIAL — composants et adaptateurs selon runtime | PARTIAL — seulement si cible/compiler et interfaces firmware disponibles | PARTIAL — API natives et dépendances déclarées | NOT_VALIDATED |
-| modula2 | Modula-2 | PARTIAL — composants et adaptateurs selon runtime | PARTIAL — seulement si cible/compiler et interfaces firmware disponibles | PARTIAL — API natives et dépendances déclarées | NOT_VALIDATED |
-| cobol | COBOL | PARTIAL — composants et adaptateurs selon runtime | PARTIAL — seulement si cible/compiler et interfaces firmware disponibles | PARTIAL — API natives et dépendances déclarées | NOT_VALIDATED |
-| pli | PL/I | PARTIAL — composants et adaptateurs selon runtime | PARTIAL — seulement si cible/compiler et interfaces firmware disponibles | PARTIAL — API natives et dépendances déclarées | NOT_VALIDATED |
-| java | Java | PARTIAL — composants et adaptateurs selon runtime | PARTIAL — seulement si cible/compiler et interfaces firmware disponibles | PARTIAL — API natives et dépendances déclarées | NOT_VALIDATED |
-| kotlin | Kotlin | PARTIAL — composants et adaptateurs selon runtime | PARTIAL — seulement si cible/compiler et interfaces firmware disponibles | PARTIAL — API natives et dépendances déclarées | NOT_VALIDATED |
-| python | Python | PARTIAL — composants et adaptateurs selon runtime | PARTIAL — seulement si cible/compiler et interfaces firmware disponibles | PARTIAL — API natives et dépendances déclarées | NOT_VALIDATED |
-| javascript | JavaScript | PARTIAL — composants et adaptateurs selon runtime | PARTIAL — seulement si cible/compiler et interfaces firmware disponibles | PARTIAL — API natives et dépendances déclarées | NOT_VALIDATED |
-| typescript | TypeScript | PARTIAL — composants et adaptateurs selon runtime | PARTIAL — seulement si cible/compiler et interfaces firmware disponibles | PARTIAL — API natives et dépendances déclarées | NOT_VALIDATED |
-| scratch | Scratch | PARTIAL — composants et adaptateurs selon runtime | PARTIAL — seulement si cible/compiler et interfaces firmware disponibles | PARTIAL — API natives et dépendances déclarées | NOT_VALIDATED |
-| u | U (ulanguage.org) | PARTIAL — composants et adaptateurs selon runtime | PARTIAL — seulement si cible/compiler et interfaces firmware disponibles | PARTIAL — API natives et dépendances déclarées | NOT_VALIDATED |
-| julia | Julia | PARTIAL — composants et adaptateurs selon runtime | PARTIAL — seulement si cible/compiler et interfaces firmware disponibles | PARTIAL — API natives et dépendances déclarées | NOT_VALIDATED |
-| mojo | Mojo | PARTIAL — composants et adaptateurs selon runtime | PARTIAL — seulement si cible/compiler et interfaces firmware disponibles | PARTIAL — API natives et dépendances déclarées | NOT_VALIDATED |
-| chapel | Chapel | PARTIAL — composants et adaptateurs selon runtime | PARTIAL — seulement si cible/compiler et interfaces firmware disponibles | PARTIAL — API natives et dépendances déclarées | NOT_VALIDATED |
-| r | R | PARTIAL — composants et adaptateurs selon runtime | PARTIAL — seulement si cible/compiler et interfaces firmware disponibles | PARTIAL — API natives et dépendances déclarées | NOT_VALIDATED |
-| apl | APL | PARTIAL — composants et adaptateurs selon runtime | PARTIAL — seulement si cible/compiler et interfaces firmware disponibles | PARTIAL — API natives et dépendances déclarées | NOT_VALIDATED |
-| j | J | PARTIAL — composants et adaptateurs selon runtime | PARTIAL — seulement si cible/compiler et interfaces firmware disponibles | PARTIAL — API natives et dépendances déclarées | NOT_VALIDATED |
-| k | K | PARTIAL — composants et adaptateurs selon runtime | PARTIAL — seulement si cible/compiler et interfaces firmware disponibles | PARTIAL — API natives et dépendances déclarées | NOT_VALIDATED |
-| q | q | PARTIAL — composants et adaptateurs selon runtime | PARTIAL — seulement si cible/compiler et interfaces firmware disponibles | PARTIAL — API natives et dépendances déclarées | NOT_VALIDATED |
-| lua | Lua | PARTIAL — composants et adaptateurs selon runtime | PARTIAL — seulement si cible/compiler et interfaces firmware disponibles | PARTIAL — API natives et dépendances déclarées | NOT_VALIDATED |
+| c | C | À ÉVALUER — composants et adaptateurs selon runtime | À ÉVALUER — seulement si cible/compiler et interfaces firmware disponibles | À ÉVALUER — API natives et dépendances déclarées | NOT_VALIDATED |
+| cpp | C++ | À ÉVALUER — composants et adaptateurs selon runtime | À ÉVALUER — seulement si cible/compiler et interfaces firmware disponibles | À ÉVALUER — API natives et dépendances déclarées | NOT_VALIDATED |
+| rust | Rust | À ÉVALUER — composants et adaptateurs selon runtime | À ÉVALUER — seulement si cible/compiler et interfaces firmware disponibles | À ÉVALUER — API natives et dépendances déclarées | NOT_VALIDATED |
+| zig | Zig | À ÉVALUER — composants et adaptateurs selon runtime | À ÉVALUER — seulement si cible/compiler et interfaces firmware disponibles | À ÉVALUER — API natives et dépendances déclarées | NOT_VALIDATED |
+| ada | Ada | À ÉVALUER — composants et adaptateurs selon runtime | À ÉVALUER — seulement si cible/compiler et interfaces firmware disponibles | À ÉVALUER — API natives et dépendances déclarées | NOT_VALIDATED |
+| asm-x86_64 | x86-64 Assembly | À ÉVALUER — composants et adaptateurs selon runtime | À ÉVALUER — seulement si cible/compiler et interfaces firmware disponibles | À ÉVALUER — API natives et dépendances déclarées | NOT_VALIDATED |
+| asm-aarch64 | AArch64 Assembly | À ÉVALUER — composants et adaptateurs selon runtime | À ÉVALUER — seulement si cible/compiler et interfaces firmware disponibles | À ÉVALUER — API natives et dépendances déclarées | NOT_VALIDATED |
+| asm-riscv64 | RISC-V Assembly | À ÉVALUER — composants et adaptateurs selon runtime | À ÉVALUER — seulement si cible/compiler et interfaces firmware disponibles | À ÉVALUER — API natives et dépendances déclarées | NOT_VALIDATED |
+| go | Go | À ÉVALUER — composants et adaptateurs selon runtime | À ÉVALUER — seulement si cible/compiler et interfaces firmware disponibles | À ÉVALUER — API natives et dépendances déclarées | NOT_VALIDATED |
+| d | D | À ÉVALUER — composants et adaptateurs selon runtime | À ÉVALUER — seulement si cible/compiler et interfaces firmware disponibles | À ÉVALUER — API natives et dépendances déclarées | NOT_VALIDATED |
+| nim | Nim | À ÉVALUER — composants et adaptateurs selon runtime | À ÉVALUER — seulement si cible/compiler et interfaces firmware disponibles | À ÉVALUER — API natives et dépendances déclarées | NOT_VALIDATED |
+| swift | Swift | À ÉVALUER — composants et adaptateurs selon runtime | À ÉVALUER — seulement si cible/compiler et interfaces firmware disponibles | À ÉVALUER — API natives et dépendances déclarées | NOT_VALIDATED |
+| pascal | Free Pascal / Object Pascal | À ÉVALUER — composants et adaptateurs selon runtime | À ÉVALUER — seulement si cible/compiler et interfaces firmware disponibles | À ÉVALUER — API natives et dépendances déclarées | NOT_VALIDATED |
+| odin | Odin | À ÉVALUER — composants et adaptateurs selon runtime | À ÉVALUER — seulement si cible/compiler et interfaces firmware disponibles | À ÉVALUER — API natives et dépendances déclarées | NOT_VALIDATED |
+| fortran | Fortran | À ÉVALUER — composants et adaptateurs selon runtime | À ÉVALUER — seulement si cible/compiler et interfaces firmware disponibles | À ÉVALUER — API natives et dépendances déclarées | NOT_VALIDATED |
+| csharp | C# | À ÉVALUER — composants et adaptateurs selon runtime | À ÉVALUER — seulement si cible/compiler et interfaces firmware disponibles | À ÉVALUER — API natives et dépendances déclarées | NOT_VALIDATED |
+| objc | Objective-C | À ÉVALUER — composants et adaptateurs selon runtime | À ÉVALUER — seulement si cible/compiler et interfaces firmware disponibles | À ÉVALUER — API natives et dépendances déclarées | NOT_VALIDATED |
+| v | V | À ÉVALUER — composants et adaptateurs selon runtime | À ÉVALUER — seulement si cible/compiler et interfaces firmware disponibles | À ÉVALUER — API natives et dépendances déclarées | NOT_VALIDATED |
+| crystal | Crystal | À ÉVALUER — composants et adaptateurs selon runtime | À ÉVALUER — seulement si cible/compiler et interfaces firmware disponibles | À ÉVALUER — API natives et dépendances déclarées | NOT_VALIDATED |
+| modula2 | Modula-2 | À ÉVALUER — composants et adaptateurs selon runtime | À ÉVALUER — seulement si cible/compiler et interfaces firmware disponibles | À ÉVALUER — API natives et dépendances déclarées | NOT_VALIDATED |
+| cobol | COBOL | À ÉVALUER — composants et adaptateurs selon runtime | À ÉVALUER — seulement si cible/compiler et interfaces firmware disponibles | À ÉVALUER — API natives et dépendances déclarées | NOT_VALIDATED |
+| pli | PL/I | À ÉVALUER — composants et adaptateurs selon runtime | À ÉVALUER — seulement si cible/compiler et interfaces firmware disponibles | À ÉVALUER — API natives et dépendances déclarées | NOT_VALIDATED |
+| java | Java | À ÉVALUER — composants et adaptateurs selon runtime | À ÉVALUER — seulement si cible/compiler et interfaces firmware disponibles | À ÉVALUER — API natives et dépendances déclarées | NOT_VALIDATED |
+| kotlin | Kotlin | À ÉVALUER — composants et adaptateurs selon runtime | À ÉVALUER — seulement si cible/compiler et interfaces firmware disponibles | À ÉVALUER — API natives et dépendances déclarées | NOT_VALIDATED |
+| python | Python | À ÉVALUER — composants et adaptateurs selon runtime | À ÉVALUER — seulement si cible/compiler et interfaces firmware disponibles | À ÉVALUER — API natives et dépendances déclarées | NOT_VALIDATED |
+| javascript | JavaScript | À ÉVALUER — composants et adaptateurs selon runtime | À ÉVALUER — seulement si cible/compiler et interfaces firmware disponibles | À ÉVALUER — API natives et dépendances déclarées | NOT_VALIDATED |
+| typescript | TypeScript | À ÉVALUER — composants et adaptateurs selon runtime | À ÉVALUER — seulement si cible/compiler et interfaces firmware disponibles | À ÉVALUER — API natives et dépendances déclarées | NOT_VALIDATED |
+| scratch | Scratch | À ÉVALUER — composants et adaptateurs selon runtime | À ÉVALUER — seulement si cible/compiler et interfaces firmware disponibles | À ÉVALUER — API natives et dépendances déclarées | NOT_VALIDATED |
+| u | U (ulanguage.org) | À ÉVALUER — composants et adaptateurs selon runtime | À ÉVALUER — seulement si cible/compiler et interfaces firmware disponibles | À ÉVALUER — API natives et dépendances déclarées | NOT_VALIDATED |
+| julia | Julia | À ÉVALUER — composants et adaptateurs selon runtime | À ÉVALUER — seulement si cible/compiler et interfaces firmware disponibles | À ÉVALUER — API natives et dépendances déclarées | NOT_VALIDATED |
+| mojo | Mojo | À ÉVALUER — composants et adaptateurs selon runtime | À ÉVALUER — seulement si cible/compiler et interfaces firmware disponibles | À ÉVALUER — API natives et dépendances déclarées | NOT_VALIDATED |
+| chapel | Chapel | À ÉVALUER — composants et adaptateurs selon runtime | À ÉVALUER — seulement si cible/compiler et interfaces firmware disponibles | À ÉVALUER — API natives et dépendances déclarées | NOT_VALIDATED |
+| r | R | À ÉVALUER — composants et adaptateurs selon runtime | À ÉVALUER — seulement si cible/compiler et interfaces firmware disponibles | À ÉVALUER — API natives et dépendances déclarées | NOT_VALIDATED |
+| apl | APL | À ÉVALUER — composants et adaptateurs selon runtime | À ÉVALUER — seulement si cible/compiler et interfaces firmware disponibles | À ÉVALUER — API natives et dépendances déclarées | NOT_VALIDATED |
+| j | J | À ÉVALUER — composants et adaptateurs selon runtime | À ÉVALUER — seulement si cible/compiler et interfaces firmware disponibles | À ÉVALUER — API natives et dépendances déclarées | NOT_VALIDATED |
+| k | K | À ÉVALUER — composants et adaptateurs selon runtime | À ÉVALUER — seulement si cible/compiler et interfaces firmware disponibles | À ÉVALUER — API natives et dépendances déclarées | NOT_VALIDATED |
+| q | q | À ÉVALUER — composants et adaptateurs selon runtime | À ÉVALUER — seulement si cible/compiler et interfaces firmware disponibles | À ÉVALUER — API natives et dépendances déclarées | NOT_VALIDATED |
+| lua | Lua | À ÉVALUER — composants et adaptateurs selon runtime | À ÉVALUER — seulement si cible/compiler et interfaces firmware disponibles | À ÉVALUER — API natives et dépendances déclarées | NOT_VALIDATED |
 
 ## Règles propres aux cibles
 
