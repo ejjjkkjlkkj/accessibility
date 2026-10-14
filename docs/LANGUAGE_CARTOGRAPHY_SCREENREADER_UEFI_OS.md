@@ -197,7 +197,7 @@ The eight existing language cores remain PARTIAL until real native accessibility
 
 ## Latest expansion status
 
-The project manifest has been expanded to 14 language tracks (42 language/component records). C++ and Free Pascal have portable core test programs and CI jobs; Fortran has a portable core test program and CI job. Odin and Odin and Objective-C source has been added but is not yet compiler-validated. C# has a CI smoke-test job pending results. UEFI and kernel work for all new tracks remains unproven; see the manifest and CI runs. Architecture assembly is tracked as support code, not a standalone complete screen reader.
+The project manifest has been expanded to 14 language tracks (42 language/component records). C++ and Free Pascal have portable core test programs and CI jobs; Fortran has a portable core test program and CI job. Odin and Objective-C source has been added but is not yet compiler-validated. C# has a CI smoke-test job pending results. UEFI and kernel work for all new tracks remains unproven; see the manifest and CI runs. Architecture assembly is tracked as support code, not a standalone complete screen reader.
 
 
 C# addition: the hosted .NET core has announcement and bounded FIFO queue smoke checks. Its UEFI and freestanding kernel tracks are explicitly BLOCKED until a compatible runtime/ABI is proven; .NET Native AOT alone is not UEFI or kernel proof.
