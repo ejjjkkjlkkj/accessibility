@@ -1,17 +1,17 @@
 # Implementation matrix
 
-Status reflects the strongest current evidence. The C and Rust UEFI prototypes are source-level console applications only; neither is yet claimed to compile, boot, navigate firmware menus, or produce audio. This matrix is a work ledger, not a claim that the components already work.
+Status reflects the strongest current evidence. All eight portable screen-reader cores now contain announcement formatting and a bounded event-queue implementation in source. They remain **PARTIAL** because native accessibility API adapters and speech/audio are not connected. Kernel sketches and UEFI feasibility notes are not complete implementations.
 
 | Language | Native screen reader | UEFI / pre-OS app | OS / kernel track | Key technical boundary |
 |---|---|---|---|---|
-| C | PARTIAL | NOT_VALIDATED (console-only source) | NOT_IMPLEMENTED |
-| Rust | PARTIAL | NOT_VALIDATED (console-only source; CI pending) | NOT_IMPLEMENTED |
-| Go | PARTIAL | NOT_IMPLEMENTED (runtime/EFI ABI gate) | NOT_IMPLEMENTED |
-| D | PARTIAL | NOT_IMPLEMENTED (runtime/EFI ABI gate) | NOT_IMPLEMENTED |
-| Ada | PARTIAL | NOT_IMPLEMENTED (GNAT runtime/EFI ABI gate) | NOT_IMPLEMENTED |
-| Zig | PARTIAL | NOT_IMPLEMENTED (EFI target/build not yet proven) | NOT_IMPLEMENTED |
-| Nim | PARTIAL | NOT_IMPLEMENTED (generated C/runtime gate) | NOT_IMPLEMENTED |
-| Swift | PARTIAL | NOT_IMPLEMENTED (runtime/EFI target gate) | NOT_IMPLEMENTED |
+| C | PARTIAL | NOT_VALIDATED (console-only source) | NOT_IMPLEMENTED | EDK2 build/run and bootable kernel linker/boot protocol remain unproven |
+| Rust | PARTIAL | NOT_VALIDATED (console-only source; CI build pending) | NOT_IMPLEMENTED | UEFI build result, kernel boot contract, allocator and drivers remain unproven |
+| Go | PARTIAL | NOT_IMPLEMENTED | NOT_IMPLEMENTED | Standard runtime/GC complicates EFI and freestanding kernel use |
+| D | PARTIAL | NOT_IMPLEMENTED | NOT_IMPLEMENTED | Compiler runtime, GC and target ABI must be audited |
+| Ada | PARTIAL | NOT_IMPLEMENTED | NOT_IMPLEMENTED | GNAT runtime profile, elaboration and EFI ABI must be proven |
+| Zig | PARTIAL | NOT_IMPLEMENTED | NOT_IMPLEMENTED | UEFI target and kernel linker/boot configuration still need build evidence |
+| Nim | PARTIAL | NOT_IMPLEMENTED | NOT_IMPLEMENTED | Generated C and Nim runtime dependencies must be audited |
+| Swift | PARTIAL | NOT_IMPLEMENTED | NOT_IMPLEMENTED | EFI target, Swift runtime and freestanding support remain unproven |
 
 ## Required capabilities per screen reader
 
@@ -21,7 +21,7 @@ Status reflects the strongest current evidence. The C and Rust UEFI prototypes a
 - Braille and magnification integration where the platform supports them.
 - Language selection, speech rate/volume controls, interrupt/stop speech, and recovery from audio failure.
 - Automated tests for navigation, focus, event ordering, and speech queue behavior.
-- IA is an optional local subsystem, never a prerequisite for core navigation, and must not block immediate speech.
+- AI is an optional local subsystem, never a prerequisite for core navigation, and must not block immediate speech.
 - No OCR-only approach where semantic accessibility APIs are available.
 
 ## Required capabilities per UEFI track
@@ -38,6 +38,7 @@ Status reflects the strongest current evidence. The C and Rust UEFI prototypes a
 - Screen reader must be integrated at the system level; do not assume a graphical desktop exists.
 - Identify a concrete supported hardware target and boot-test strategy.
 - Separate host-side unit tests, emulator boot tests, and physical hardware validation.
+- Kernel entry sketches are not bootable OS implementations until a linker layout, boot protocol and runtime requirements are validated.
 
 ## Evidence format
 
