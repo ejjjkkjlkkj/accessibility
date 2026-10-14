@@ -33,7 +33,7 @@ bool isValid(const ref AccessibilityEvent event) {
     return event.abiVersion == 1 &&
         event.role >= Role.unknown &&
         event.role <= Role.menuItem &&
-        event.name.length <= 256;
+        event.name.length <= 4096;
 }
 
 unittest {
@@ -41,6 +41,6 @@ unittest {
     assert(isValid(valid));
     auto invalid = AccessibilityEvent(2, Role.button, "Save");
     assert(!isValid(invalid));
-    auto tooLong = AccessibilityEvent(1, Role.button, cast(string) replicate("x", 257));
+    auto tooLong = AccessibilityEvent(1, Role.button, cast(string) replicate("x", 4097));
     assert(!isValid(tooLong));
 }
