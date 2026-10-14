@@ -1,0 +1,56 @@
+name: Refresh accessibility resource database
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "23 5 * * 1"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: accessibility-resource-database
+  cancel-in-progress: false
+
+jobs:
+  build-database:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Build SQLite database and check URLs
+        run: python tools/build_resource_db.py
+
+      - name: Upload database and reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: accessibility-resource-database
+          path: |
+            database/accessibility_resources.sqlite
+            database/resource_status.json
+            database/resource_status.csv
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Commit refreshed database and reports
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add database/accessibility_resources.sqlite database/resource_status.json database/resource_status.csv
+          if git diff --cached --quiet; then
+            echo "No database changes to commit."
+          else
+            git commit -m "chore: refresh accessibility resource database"
+            git push origin HEAD:main
+          fi
