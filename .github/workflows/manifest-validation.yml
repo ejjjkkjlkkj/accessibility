@@ -20,5 +20,5 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.x"
-      - name: Validate all 24 component records
+      - name: Validate all language/component records
         run: python scripts/validate_manifest.py
