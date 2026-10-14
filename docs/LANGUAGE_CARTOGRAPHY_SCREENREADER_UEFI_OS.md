@@ -48,9 +48,9 @@ This document maps candidate languages to three independent deliverables: a nati
 
 ## Language-by-language execution map
 
-### Progress update — 13 full language records
+### Progress update — 14 full language records
 
-The repository now includes initial portable-core scaffolding for C++, Free Pascal and Odin, plus a Fortran portable core/test source and an Objective-C Foundation-based announcement core. UEFI and kernel status for these additions remains NOT_VALIDATED, NOT_IMPLEMENTED or BLOCKED as stated in `projects/manifest.json`. CI jobs were added for C++ and Free Pascal, and Fortran. Their results are pending; no PASS is claimed. Objective-C is scoped to Apple-specific adapter work, not a shared bare-metal kernel.
+The repository now includes initial portable-core scaffolding for C++, Free Pascal, Odin, Fortran, Objective-C and C#; C# has a hosted core and smoke-test executable. UEFI and kernel status for these additions remains NOT_VALIDATED, NOT_IMPLEMENTED or BLOCKED as stated in `projects/manifest.json`. CI jobs were added for C++ and Free Pascal, and Fortran. Their results are pending; no PASS is claimed. Objective-C is scoped to Apple-specific adapter work, not a shared bare-metal kernel.
 
 ### Existing eight priority tracks
 
@@ -197,4 +197,7 @@ The eight existing language cores remain PARTIAL until real native accessibility
 
 ## Latest expansion status
 
-The project manifest has been expanded to 13 language tracks (39 language/component records). C++ and Free Pascal have portable core test programs and CI jobs; Fortran has a portable core test program and CI job. Odin and Objective-C source has been added but is not yet compiler-validated. UEFI and kernel work for all new tracks remains unproven; see the manifest and CI runs. Architecture assembly is tracked as support code, not a standalone complete screen reader.
+The project manifest has been expanded to 14 language tracks (42 language/component records). C++ and Free Pascal have portable core test programs and CI jobs; Fortran has a portable core test program and CI job. Odin and Odin and Objective-C source has been added but is not yet compiler-validated. C# has a CI smoke-test job pending results. UEFI and kernel work for all new tracks remains unproven; see the manifest and CI runs. Architecture assembly is tracked as support code, not a standalone complete screen reader.
+
+
+C# addition: the hosted .NET core has announcement and bounded FIFO queue smoke checks. Its UEFI and freestanding kernel tracks are explicitly BLOCKED until a compatible runtime/ABI is proven; .NET Native AOT alone is not UEFI or kernel proof.
