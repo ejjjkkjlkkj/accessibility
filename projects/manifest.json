@@ -307,6 +307,14 @@
       "uefi_bare_metal": "NOT_VALIDATED",
       "os": "NOT_VALIDATED",
       "notes": "Capability depends on compiler, runtime, target APIs, and reproducible tests."
+    },
+    {
+      "id": "nexora",
+      "name": "NEXORA (langage universel expérimental)",
+      "screenreader": "NOT_VALIDATED",
+      "uefi_bare_metal": "NOT_VALIDATED",
+      "os": "NOT_VALIDATED",
+      "notes": "Interpréteur de référence limité uniquement; pas encore de compilateur de production, backend OS/UEFI ou runtime freestanding. Ne pas confondre avec U (ulanguage.org)."
     }
   ]
 }
