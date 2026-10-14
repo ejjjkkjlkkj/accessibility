@@ -91,16 +91,21 @@ jobs:
       - name: Install Rust UEFI target
         run: rustup target add x86_64-unknown-uefi
       - name: Build Rust UEFI application
-        run: cargo build --manifest-path src/rust-uefi/Cargo.toml --target x86_64-unknown-uefi --release
+        run: cargo build --manifest-path src/rust-uefi/Cargo.toml --target x86_64-unknown-uefi --release --target-dir src/rust-uefi/target
       - name: Normalize and verify EFI artifact
         shell: bash
         run: |
           artifact_dir="src/rust-uefi/target/x86_64-unknown-uefi/release"
-          if [ ! -s "$artifact_dir/accessibility_uefi_rust.efi" ] && [ -s "$artifact_dir/accessibility_uefi_rust" ]; then
-            cp "$artifact_dir/accessibility_uefi_rust" "$artifact_dir/accessibility_uefi_rust.efi"
+          mkdir -p "$artifact_dir"
+          echo "Generated UEFI-target files:"
+          find src/rust-uefi/target -type f -path '*/x86_64-unknown-uefi/release/*' -size +0c -print
+          artifact="$(find "$artifact_dir" -maxdepth 2 -type f \\( -name 'accessibility_uefi_rust' -o -name 'accessibility_uefi_rust.efi' \\) -size +0c -print -quit)"
+          test -n "$artifact"
+          if [ "$artifact" != "$artifact_dir/accessibility_uefi_rust.efi" ]; then
+            cp "$artifact" "$artifact_dir/accessibility_uefi_rust.efi"
           fi
           test -s "$artifact_dir/accessibility_uefi_rust.efi"
-          printf 'EFI artifact size: '
+          printf 'EFI-target artifact bytes: '
           wc -c < "$artifact_dir/accessibility_uefi_rust.efi"
 
   c-kernel-object:
