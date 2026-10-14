@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Check source-file inventory for all eight tracks; this is not a build or runtime proof."""
+"""Check source inventory for language tracks; this is not build or runtime proof."""
 from __future__ import annotations
 
 import sys
@@ -53,6 +53,23 @@ TRACKS = {
         "uefi": "src/swift/uefi/README.md",
         "os": "src/swift/os/README.md",
         "kernel": "src/swift/kernel/kernel.swift",
+    },
+    "C++": {
+        "core": "src/cpp/screenreader_core.hpp",
+        "tests": "src/cpp/test_screenreader_core.cpp",
+        "uefi": "src/cpp/uefi/README.md",
+        "kernel": "src/cpp/kernel/README.md",
+    },
+    "Free Pascal": {
+        "core": "src/pascal/screenreader_core.pas",
+        "tests": "src/pascal/test_screenreader_core.pas",
+        "uefi": "src/pascal/uefi/README.md",
+        "kernel": "src/pascal/kernel/README.md",
+    },
+    "Odin": {
+        "core": "src/odin/screenreader_core.odin",
+        "uefi": "src/odin/uefi/README.md",
+        "kernel": "src/odin/kernel/README.md",
     },
 }
 
