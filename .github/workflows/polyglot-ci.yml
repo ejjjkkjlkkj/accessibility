@@ -1,14 +1,48 @@
-name: Polyglot CI (Go, C, Rust, D, Ada, Zig, Nim, Swift)
+name: Polyglot CI (C, C++, Rust, Go, D, Ada, Zig, Nim, Swift, Pascal, Odin, Fortran, Objective-C, C#)
 on:
   push:
-    branches: [main]
-    paths: ["cmd/**", "components/**", "crates/**", "internal/**", "data/resources.csv", "go.mod", ".github/workflows/polyglot-ci.yml"]
+    branches: [main, "work/**"]
+    paths:
+      - "cmd/**"
+      - "components/**"
+      - "crates/**"
+      - "internal/**"
+      - "src/**"
+      - "projects/**"
+      - "tests/**"
+      - "scripts/**"
+      - "docs/**"
+      - "data/resources.csv"
+      - "go.mod"
+      - ".github/workflows/**"
   pull_request:
-    paths: ["cmd/**", "components/**", "crates/**", "internal/**", "data/resources.csv", "go.mod", ".github/workflows/polyglot-ci.yml"]
+    paths:
+      - "cmd/**"
+      - "components/**"
+      - "crates/**"
+      - "internal/**"
+      - "src/**"
+      - "projects/**"
+      - "tests/**"
+      - "scripts/**"
+      - "docs/**"
+      - "data/resources.csv"
+      - "go.mod"
+      - ".github/workflows/**"
   workflow_dispatch:
 permissions:
   contents: read
 jobs:
+  source-inventory:
+    name: Validate eight language tracks and source inventory
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python scripts/validate_manifest.py
+      - run: python scripts/validate_source_inventory.py
   go:
     name: Go screen-reader core and validator
     runs-on: ubuntu-latest
@@ -26,6 +60,38 @@ jobs:
       - run: cmake -S components/core-c -B build/core-c
       - run: cmake --build build/core-c --parallel 2
       - run: ctest --test-dir build/core-c --output-on-failure
+  cpp-screenreader:
+    name: C++ portable screen-reader core
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: g++ -std=c++20 -Wall -Wextra -Werror -pedantic src/cpp/test_screenreader_core.cpp -o build-cpp-screenreader
+      - run: ./build-cpp-screenreader
+  pascal-screenreader:
+    name: Free Pascal portable screen-reader core
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update && sudo apt-get install -y fp-compiler
+      - run: fpc -Fu./src/pascal -FU/tmp -FE/tmp src/pascal/test_screenreader_core.pas
+      - run: /tmp/test_screenreader_core
+  fortran-screenreader:
+    name: Fortran portable screen-reader core
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update && sudo apt-get install -y gfortran
+      - run: gfortran -J/tmp -I/tmp src/fortran/screenreader_core.f90 src/fortran/test_screenreader_core.f90 -o /tmp/test-screenreader-fortran
+      - run: /tmp/test-screenreader-fortran
+  csharp-screenreader:
+    name: C# portable screen-reader core
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+      - run: dotnet run --project src/csharp/ScreenReaderCore.Tests.csproj --configuration Release
   rust:
     name: Rust no_std core
     runs-on: ubuntu-latest

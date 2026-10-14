@@ -1,0 +1,25 @@
+name: Validate project matrix
+
+on:
+  push:
+    branches: ["main", "work/**"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate-manifest:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Python for manifest validation
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Validate all language/component entries
+        run: python scripts/validate_manifest.py
+      - name: Validate source inventory
+        run: python scripts/validate_source_inventory.py

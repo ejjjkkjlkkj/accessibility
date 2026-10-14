@@ -1,7 +1,5 @@
 module accessibility_event;
 
-import std.array : replicate;
-
 enum Role : ubyte {
     unknown = 0,
     window = 1,
@@ -28,6 +26,8 @@ unittest {
     assert(isValid(valid));
     auto invalid = AccessibilityEvent(2, Role.button, "Save");
     assert(!isValid(invalid));
-    auto tooLong = AccessibilityEvent(1, Role.button, cast(string) replicate('x', 257));
+    auto tooLongName = new char[257];
+    tooLongName[] = 'x';
+    auto tooLong = AccessibilityEvent(1, Role.button, cast(string) tooLongName);
     assert(!isValid(tooLong));
 }
