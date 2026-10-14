@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "project_goal": "Eight independent language-specific screen-reader, UEFI/pre-OS, and OS/kernel tracks",
+  "project_goal": "Eleven language-specific screen-reader, UEFI/pre-OS and OS/kernel tracks, plus architecture-specific assembly support",
   "evidence_policy": {
     "initial_status": "NOT_IMPLEMENTED",
     "emulator_is_physical_proof": false,
@@ -140,6 +140,57 @@
         "operating_system_kernel": {
           "status": "NOT_IMPLEMENTED",
           "evidence": "Independent kernel entry sketch/documentation exists, but no complete bootable kernel or OS."
+        }
+      }
+    },
+    {
+      "language": "C++",
+      "components": {
+        "screen_reader": {
+          "status": "PARTIAL",
+          "evidence": "Portable semantic announcement formatter and bounded FIFO event queue with source-level test cases; native OS accessibility adapter and speech backend are not connected or CI-validated yet."
+        },
+        "uefi_pre_os": {
+          "status": "NOT_VALIDATED",
+          "evidence": "UEFI feasibility gate documented; no compiled PE/COFF EFI application or emulator result."
+        },
+        "operating_system_kernel": {
+          "status": "NOT_IMPLEMENTED",
+          "evidence": "Kernel feasibility documented; no freestanding C++ boot image, linker/boot protocol validation or boot test."
+        }
+      }
+    },
+    {
+      "language": "Free Pascal",
+      "components": {
+        "screen_reader": {
+          "status": "PARTIAL",
+          "evidence": "Portable announcement formatter and fixed-capacity event queue source plus test program added; compiler execution and CI validation are pending; no native API or speech backend."
+        },
+        "uefi_pre_os": {
+          "status": "NOT_VALIDATED",
+          "evidence": "UEFI toolchain, EFI ABI, PE/COFF output and protocol access remain unproven."
+        },
+        "operating_system_kernel": {
+          "status": "NOT_IMPLEMENTED",
+          "evidence": "No freestanding kernel or boot image; runtime/startup and linker feasibility remain unproven."
+        }
+      }
+    },
+    {
+      "language": "Odin",
+      "components": {
+        "screen_reader": {
+          "status": "PARTIAL",
+          "evidence": "Portable announcement formatter and fixed-capacity FIFO queue source added; compiler/test validation is pending; no native accessibility adapter or speech backend."
+        },
+        "uefi_pre_os": {
+          "status": "NOT_VALIDATED",
+          "evidence": "EFI target, PE/COFF ABI, runtime and protocol path are not validated."
+        },
+        "operating_system_kernel": {
+          "status": "NOT_IMPLEMENTED",
+          "evidence": "No freestanding kernel or boot image; runtime/startup, linker and boot protocol are not validated."
         }
       }
     }
