@@ -1,0 +1,71 @@
+name: Accessibility repository integrity
+
+on:
+  push:
+    branches: [main, "**"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: accessibility-integrity-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  docs-and-manifests:
+    name: Validate documentation and manifests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Validate repository baseline
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          required = ["README.md"]
+          missing = [name for name in required if not Path(name).is_file()]
+          if missing:
+              raise SystemExit("FAIL: missing required files: " + ", ".join(missing))
+          print("PASS: repository baseline exists")
+          PY
+      - name: Validate JSON manifests and local Markdown links
+        run: |
+          python - <<'PY'
+          import json
+          import re
+          from pathlib import Path
+          errors = []
+          for path in Path(".").rglob("*.json"):
+              if any(part in {".git", ".github"} for part in path.parts):
+                  continue
+              try:
+                  json.loads(path.read_text(encoding="utf-8"))
+              except Exception as exc:
+                  errors.append(f"{path}: invalid JSON: {exc}")
+          pattern = re.compile(r'(?<!!)\\[[^\\]]*\\]\\(([^)]+)\\)')
+          for source in Path(".").rglob("*.md"):
+              if ".git" in source.parts:
+                  continue
+              try:
+                  content = source.read_text(encoding="utf-8")
+              except UnicodeDecodeError as exc:
+                  errors.append(f"{source}: invalid UTF-8: {exc}")
+                  continue
+              for target in pattern.findall(content):
+                  target = target.strip().split("#", 1)[0]
+                  if not target or re.match(r"^[a-zA-Z][a-zA-Z0-9+.-]*:", target) or target.startswith("#"):
+                      continue
+                  resolved = (source.parent / target.split("?", 1)[0]).resolve()
+                  if not resolved.exists():
+                      errors.append(f"{source}: broken local link: {target}")
+          if errors:
+              print("\\n".join(errors))
+              raise SystemExit(f"FAIL: {len(errors)} validation error(s)")
+          print("PASS: JSON manifests and local Markdown links")
+          PY
