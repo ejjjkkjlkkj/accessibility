@@ -67,7 +67,7 @@ class AccessibilityRoleContractTests(unittest.TestCase):
 
     def test_ada_role_codes(self):
         found = role_map("components/core-ada/accessibility_event.ads",
-            r"([A-Za-z_]+)_Role\s*=>\s*(\d+)", normalizer=lambda value: snake(value))
+            r"([A-Za-z_]+)_Role\s*=>\s*(\d+)", normalizer=lambda value: value.lower())
         self.assertEqual(found, self.expected)
 
     def test_shared_name_limit_is_enforced(self):
