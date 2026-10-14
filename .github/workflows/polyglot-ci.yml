@@ -1,4 +1,4 @@
-name: Polyglot CI (Go, C, Rust, D, Ada, Zig, Nim, Swift)
+name: Polyglot CI (C, C++, Rust, Go, D, Ada, Zig, Nim, Swift, Pascal, Odin)
 on:
   push:
     branches: [main, "work/**"]
@@ -60,6 +60,21 @@ jobs:
       - run: cmake -S components/core-c -B build/core-c
       - run: cmake --build build/core-c --parallel 2
       - run: ctest --test-dir build/core-c --output-on-failure
+  cpp-screenreader:
+    name: C++ portable screen-reader core
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: g++ -std=c++20 -Wall -Wextra -Werror -pedantic src/cpp/test_screenreader_core.cpp -o build-cpp-screenreader
+      - run: ./build-cpp-screenreader
+  pascal-screenreader:
+    name: Free Pascal portable screen-reader core
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update && sudo apt-get install -y fp-compiler
+      - run: fpc -Fu./src/pascal -FE/tmp src/pascal/test_screenreader_core.pas
+      - run: /tmp/test_screenreader_core
   rust:
     name: Rust no_std core
     runs-on: ubuntu-latest
