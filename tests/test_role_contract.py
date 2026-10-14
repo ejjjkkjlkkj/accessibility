@@ -39,35 +39,35 @@ class AccessibilityRoleContractTests(unittest.TestCase):
 
     def test_c_role_codes(self):
         self.assertEqual(role_map("components/core-c/include/accessibility_event.h",
-            r"ACCESSIBILITY_ROLE_([A-Z_]+)\\s*=\\s*(\\d+)", normalizer=str.lower), self.expected)
+            r"ACCESSIBILITY_ROLE_([A-Z_]+)\s*=\s*(\d+)", normalizer=str.lower), self.expected)
 
     def test_rust_role_codes(self):
         self.assertEqual(role_map("crates/accessibility-core/src/lib.rs",
-            r"\\b([A-Z][A-Za-z]+)\\s*=\\s*(\\d+)", normalizer=snake), self.expected)
+            r"\b([A-Z][A-Za-z]+)\s*=\s*(\d+)", normalizer=snake), self.expected)
 
     def test_go_role_codes(self):
         self.assertEqual(role_map("internal/accessibility/role.go",
-            r"Role([A-Z][A-Za-z]*)\\s+Role\\s*=\\s*(\\d+)", normalizer=snake), self.expected)
+            r"Role([A-Z][A-Za-z]*)\s+Role\s*=\s*(\d+)", normalizer=snake), self.expected)
 
     def test_d_role_codes(self):
         self.assertEqual(role_map("components/core-d/src/accessibility_event.d",
-            r"^\\s*([A-Za-z][A-Za-z0-9]*)\\s*=\\s*(\\d+),?$", normalizer=snake), self.expected)
+            r"^\s*([A-Za-z][A-Za-z0-9]*)\s*=\s*(\d+),?$", normalizer=snake), self.expected)
 
     def test_swift_role_codes(self):
         self.assertEqual(role_map("components/core-swift/Sources/AccessibilityCore/AccessibilityEvent.swift",
-            r"case\\s+([A-Za-z][A-Za-z0-9]*)\\s*=\\s*(\\d+)", normalizer=snake), self.expected)
+            r"case\s+([A-Za-z][A-Za-z0-9]*)\s*=\s*(\d+)", normalizer=snake), self.expected)
 
     def test_zig_role_codes(self):
         self.assertEqual(role_map("components/core-zig/src/accessibility_event.zig",
-            r"^\\s*([a-z][a-z_]*)\\s*=\\s*(\\d+),?$", normalizer=str.lower), self.expected)
+            r"^\s*([a-z][a-z_]*)\s*=\s*(\d+),?$", normalizer=str.lower), self.expected)
 
     def test_nim_role_codes(self):
         self.assertEqual(role_map("components/core-nim/src/accessibility_event.nim",
-            r"\\ber([A-Z][A-Za-z]+)\\s*=\\s*(\\d+)", normalizer=snake), self.expected)
+            r"\ber([A-Z][A-Za-z]+)\s*=\s*(\d+)", normalizer=snake), self.expected)
 
     def test_ada_role_codes(self):
         found = role_map("components/core-ada/accessibility_event.ads",
-            r"([A-Za-z_]+)_Role\\s*=>\\s*(\\d+)", normalizer=lambda value: snake(value))
+            r"([A-Za-z_]+)_Role\s*=>\s*(\d+)", normalizer=lambda value: snake(value))
         self.assertEqual(found, self.expected)
 
     def test_shared_name_limit_is_enforced(self):
