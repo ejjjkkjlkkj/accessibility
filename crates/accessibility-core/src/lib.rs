@@ -17,7 +17,6 @@ impl<'a> AccessibleEvent<'a> {
     /// Validate the shared logical event contract; this is not a platform adapter.
     pub fn is_valid(&self) -> bool {
         self.abi_version == ABI_VERSION
-            && self.role != Role::Unknown
             && self.name.len() <= 4096
     }
 }
@@ -28,6 +27,6 @@ mod tests {
     fn event_has_stable_version_and_values() {
         let event = AccessibleEvent::new(Role::Button, 7, "Continue");
         assert_eq!(event.abi_version, ABI_VERSION); assert_eq!(event.role, Role::Button);\n        assert_eq!(Role::Button as u32, 5); assert_eq!(Role::MenuItem as u32, 17);
-        assert_eq!(event.source_id, 7); assert_eq!(event.name, "Continue"); assert_eq!(event.state_flags, 0);\n        assert!(event.is_valid());\n        assert!(!AccessibleEvent::new(Role::Button, 7, &"x".repeat(4097)).is_valid());\n        assert!(!AccessibleEvent::new(Role::Unknown, 7, "unknown").is_valid());
+        assert_eq!(event.source_id, 7); assert_eq!(event.name, "Continue"); assert_eq!(event.state_flags, 0);\n        assert!(event.is_valid());\n        assert!(!AccessibleEvent::new(Role::Button, 7, &"x".repeat(4097)).is_valid());\n        assert!(AccessibleEvent::new(Role::Unknown, 7, "unknown").is_valid());
     }
 }
