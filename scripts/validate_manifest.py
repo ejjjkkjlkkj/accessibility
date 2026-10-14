@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate the eight-language / 24-component project manifest.
+"""Validate the language-track / component project manifest.
 
 This checks bookkeeping only. It does not build code or prove runtime,
 accessibility, UEFI, OS boot, audio, emulator, or physical-hardware behavior.
@@ -10,7 +10,7 @@ import json
 import sys
 from pathlib import Path
 
-EXPECTED_LANGUAGES = {"C", "Rust", "Go", "D", "Ada", "Zig", "Nim", "Swift"}
+EXPECTED_LANGUAGES = {"C", "Rust", "Go", "D", "Ada", "Zig", "Nim", "Swift", "C++", "Free Pascal", "Odin"}
 EXPECTED_COMPONENTS = {"screen_reader", "uefi_pre_os", "operating_system_kernel"}
 ALLOWED_STATUSES = {
     "NOT_IMPLEMENTED", "NOT_VALIDATED", "PARTIAL", "BLOCKED",
@@ -77,8 +77,8 @@ def main() -> int:
                     f"{language}/{component_name}: PASS evidence must identify command and environment"
                 )
 
-    if count != 24:
-        errors.append(f"expected exactly 24 component records; found {count}")
+    if count != len(EXPECTED_LANGUAGES) * len(EXPECTED_COMPONENTS):
+        errors.append(f"expected {len(EXPECTED_LANGUAGES) * len(EXPECTED_COMPONENTS)} component records; found {count}")
 
     if errors:
         for error in errors:
@@ -86,9 +86,9 @@ def main() -> int:
         print(f"MANIFEST_VALIDATION=FAIL errors={len(errors)} component_records={count}")
         return 1
 
-    print("PASS: 8 language tracks and 24 component records are structurally valid.")
+    print(f"PASS: {len(EXPECTED_LANGUAGES)} language tracks and {count} component records are structurally valid.")
     print("LIMITATION: manifest structure only; no build, runtime, UEFI, OS, speech, or hardware proof.")
-    print("MANIFEST_VALIDATION=PASS errors=0 component_records=24")
+    print(f"MANIFEST_VALIDATION=PASS errors=0 component_records={count}")
     return 0
 
 
