@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "catalog_source": "ejjjkkjlkkj/ia:LANGUAGE-CATALOG.md",
-  "generated_from_catalog_commit": "e9f28e3b486bb8ad3921d6c069d6b9188d3791bd",
+  "generated_from_catalog_commit": "b4f93f61de919269b585133e299e7f5712b32588",
   "rule": "Initial states are not validation claims. Each axis must earn PASS independently.",
   "languages": [
     {
