@@ -31,7 +31,6 @@ struct AccessibilityEvent {
 
 bool isValid(const ref AccessibilityEvent event) {
     return event.abiVersion == 1 &&
-        event.role >= Role.unknown &&
         event.role <= Role.menuItem &&
         event.name.length <= 4096;
 }
