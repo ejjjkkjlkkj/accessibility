@@ -1,11 +1,11 @@
 # Implementation matrix
 
-Status reflects the strongest current evidence. All eight portable screen-reader cores now contain announcement formatting and a bounded event-queue implementation in source. They remain **PARTIAL** because native accessibility API adapters and speech/audio are not connected. Kernel sketches and UEFI feasibility notes are not complete implementations.
+Status reflects the strongest current evidence. All eight portable screen-reader cores contain announcement formatting and bounded event queues, with navigation-cursor work being developed separately. They remain **PARTIAL** because native accessibility API adapters and speech/audio are not connected. Kernel sketches and UEFI prototypes are not complete implementations.
 
 | Language | Native screen reader | UEFI / pre-OS app | OS / kernel track | Key technical boundary |
 |---|---|---|---|---|
-| C | PARTIAL | NOT_VALIDATED (console-only source) | NOT_IMPLEMENTED | EDK2 build/run and bootable kernel linker/boot protocol remain unproven |
-| Rust | PARTIAL | NOT_VALIDATED (console-only source; CI build pending) | NOT_IMPLEMENTED | UEFI build result, kernel boot contract, allocator and drivers remain unproven |
+| C | PARTIAL | NOT_VALIDATED (interactive arrow-key text menu source; build/run unproven) | NOT_IMPLEMENTED | EDK2 build/run and bootable kernel linker/boot protocol remain unproven |
+| Rust | PARTIAL | NOT_VALIDATED (console-only source; CI build result unconfirmed) | NOT_IMPLEMENTED | UEFI build result, kernel boot contract, allocator and drivers remain unproven |
 | Go | PARTIAL | NOT_IMPLEMENTED | NOT_IMPLEMENTED | Standard runtime/GC complicates EFI and freestanding kernel use |
 | D | PARTIAL | NOT_IMPLEMENTED | NOT_IMPLEMENTED | Compiler runtime, GC and target ABI must be audited |
 | Ada | PARTIAL | NOT_IMPLEMENTED | NOT_IMPLEMENTED | GNAT runtime profile, elaboration and EFI ABI must be proven |
@@ -28,6 +28,7 @@ Status reflects the strongest current evidence. All eight portable screen-reader
 
 - Separate UEFI application from an actual standalone OS kernel.
 - Validate PE/COFF target, EFI entry point, protocol discovery, GOP handling, keyboard input protocol, memory-map handling, and exit/boot-service constraints.
+- The C prototype now navigates a small firmware text menu with Up/Down, Enter and Escape. This is keyboard navigation only, not speech or a semantic screen reader.
 - Audio must be treated as BLOCKED until a specific device/driver path and physical output are demonstrated; UEFI does not guarantee a generic audio protocol.
 - Never modify firmware variables, flash firmware, or reboot a real machine as part of unattended CI.
 - QEMU results are emulator-only evidence.
