@@ -19,7 +19,7 @@ test "value and disabled state" {
 test "bounded event queue copies fields and preserves FIFO" {
     var q = sr.EventQueue{};
     try q.push(.focus, .{ .role = "bouton", .name = "Valider", .focused = true });
-    var first = q.pop().?;
+    const first = q.pop().?;
     try std.testing.expectEqual(sr.EventKind.focus, first.kind);
     try std.testing.expectEqualStrings("Valider", first.nameText());
     try std.testing.expect(q.pop() == null);
@@ -28,5 +28,4 @@ test "bounded event queue copies fields and preserves FIFO" {
     try std.testing.expectError(error.Full, q.push(.focus, .{}));
     for (0..sr.queue_capacity) |_| try std.testing.expect(q.pop() != null);
     try std.testing.expect(q.pop() == null);
-    _ = &first;
 }
