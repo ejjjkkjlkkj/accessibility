@@ -83,6 +83,13 @@ TRACKS = {
         "uefi": "src/objc/uefi/README.md",
         "kernel": "src/objc/kernel/README.md",
     },
+    "C#": {
+        "core": "src/csharp/ScreenReaderCore.cs",
+        "tests": "src/csharp/Program.cs",
+        "project": "src/csharp/ScreenReaderCore.Tests.csproj",
+        "uefi": "src/csharp/uefi/README.md",
+        "kernel": "src/csharp/kernel/README.md",
+    },
 }
 
 
