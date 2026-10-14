@@ -10,7 +10,7 @@ import json
 import sys
 from pathlib import Path
 
-EXPECTED_LANGUAGES = {"C", "Rust", "Go", "D", "Ada", "Zig", "Nim", "Swift", "C++", "Free Pascal", "Odin", "Fortran", "Objective-C"}
+EXPECTED_LANGUAGES = {"C", "Rust", "Go", "D", "Ada", "Zig", "Nim", "Swift", "C++", "Free Pascal", "Odin", "Fortran", "Objective-C", "C#"}
 EXPECTED_COMPONENTS = {"screen_reader", "uefi_pre_os", "operating_system_kernel"}
 ALLOWED_STATUSES = {
     "NOT_IMPLEMENTED", "NOT_VALIDATED", "PARTIAL", "BLOCKED",
