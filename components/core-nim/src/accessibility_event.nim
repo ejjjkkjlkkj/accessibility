@@ -19,4 +19,4 @@ proc isValid*(event: AccessibilityEvent): bool =
 when isMainModule:
   doAssert AccessibilityEvent(abiVersion: 1, role: erButton, name: "Save").isValid()
   doAssert not AccessibilityEvent(abiVersion: 2, role: erButton, name: "Save").isValid()
-  doAssert not AccessibilityEvent(abiVersion: 1, role: erButton, name: repeat('x', 257)).isValid()
+  doAssert not AccessibilityEvent(abiVersion: 1, role: erButton, name: repeat('x', 4097)).isValid()
