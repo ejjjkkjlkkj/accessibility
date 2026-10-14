@@ -59,5 +59,9 @@ int main(void) {
     assert(sr_queue_pop(&queue, &event) == 1);
     assert(event.type == SR_EVENT_STATE_CHANGED);
     assert(strcmp(event.name, "Wi-Fi") == 0);
+    sr_node fallback = {NULL, "", "42", 1, 0};
+    assert(sr_announce(&fallback, out, sizeof out) > 0);
+    assert(strcmp(out, "élément, 42") == 0);
+
     return 0;
 }
