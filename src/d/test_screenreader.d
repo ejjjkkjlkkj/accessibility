@@ -17,5 +17,6 @@ unittest {
     assert(!q.push(EventKind.focus, Node.init));
     foreach (i; 0 .. QueueCapacity) assert(q.pop(e));
     assert(!q.pop(e));
-    assert(!q.push(EventKind.focus, Node("", "x".replicate(TextCapacity), "", true, false)));
+    auto longName = new char[TextCapacity];
+    assert(!q.push(EventKind.focus, Node("", longName.idup, "", true, false)));
 }
