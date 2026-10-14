@@ -1,40 +1,23 @@
 name: Polyglot CI (Go, C, Rust, D, Ada, Zig, Nim, Swift)
-
 on:
   push:
     branches: [main]
-    paths:
-      - "cmd/**"
-      - "components/**"
-      - "crates/**"
-      - "data/resources.csv"
-      - "go.mod"
-      - ".github/workflows/polyglot-ci.yml"
+    paths: ["cmd/**", "components/**", "crates/**", "internal/**", "data/resources.csv", "go.mod", ".github/workflows/polyglot-ci.yml"]
   pull_request:
-    paths:
-      - "cmd/**"
-      - "components/**"
-      - "crates/**"
-      - "data/resources.csv"
-      - "go.mod"
-      - ".github/workflows/polyglot-ci.yml"
+    paths: ["cmd/**", "components/**", "crates/**", "internal/**", "data/resources.csv", "go.mod", ".github/workflows/polyglot-ci.yml"]
   workflow_dispatch:
-
 permissions:
   contents: read
-
 jobs:
   go:
-    name: Go validator
+    name: Go screen-reader core and validator
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
-        with:
-          go-version: "1.23.x"
+        with: {go-version: "1.23.x"}
       - run: go test ./...
       - run: go run ./cmd/catalog-validator data/resources.csv
-
   c:
     name: C11 core
     runs-on: ubuntu-latest
@@ -43,7 +26,6 @@ jobs:
       - run: cmake -S components/core-c -B build/core-c
       - run: cmake --build build/core-c --parallel 2
       - run: ctest --test-dir build/core-c --output-on-failure
-
   rust:
     name: Rust no_std core
     runs-on: ubuntu-latest
@@ -52,20 +34,17 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - run: cargo test --manifest-path crates/accessibility-core/Cargo.toml
       - run: cargo check --manifest-path crates/accessibility-core/Cargo.toml --lib
-
   d:
-    name: D event core
+    name: D event and navigation core
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: dlang-community/setup-dlang@v2
-        with:
-          compiler: dmd
+        with: {compiler: dmd}
       - working-directory: components/core-d
         run: dub test
-
   ada:
-    name: Ada event core
+    name: Ada event and navigation core
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -74,34 +53,31 @@ jobs:
         run: |
           gnatmake -gnata test_accessibility_event.adb
           ./test_accessibility_event
-
+          gnatmake -gnata test_screenreader_cursor.adb
+          ./test_screenreader_cursor
   zig:
-    name: Zig event core
+    name: Zig event and navigation core
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: mlugg/setup-zig@v1
-        with:
-          version: 0.13.0
+        with: {version: "0.13.0"}
       - run: zig test components/core-zig/src/accessibility_event.zig
-
+      - run: zig test components/core-zig/src/screenreader_cursor.zig
   nim:
-    name: Nim event core
+    name: Nim event and navigation core
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: |
-          sudo apt-get update
-          sudo apt-get install -y nim
+      - run: sudo apt-get update && sudo apt-get install -y nim
       - run: nim c -r --hints:off components/core-nim/src/accessibility_event.nim
-
+      - run: nim c -r --hints:off components/core-nim/src/screenreader_cursor.nim
   swift:
     name: Swift package
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: swift-actions/setup-swift@v2
-        with:
-          swift-version: "6.0.3"
+        with: {swift-version: "6.0.3"}
       - working-directory: components/core-swift
         run: swift test
