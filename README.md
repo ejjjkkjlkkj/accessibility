@@ -20,7 +20,7 @@ Dépôt de référence pour cartographier et développer les composants d'access
 
 ## Catalogue et feuille de route
 
-Les documents canoniques à maintenir dans docs/ sont la cartographie des langages et les portes de release Screen Reader / UEFI / OS. Les IDs de langage doivent rester synchronisés avec ejjjkkjlkkj/ia; les statuts d'accessibilité et d'IA sont indépendants.
+Les documents canoniques maintenus dans docs/ sont la cartographie des langages et les portes de release Screen Reader / UEFI / OS. Les IDs de langage doivent rester synchronisés avec ejjjkkjlkkj/ia; les statuts d'accessibilité et d'IA sont indépendants.
 
 ## CI
 
