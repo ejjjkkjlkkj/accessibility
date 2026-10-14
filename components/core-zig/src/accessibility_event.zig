@@ -32,7 +32,12 @@ pub const AccessibilityEvent = struct {
     }
 };
 
-test "canonical role codes are stable" {\n    try std.testing.expectEqual(@as(u8, 5), @intFromEnum(Role.button));\n    try std.testing.expectEqual(@as(u8, 17), @intFromEnum(Role.menu_item));\n}\n\ntest "valid event accepted" {
+test "canonical role codes are stable" {
+    try std.testing.expectEqual(@as(u8, 5), @intFromEnum(Role.button));
+    try std.testing.expectEqual(@as(u8, 17), @intFromEnum(Role.menu_item));
+}
+
+test "valid event accepted" {
     const event = AccessibilityEvent{ .role = .button, .name = "Save" };
     try std.testing.expect(event.isValid());
 }
