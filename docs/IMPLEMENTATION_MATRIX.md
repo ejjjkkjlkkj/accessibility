@@ -1,5 +1,7 @@
 # Implementation matrix
 
+Execution plan: [all-language completion and release gates](EXECUTION_PLAN_ALL_LANGUAGE_RELEASE_GATES.md). This defines the shared screen-reader conformance contract, separate UEFI/kernel gates, feasibility decisions for additional languages, and required evidence before release.
+
 The initial eight-language matrix is extended by the manifest to 14 tracks. Additional tracks: C++ (portable core/tests, UEFI not validated, kernel not implemented), Free Pascal (portable core/tests, UEFI not validated, kernel not implemented), Odin (core source added, compiler validation pending), Fortran (core/tests and CI job added, results pending), Objective-C (Foundation announcement core; Apple adapter integration pending; UEFI/kernel blocked), C# (hosted core and smoke tests added; UEFI/kernel blocked). See `projects/manifest.json` for exact per-component status.
 
 Status reflects the strongest current evidence. All eight portable screen-reader cores contain announcement formatting, bounded event queues, and bounded cursor-navigation implementations with regression tests for empty, single-item, and multi-item lists. The expanded tests have been committed, but CI results must be checked per language before claiming validation. They remain **PARTIAL** because native accessibility API adapters and speech/audio are not connected. Kernel sketches and UEFI prototypes are not complete implementations.
