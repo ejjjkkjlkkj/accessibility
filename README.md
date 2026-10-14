@@ -25,3 +25,8 @@ Les documents canoniques maintenus dans docs/ sont la cartographie des langages 
 ## CI
 
 GitHub Actions vérifie les fichiers de documentation, la syntaxe JSON des manifestes présents et les liens Markdown locaux. Cette CI ne prétend pas prouver le fonctionnement d'un screen reader sur matériel réel.
+
+
+## NEXORA integration
+
+The accessibility boundary for the experimental NEXORA language is documented in [the NEXORA accessibility contract](docs/NEXORA-ACCESSIBILITY-CONTRACT.md) and its machine-readable contract at `projects/nexora/accessibility-contract.json`. This is a contract only: it does not claim a working NEXORA screen reader, OS backend, or UEFI runtime.
