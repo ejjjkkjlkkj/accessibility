@@ -1,6 +1,7 @@
 #![no_std]
 
 pub mod screenreader;
+pub mod tree;
 
 pub const ABI_VERSION: u32 = 1;
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
