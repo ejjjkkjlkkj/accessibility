@@ -5,6 +5,9 @@ doAssert announce(FocusNode(role: "bouton", name: "Valider", focused: true)) == 
 doAssert announce(FocusNode(role: "bouton", name: "Valider", focused: false)) == ""
 doAssert announce(FocusNode(role: "champ", name: "Volume", value: "80 %", focused: true, disabled: true)) == "champ: Volume, 80 %, désactivé"
 
+doAssert announce(FocusNode(value: "42", focused: true)) == "élément, 42"
+doAssert announce(FocusNode(focused: true)) == "élément"
+
 var q: EventQueue
 var ev: SemanticEvent
 doAssert q.push(focusEvent, FocusNode(role: "bouton", name: "Valider", focused: true))
