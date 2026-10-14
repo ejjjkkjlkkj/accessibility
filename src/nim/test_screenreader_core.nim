@@ -1,4 +1,5 @@
 import screenreader_core
+import std/strutils
 
 doAssert announce(FocusNode(role: "bouton", name: "Valider", focused: true)) == "bouton: Valider"
 doAssert announce(FocusNode(role: "bouton", name: "Valider", focused: false)) == ""
