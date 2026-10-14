@@ -1,6 +1,6 @@
 program TestScreenReaderCore;
 {$mode objfpc}{$H+}
-uses SysUtils, ScreenReaderCore;
+uses SysUtils, screenreader_core;
 var N: TAccessibleNode; Q: TEventQueue; E, O: TScreenReaderEvent;
 begin
   N.Role := 'bouton'; N.Name := 'Valider'; N.Value := ''; N.Focused := True; N.Disabled := False;
