@@ -4,10 +4,23 @@ import std.array : replicate;
 
 enum Role : ubyte {
     unknown = 0,
-    window = 1,
-    button = 2,
-    textField = 3,
-    heading = 4
+    application = 1,
+    window = 2,
+    group = 3,
+    text = 4,
+    button = 5,
+    checkbox = 6,
+    radio = 7,
+    textbox = 8,
+    link = 9,
+    heading = 10,
+    list = 11,
+    listItem = 12,
+    table = 13,
+    row = 14,
+    cell = 15,
+    menu = 16,
+    menuItem = 17
 }
 
 struct AccessibilityEvent {
@@ -19,7 +32,7 @@ struct AccessibilityEvent {
 bool isValid(const ref AccessibilityEvent event) {
     return event.abiVersion == 1 &&
         event.role >= Role.unknown &&
-        event.role <= Role.heading &&
+        event.role <= Role.menuItem &&
         event.name.length <= 256;
 }
 
