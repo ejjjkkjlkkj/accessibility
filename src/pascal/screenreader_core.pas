@@ -1,4 +1,4 @@
-unit ScreenReaderCore;
+unit screenreader_core;
 {$mode objfpc}{$H+}
 interface
 uses SysUtils;
