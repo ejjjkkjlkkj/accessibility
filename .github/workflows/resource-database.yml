@@ -27,6 +27,9 @@ jobs:
         with:
           python-version: "3.12"
 
+      - name: Run offline unit tests
+        run: python -m unittest discover -s tests -v
+
       - name: Build SQLite database and check URLs
         run: python tools/build_resource_db.py
 
