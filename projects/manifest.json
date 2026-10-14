@@ -14,7 +14,8 @@
           "status": "NOT_IMPLEMENTED"
         },
         "uefi_pre_os": {
-          "status": "NOT_IMPLEMENTED"
+          "status": "NOT_VALIDATED",
+          "evidence": "Console-only EDK2 C source exists; build/runtime not yet validated."
         },
         "operating_system_kernel": {
           "status": "NOT_IMPLEMENTED"
@@ -28,7 +29,8 @@
           "status": "NOT_IMPLEMENTED"
         },
         "uefi_pre_os": {
-          "status": "NOT_IMPLEMENTED"
+          "status": "NOT_VALIDATED",
+          "evidence": "Rust UEFI console entry point and CI build job added; build result pending."
         },
         "operating_system_kernel": {
           "status": "NOT_IMPLEMENTED"
