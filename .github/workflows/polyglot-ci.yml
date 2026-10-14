@@ -1,4 +1,4 @@
-name: Polyglot CI (C, C++, Rust, Go, D, Ada, Zig, Nim, Swift, Pascal, Odin)
+name: Polyglot CI (C, C++, Rust, Go, D, Ada, Zig, Nim, Swift, Pascal, Odin, Fortran, Objective-C)
 on:
   push:
     branches: [main, "work/**"]
@@ -73,8 +73,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: sudo apt-get update && sudo apt-get install -y fp-compiler
-      - run: fpc -Fu./src/pascal -FE/tmp src/pascal/test_screenreader_core.pas
+      - run: fpc -Fu./src/pascal -FU/tmp -FE/tmp src/pascal/test_screenreader_core.pas
       - run: /tmp/test_screenreader_core
+  fortran-screenreader:
+    name: Fortran portable screen-reader core
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update && sudo apt-get install -y gfortran
+      - run: gfortran -J/tmp -I/tmp src/fortran/screenreader_core.f90 src/fortran/test_screenreader_core.f90 -o /tmp/test-screenreader-fortran
+      - run: /tmp/test-screenreader-fortran
   rust:
     name: Rust no_std core
     runs-on: ubuntu-latest
