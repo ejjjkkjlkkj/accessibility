@@ -1,0 +1,104 @@
+name: Accessibility and ZERO CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    - cron: "23 4 * * 1"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: accessibility-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  repository-audit:
+    name: Repository and documentation audit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Verify required ZERO documents
+        shell: bash
+        run: |
+          set -euo pipefail
+          for f in ZERO/README.md ZERO/LANGUAGE-AUDIT.md ZERO/REQUIREMENTS.md; do
+            test -s "$f" || { echo "FAIL: missing or empty $f"; exit 1; }
+            echo "PASS: $f"
+          done
+
+      - name: Check whitespace errors
+        run: git diff --check
+
+      - name: Check Markdown relative links
+        shell: python
+        run: |
+          import pathlib, re, sys
+          root = pathlib.Path(".")
+          failures = []
+          ignored = {".git", ".github"}
+          for path in root.rglob("*.md"):
+              if any(part in ignored for part in path.parts):
+                  continue
+              text = path.read_text(encoding="utf-8", errors="replace")
+              for target in re.findall(r"!?(?:\[[^\]]*\])\(([^)]+)\)", text):
+                  target = target.strip().split()[0].strip("<>")
+                  if not target or target.startswith(("http://", "https://", "mailto:", "#", "data:")):
+                      continue
+                  target = target.split("#", 1)[0].split("?", 1)[0]
+                  if not target:
+                      continue
+                  resolved = (path.parent / target).resolve()
+                  if not resolved.exists():
+                      failures.append(f"{path}: broken relative link: {target}")
+          if failures:
+              print("\n".join(failures))
+              sys.exit(1)
+          print("PASS: Markdown relative links")
+
+      - name: Inventory implementation and tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "Repository inventory (no claim of hardware validation):"
+          find . -maxdepth 3 -type f \( -name Cargo.toml -o -name pyproject.toml -o -name pytest.ini -o -name CMakeLists.txt -o -name Makefile \) -not -path './.git/*' -print
+          if [ -f Cargo.toml ]; then
+            if command -v cargo >/dev/null 2>&1; then
+              cargo test --workspace --locked
+            else
+              echo "BLOCKED: Cargo manifest found but toolchain unavailable"
+              exit 1
+            fi
+          else
+            echo "PARTIAL: no root Cargo.toml; no Rust workspace test was inferred"
+          fi
+          if [ -f pyproject.toml ] || [ -d tests ]; then
+            python -m compileall -q .
+            if python -c "import pytest" >/dev/null 2>&1; then
+              python -m pytest -q
+            else
+              echo "PARTIAL: Python sources compiled; pytest is not installed"
+            fi
+          else
+            echo "PARTIAL: no root Python project/tests detected"
+          fi
+
+  security-baseline:
+    name: Dependency and secret hygiene baseline
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check for accidentally committed common secret files
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git ls-files | grep -E '(^|/)(\.env|id_rsa|id_ed25519|credentials\.json|secrets\.json)$'; then
+            echo "FAIL: suspicious secret-like filename tracked; inspect manually"
+            exit 1
+          fi
+          echo "PASS: no common secret-like filenames detected"
