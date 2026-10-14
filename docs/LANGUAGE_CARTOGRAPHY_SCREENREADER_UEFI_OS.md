@@ -45,6 +45,7 @@ Définir une piste de travail pour chaque ID du catalogue commun IA. Cette carto
 | typescript | TypeScript | À ÉVALUER — composants et adaptateurs selon runtime | À ÉVALUER — seulement si cible/compiler et interfaces firmware disponibles | À ÉVALUER — API natives et dépendances déclarées | NOT_VALIDATED |
 | scratch | Scratch | À ÉVALUER — composants et adaptateurs selon runtime | À ÉVALUER — seulement si cible/compiler et interfaces firmware disponibles | À ÉVALUER — API natives et dépendances déclarées | NOT_VALIDATED |
 | u | U (ulanguage.org) | À ÉVALUER — composants et adaptateurs selon runtime | À ÉVALUER — seulement si cible/compiler et interfaces firmware disponibles | À ÉVALUER — API natives et dépendances déclarées | NOT_VALIDATED |
+| nexora | NEXORA (langage universel expérimental) | NOT_VALIDATED — aucun screen reader écrit en NEXORA validé | NOT_VALIDATED — aucun compilateur/backend UEFI ni runtime freestanding validé | NOT_VALIDATED — aucun backend OS ni adaptateur natif validé | PARTIAL — interpréteur de référence limité seulement |
 | julia | Julia | À ÉVALUER — composants et adaptateurs selon runtime | À ÉVALUER — seulement si cible/compiler et interfaces firmware disponibles | À ÉVALUER — API natives et dépendances déclarées | NOT_VALIDATED |
 | mojo | Mojo | À ÉVALUER — composants et adaptateurs selon runtime | À ÉVALUER — seulement si cible/compiler et interfaces firmware disponibles | À ÉVALUER — API natives et dépendances déclarées | NOT_VALIDATED |
 | chapel | Chapel | À ÉVALUER — composants et adaptateurs selon runtime | À ÉVALUER — seulement si cible/compiler et interfaces firmware disponibles | À ÉVALUER — API natives et dépendances déclarées | NOT_VALIDATED |
@@ -54,6 +55,10 @@ Définir une piste de travail pour chaque ID du catalogue commun IA. Cette carto
 | k | K | À ÉVALUER — composants et adaptateurs selon runtime | À ÉVALUER — seulement si cible/compiler et interfaces firmware disponibles | À ÉVALUER — API natives et dépendances déclarées | NOT_VALIDATED |
 | q | q | À ÉVALUER — composants et adaptateurs selon runtime | À ÉVALUER — seulement si cible/compiler et interfaces firmware disponibles | À ÉVALUER — API natives et dépendances déclarées | NOT_VALIDATED |
 | lua | Lua | À ÉVALUER — composants et adaptateurs selon runtime | À ÉVALUER — seulement si cible/compiler et interfaces firmware disponibles | À ÉVALUER — API natives et dépendances déclarées | NOT_VALIDATED |
+
+### Piste NEXORA — limites actuelles
+
+NEXORA est distinct de U (ulanguage.org). Le dépôt IA contient un prototype d’interpréteur limité; cela ne prouve pas l’existence d’un compilateur, d’un IR typé stable, d’un binaire natif, d’un screen reader, d’un backend OS ou d’un exécutable UEFI. Les trois axes Screen Reader, UEFI/bare metal et OS restent NOT_VALIDATED jusqu’à des tests spécifiques reproductibles.
 
 ## Règles propres aux cibles
 
