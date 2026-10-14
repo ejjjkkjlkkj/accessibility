@@ -23,7 +23,7 @@ The core only navigates a count supplied by an adapter. It does not discover acc
 | C11 | components/core-c/ | CMake + CTest |
 | Rust (no_std) | crates/accessibility-core/src/screenreader.rs | cargo test |
 | D | components/core-d/src/screenreader_cursor.d | dub test |
-| Ada | components/core-ada/ | GNAT assertions (to be wired into CI) |
+| Ada | components/core-ada/screenreader_cursor.ads and .adb | GNAT assertions |
 | Zig | components/core-zig/src/screenreader_cursor.zig | zig test |
 | Nim | components/core-nim/src/screenreader_cursor.nim | nim c -r |
 | Swift | components/core-swift/Sources/AccessibilityCore/ScreenReaderCursor.swift | swift test |
