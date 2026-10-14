@@ -2,6 +2,8 @@
 
 Status reflects the strongest current evidence. All eight portable screen-reader cores contain announcement formatting, bounded event queues, and bounded cursor-navigation implementations with regression tests for empty, single-item, and multi-item lists. The expanded tests have been committed, but CI results must be checked per language before claiming validation. They remain **PARTIAL** because native accessibility API adapters and speech/audio are not connected. Kernel sketches and UEFI prototypes are not complete implementations.
 
+The expanded language feasibility map (C++, architecture-specific assembly, Free Pascal, Odin, V, Objective-C, Fortran, Crystal, Modula-2, COBOL and PL/I) is maintained in [LANGUAGE_CARTOGRAPHY_SCREENREADER_UEFI_OS.md](LANGUAGE_CARTOGRAPHY_SCREENREADER_UEFI_OS.md). These candidates are not counted as implemented tracks until their independent native-reader, UEFI and kernel gates have evidence.
+
 | Language | Native screen reader | UEFI / pre-OS app | OS / kernel track | Key technical boundary |
 |---|---|---|---|---|
 | C | PARTIAL | NOT_VALIDATED (interactive arrow-key text menu source; build/run unproven) | NOT_IMPLEMENTED | EDK2 build/run and bootable kernel linker/boot protocol remain unproven |
