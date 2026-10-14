@@ -67,18 +67,34 @@ pub const EventQueue = struct {
 /// Caller owns the returned allocation. Platform APIs and speech are not wired yet.
 pub fn announce(allocator: std.mem.Allocator, node: Node) ![]u8 {
     if (!node.focused) return try allocator.dupe(u8, "");
+
     const role = if (node.role.len == 0) "élément" else node.role;
-    var result: std.ArrayList(u8) = .empty;
-    defer result.deinit(allocator);
-    try result.appendSlice(allocator, role);
+    const role_sep_len: usize = if (node.name.len > 0) 2 else 0;
+    const value_sep_len: usize = if (node.value.len > 0) 2 else 0;
+    const disabled_len: usize = if (node.disabled) ", désactivé".len else 0;
+    const total_len = role.len + role_sep_len + node.name.len +
+        value_sep_len + node.value.len + disabled_len;
+
+    const result = try allocator.alloc(u8, total_len);
+    var offset: usize = 0;
+    @memcpy(result[offset .. offset + role.len], role);
+    offset += role.len;
+
     if (node.name.len > 0) {
-        try result.appendSlice(allocator, ": ");
-        try result.appendSlice(allocator, node.name);
+        @memcpy(result[offset .. offset + 2], ": ");
+        offset += 2;
+        @memcpy(result[offset .. offset + node.name.len], node.name);
+        offset += node.name.len;
     }
     if (node.value.len > 0) {
-        try result.appendSlice(allocator, ", ");
-        try result.appendSlice(allocator, node.value);
+        @memcpy(result[offset .. offset + 2], ", ");
+        offset += 2;
+        @memcpy(result[offset .. offset + node.value.len], node.value);
+        offset += node.value.len;
     }
-    if (node.disabled) try result.appendSlice(allocator, ", désactivé");
-    return try allocator.dupe(u8, result.items);
+    if (node.disabled) {
+        const suffix = ", désactivé";
+        @memcpy(result[offset .. offset + suffix.len], suffix);
+    }
+    return result;
 }
