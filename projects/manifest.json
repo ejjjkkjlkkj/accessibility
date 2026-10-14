@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "project_goal": "Fourteen language-specific screen-reader, UEFI/pre-OS and OS/kernel tracks, plus architecture-specific assembly support",
+  "project_goal": "Feasibility-driven catalog of machine-language tracks, each with separate screen-reader, UEFI/pre-OS, and OS/kernel deliverables; shared language catalog mirrored to ejjjkkjlkkj/ia for language-specific AI tooling/model experiments.",
   "evidence_policy": {
     "initial_status": "NOT_IMPLEMENTED",
     "emulator_is_physical_proof": false,
@@ -245,5 +245,55 @@
         }
       }
     }
-  ]
+  ],
+  "language_catalog_policy": {
+    "tiers": {
+      "primary_systems": [
+        "C",
+        "C++",
+        "Rust",
+        "Zig",
+        "Ada",
+        "Assembly x86-64",
+        "Assembly AArch64",
+        "Assembly RISC-V",
+        "Go",
+        "D",
+        "Nim",
+        "Swift",
+        "Free Pascal",
+        "Odin",
+        "Fortran",
+        "C#",
+        "Objective-C"
+      ],
+      "feasibility_candidates": [
+        "V",
+        "Crystal",
+        "Modula-2",
+        "COBOL",
+        "PL/I"
+      ],
+      "hosted_screen_reader_candidates": [
+        "Java",
+        "Kotlin",
+        "Python",
+        "JavaScript",
+        "TypeScript"
+      ]
+    },
+    "per_language_components": [
+      "screen_reader",
+      "uefi_pre_os",
+      "operating_system_kernel"
+    ],
+    "rules": [
+      "No PASS without reproducible evidence.",
+      "Host, emulator, and physical validation are distinct.",
+      "Hosted-only languages may have UEFI/kernel BLOCKED with a documented technical reason.",
+      "No placeholder implementations to inflate language count.",
+      "Mirror stable language IDs to ejjjkkjlkkj/ia for AI tooling, datasets, adapters, and benchmarks.",
+      "Do not imply separate foundation-model training without artifacts and benchmark evidence."
+    ]
+  }
 }
