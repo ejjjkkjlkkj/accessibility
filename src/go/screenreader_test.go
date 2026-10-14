@@ -28,3 +28,16 @@ func TestQueueFIFOCapacityAndBounds(t *testing.T) {
 	if _,ok:=q.Pop(); ok { t.Fatal("empty queue returned event") }
 	if q.Push(EventKind(99), first) { t.Fatal("invalid event kind accepted") }
 }
+
+func TestQueueRingWraparoundPreservesFIFO(t *testing.T) {
+	var q EventQueue
+	a := Node{Role: "bouton", Name: "A", Focused: true}
+	b := Node{Role: "bouton", Name: "B", Focused: true}
+	for i := 0; i < 12; i++ { if !q.Push(FocusEvent, a) { t.Fatal("initial push failed") } }
+	for i := 0; i < 8; i++ { got, ok := q.Pop(); if !ok || got.Name != "A" { t.Fatalf("initial pop %d: %#v, %v", i, got, ok) } }
+	for i := 0; i < 12; i++ { if !q.Push(FocusEvent, b) { t.Fatalf("wrapped push %d failed", i) } }
+	if q.Len() != eventQueueLimit { t.Fatalf("len=%d", q.Len()) }
+	for i := 0; i < 4; i++ { got, ok := q.Pop(); if !ok || got.Name != "A" { t.Fatalf("remaining A %d: %#v, %v", i, got, ok) } }
+	for i := 0; i < 12; i++ { got, ok := q.Pop(); if !ok || got.Name != "B" { t.Fatalf("wrapped B %d: %#v, %v", i, got, ok) } }
+	if _, ok := q.Pop(); ok { t.Fatal("queue should be empty") }
+}
