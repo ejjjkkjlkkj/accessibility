@@ -42,3 +42,12 @@ test "event queue ring wraparound preserves FIFO" {
     for (0..12) |_| try std.testing.expectEqualStrings("B", q.pop().?.nameText());
     try std.testing.expect(q.pop() == null);
 }
+
+test "missing role and empty fields use generic label" {
+    const got = try sr.announce(std.testing.allocator, .{ .value = "42", .focused = true });
+    defer std.testing.allocator.free(got);
+    try std.testing.expectEqualStrings("élément, 42", got);
+    const empty = try sr.announce(std.testing.allocator, .{ .focused = true });
+    defer std.testing.allocator.free(empty);
+    try std.testing.expectEqualStrings("élément", empty);
+}
