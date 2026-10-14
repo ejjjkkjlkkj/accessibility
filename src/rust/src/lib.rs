@@ -25,3 +25,29 @@ pub fn announce(node: &Node<'_>) -> Option<heapless::String<256>> {
     if node.disabled { let _ = out.push_str(", désactivé"); }
     Some(out)
 }
+
+#[cfg(test)]
+extern crate std;
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn focused_node_is_announced() {
+        let node = Node { role: "bouton", name: "Valider", value: "", focused: true, disabled: false };
+        assert_eq!(announce(&node).unwrap().as_str(), "bouton: Valider");
+    }
+
+    #[test]
+    fn unfocused_node_is_silent() {
+        let node = Node { role: "bouton", name: "Valider", value: "", focused: false, disabled: false };
+        assert!(announce(&node).is_none());
+    }
+
+    #[test]
+    fn value_and_disabled_state_are_included() {
+        let node = Node { role: "champ", name: "Volume", value: "80 %", focused: true, disabled: true };
+        assert_eq!(announce(&node).unwrap().as_str(), "champ: Volume, 80 %, désactivé");
+    }
+}
