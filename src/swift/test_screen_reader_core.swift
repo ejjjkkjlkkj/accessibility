@@ -10,6 +10,9 @@ struct ScreenReaderCoreTests {
         expect(ScreenReaderCore.announce(FocusNode(role: "bouton", name: "Valider")) == "", "unfocused silence")
         expect(ScreenReaderCore.announce(FocusNode(role: "champ", name: "Volume", value: "80 %", focused: true, disabled: true)) == "champ: Volume, 80 %, désactivé", "value and disabled")
 
+        expect(ScreenReaderCore.announce(FocusNode(value: "42", focused: true)) == "élément, 42", "fallback role")
+        expect(ScreenReaderCore.announce(FocusNode(focused: true)) == "élément", "empty fields")
+
         var q = EventQueue()
         var node = FocusNode(role: "bouton", name: "Valider", focused: true)
         expect(q.push(.focus, node: node), "queue push")
