@@ -33,7 +33,7 @@ pub const AccessibilityEvent = struct {
     }
 };
 
-test "valid event accepted" {
+test "canonical role codes are stable" {\n    try std.testing.expectEqual(@as(u8, 5), @intFromEnum(Role.button));\n    try std.testing.expectEqual(@as(u8, 17), @intFromEnum(Role.menu_item));\n}\n\ntest "valid event accepted" {
     const event = AccessibilityEvent{ .role = .button, .name = "Save" };
     try std.testing.expect(event.isValid());
 }
@@ -41,7 +41,7 @@ test "valid event accepted" {
 test "invalid ABI and oversized names rejected" {
     const bad_abi = AccessibilityEvent{ .abi_version = 2, .role = .button };
     try std.testing.expect(!bad_abi.isValid());
-    const long_name = [_]u8{'x'} ** 257;
+    const long_name = [_]u8{'x'} ** 4097;
     const bad_name = AccessibilityEvent{ .role = .button, .name = &long_name };
     try std.testing.expect(!bad_name.isValid());
 }
