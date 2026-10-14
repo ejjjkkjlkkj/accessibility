@@ -11,3 +11,10 @@ fn main() -> Status {
     uefi::println!("No semantic UI tree, speech, audio driver, or OS kernel is present.");
     Status::SUCCESS
 }
+
+#[panic_handler]
+fn panic(_info: &core::panic::PanicInfo) -> ! {
+    loop {
+        core::hint::spin_loop();
+    }
+}
