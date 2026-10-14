@@ -1,10 +1,10 @@
 # Completion plan: eight screen readers, eight UEFI applications, eight OS tracks
 
-This plan is the execution contract for the 24 deliverables. It does not mark any component complete by documentation alone.
+This plan is the execution contract for the language/component matrix currently recorded in `projects/manifest.json`. It does not mark any component complete by documentation alone.
 
 ## Scope
 
-Language tracks: C, Rust, Go, D, Ada, Zig, Nim, Swift. Each track has three separate deliverables:
+Language tracks currently include C, Rust, Go, D, Ada, Zig, Nim, Swift, C++, Free Pascal, Odin, Fortran and Objective-C. Each track has three separate deliverables, with infeasible combinations explicitly BLOCKED rather than silently counted as complete:
 
 1. **Native screen reader** — platform accessibility API adapter, semantic event model, focus/navigation, speech output, keyboard controls, recovery, and tests.
 2. **UEFI/pre-OS application** — EFI application that reads firmware-provided input and display protocols and announces accessible setup/navigation information. Audio remains BLOCKED until a real device-specific path is demonstrated.
@@ -44,7 +44,7 @@ A track cannot be marked PASS until evidence exists for all applicable items:
 ## Implementation sequence
 
 ### Phase 0 — evidence and interfaces
-1. Validate the 24-entry manifest and enforce allowed status labels.
+1. Validate the language/component manifest and enforce allowed status labels.
 2. Freeze a language-neutral event contract: focus, semantic node, value/state change, alert, input, speech request, cancellation and backend error.
 3. Keep native, UEFI and kernel artifacts in separate directories and CI jobs.
 
@@ -68,7 +68,7 @@ Develop independent kernels incrementally, starting with bootable serial-output 
 
 ### Phase 5 — integration and release
 - Run CI across all available toolchains.
-- Publish a 24-row evidence report with source revision, commands, versions, environment, result and artifacts.
+- Publish a language-by-component evidence report with source revision, commands, versions, environment, result and artifacts.
 - Require all critical accessibility tests to pass; list unsupported combinations explicitly.
 - Do not merge or publish a release solely because documentation or host unit tests pass.
 
