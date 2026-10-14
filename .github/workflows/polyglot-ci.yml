@@ -1,14 +1,48 @@
 name: Polyglot CI (Go, C, Rust, D, Ada, Zig, Nim, Swift)
 on:
   push:
-    branches: [main]
-    paths: ["cmd/**", "components/**", "crates/**", "internal/**", "data/resources.csv", "go.mod", ".github/workflows/polyglot-ci.yml"]
+    branches: [main, "work/**"]
+    paths:
+      - "cmd/**"
+      - "components/**"
+      - "crates/**"
+      - "internal/**"
+      - "src/**"
+      - "projects/**"
+      - "tests/**"
+      - "scripts/**"
+      - "docs/**"
+      - "data/resources.csv"
+      - "go.mod"
+      - ".github/workflows/**"
   pull_request:
-    paths: ["cmd/**", "components/**", "crates/**", "internal/**", "data/resources.csv", "go.mod", ".github/workflows/polyglot-ci.yml"]
+    paths:
+      - "cmd/**"
+      - "components/**"
+      - "crates/**"
+      - "internal/**"
+      - "src/**"
+      - "projects/**"
+      - "tests/**"
+      - "scripts/**"
+      - "docs/**"
+      - "data/resources.csv"
+      - "go.mod"
+      - ".github/workflows/**"
   workflow_dispatch:
 permissions:
   contents: read
 jobs:
+  source-inventory:
+    name: Validate eight language tracks and source inventory
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python scripts/validate_manifest.py
+      - run: python scripts/validate_source_inventory.py
   go:
     name: Go screen-reader core and validator
     runs-on: ubuntu-latest
