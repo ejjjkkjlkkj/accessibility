@@ -1,4 +1,4 @@
-# Completion plan: eight screen readers, eight UEFI applications, eight OS tracks
+# Completion plan: multi-language screen readers, UEFI applications and OS tracks
 
 This plan is the execution contract for the language/component matrix currently recorded in `projects/manifest.json`. It does not mark any component complete by documentation alone.
 
@@ -87,4 +87,4 @@ Develop independent kernels incrementally, starting with bootable serial-output 
 
 ## Current truthful baseline
 
-The portable cores are PARTIAL. The existing C UEFI source is a console prototype; Rust UEFI is not validated. Other UEFI implementations and all eight complete OS kernels remain unimplemented. Native platform accessibility adapters and connected speech output remain unimplemented. No physical audio or hardware result is implied by this plan.
+The portable cores are PARTIAL. The existing C UEFI source is a console prototype; Rust UEFI is not validated. Most additional UEFI implementations remain unvalidated, and no complete bootable kernel has been established across the language tracks. Native platform accessibility adapters and connected speech output remain unimplemented. No physical audio or hardware result is implied by this plan.
