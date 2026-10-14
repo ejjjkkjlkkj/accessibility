@@ -1,0 +1,312 @@
+{
+  "schema_version": 1,
+  "catalog_source": "ejjjkkjlkkj/ia:LANGUAGE-CATALOG.md",
+  "generated_from_catalog_commit": "e9f28e3b486bb8ad3921d6c069d6b9188d3791bd",
+  "rule": "Initial states are not validation claims. Each axis must earn PASS independently.",
+  "languages": [
+    {
+      "id": "c",
+      "name": "C",
+      "screenreader": "NOT_VALIDATED",
+      "uefi_bare_metal": "NOT_VALIDATED",
+      "os": "NOT_VALIDATED",
+      "notes": "Capability depends on compiler, runtime, target APIs, and reproducible tests."
+    },
+    {
+      "id": "cpp",
+      "name": "C++",
+      "screenreader": "NOT_VALIDATED",
+      "uefi_bare_metal": "NOT_VALIDATED",
+      "os": "NOT_VALIDATED",
+      "notes": "Capability depends on compiler, runtime, target APIs, and reproducible tests."
+    },
+    {
+      "id": "rust",
+      "name": "Rust",
+      "screenreader": "NOT_VALIDATED",
+      "uefi_bare_metal": "NOT_VALIDATED",
+      "os": "NOT_VALIDATED",
+      "notes": "Capability depends on compiler, runtime, target APIs, and reproducible tests."
+    },
+    {
+      "id": "zig",
+      "name": "Zig",
+      "screenreader": "NOT_VALIDATED",
+      "uefi_bare_metal": "NOT_VALIDATED",
+      "os": "NOT_VALIDATED",
+      "notes": "Capability depends on compiler, runtime, target APIs, and reproducible tests."
+    },
+    {
+      "id": "ada",
+      "name": "Ada",
+      "screenreader": "NOT_VALIDATED",
+      "uefi_bare_metal": "NOT_VALIDATED",
+      "os": "NOT_VALIDATED",
+      "notes": "Capability depends on compiler, runtime, target APIs, and reproducible tests."
+    },
+    {
+      "id": "asm-x86_64",
+      "name": "x86-64 Assembly",
+      "screenreader": "NOT_VALIDATED",
+      "uefi_bare_metal": "NOT_VALIDATED",
+      "os": "NOT_VALIDATED",
+      "notes": "Low-level kernels only; not a complete standalone screen reader."
+    },
+    {
+      "id": "asm-aarch64",
+      "name": "AArch64 Assembly",
+      "screenreader": "NOT_VALIDATED",
+      "uefi_bare_metal": "NOT_VALIDATED",
+      "os": "NOT_VALIDATED",
+      "notes": "Low-level kernels only; not a complete standalone screen reader."
+    },
+    {
+      "id": "asm-riscv64",
+      "name": "RISC-V Assembly",
+      "screenreader": "NOT_VALIDATED",
+      "uefi_bare_metal": "NOT_VALIDATED",
+      "os": "NOT_VALIDATED",
+      "notes": "Low-level kernels only; not a complete standalone screen reader."
+    },
+    {
+      "id": "go",
+      "name": "Go",
+      "screenreader": "NOT_VALIDATED",
+      "uefi_bare_metal": "NOT_VALIDATED",
+      "os": "NOT_VALIDATED",
+      "notes": "Capability depends on compiler, runtime, target APIs, and reproducible tests."
+    },
+    {
+      "id": "d",
+      "name": "D",
+      "screenreader": "NOT_VALIDATED",
+      "uefi_bare_metal": "NOT_VALIDATED",
+      "os": "NOT_VALIDATED",
+      "notes": "Capability depends on compiler, runtime, target APIs, and reproducible tests."
+    },
+    {
+      "id": "nim",
+      "name": "Nim",
+      "screenreader": "NOT_VALIDATED",
+      "uefi_bare_metal": "NOT_VALIDATED",
+      "os": "NOT_VALIDATED",
+      "notes": "Capability depends on compiler, runtime, target APIs, and reproducible tests."
+    },
+    {
+      "id": "swift",
+      "name": "Swift",
+      "screenreader": "NOT_VALIDATED",
+      "uefi_bare_metal": "NOT_VALIDATED",
+      "os": "NOT_VALIDATED",
+      "notes": "Capability depends on compiler, runtime, target APIs, and reproducible tests."
+    },
+    {
+      "id": "pascal",
+      "name": "Free Pascal / Object Pascal",
+      "screenreader": "NOT_VALIDATED",
+      "uefi_bare_metal": "NOT_VALIDATED",
+      "os": "NOT_VALIDATED",
+      "notes": "Capability depends on compiler, runtime, target APIs, and reproducible tests."
+    },
+    {
+      "id": "odin",
+      "name": "Odin",
+      "screenreader": "NOT_VALIDATED",
+      "uefi_bare_metal": "NOT_VALIDATED",
+      "os": "NOT_VALIDATED",
+      "notes": "Capability depends on compiler, runtime, target APIs, and reproducible tests."
+    },
+    {
+      "id": "fortran",
+      "name": "Fortran",
+      "screenreader": "NOT_VALIDATED",
+      "uefi_bare_metal": "NOT_VALIDATED",
+      "os": "NOT_VALIDATED",
+      "notes": "Capability depends on compiler, runtime, target APIs, and reproducible tests."
+    },
+    {
+      "id": "csharp",
+      "name": "C#",
+      "screenreader": "NOT_VALIDATED",
+      "uefi_bare_metal": "NOT_VALIDATED",
+      "os": "NOT_VALIDATED",
+      "notes": "Capability depends on compiler, runtime, target APIs, and reproducible tests."
+    },
+    {
+      "id": "objc",
+      "name": "Objective-C",
+      "screenreader": "NOT_VALIDATED",
+      "uefi_bare_metal": "NOT_VALIDATED",
+      "os": "NOT_VALIDATED",
+      "notes": "Capability depends on compiler, runtime, target APIs, and reproducible tests."
+    },
+    {
+      "id": "v",
+      "name": "V",
+      "screenreader": "NOT_VALIDATED",
+      "uefi_bare_metal": "NOT_VALIDATED",
+      "os": "NOT_VALIDATED",
+      "notes": "Capability depends on compiler, runtime, target APIs, and reproducible tests."
+    },
+    {
+      "id": "crystal",
+      "name": "Crystal",
+      "screenreader": "NOT_VALIDATED",
+      "uefi_bare_metal": "NOT_VALIDATED",
+      "os": "NOT_VALIDATED",
+      "notes": "Capability depends on compiler, runtime, target APIs, and reproducible tests."
+    },
+    {
+      "id": "modula2",
+      "name": "Modula-2",
+      "screenreader": "NOT_VALIDATED",
+      "uefi_bare_metal": "NOT_VALIDATED",
+      "os": "NOT_VALIDATED",
+      "notes": "Capability depends on compiler, runtime, target APIs, and reproducible tests."
+    },
+    {
+      "id": "cobol",
+      "name": "COBOL",
+      "screenreader": "NOT_VALIDATED",
+      "uefi_bare_metal": "NOT_VALIDATED",
+      "os": "NOT_VALIDATED",
+      "notes": "Capability depends on compiler, runtime, target APIs, and reproducible tests."
+    },
+    {
+      "id": "pli",
+      "name": "PL/I",
+      "screenreader": "NOT_VALIDATED",
+      "uefi_bare_metal": "NOT_VALIDATED",
+      "os": "NOT_VALIDATED",
+      "notes": "Capability depends on compiler, runtime, target APIs, and reproducible tests."
+    },
+    {
+      "id": "java",
+      "name": "Java",
+      "screenreader": "NOT_VALIDATED",
+      "uefi_bare_metal": "NOT_VALIDATED",
+      "os": "NOT_VALIDATED",
+      "notes": "Capability depends on compiler, runtime, target APIs, and reproducible tests."
+    },
+    {
+      "id": "kotlin",
+      "name": "Kotlin",
+      "screenreader": "NOT_VALIDATED",
+      "uefi_bare_metal": "NOT_VALIDATED",
+      "os": "NOT_VALIDATED",
+      "notes": "Capability depends on compiler, runtime, target APIs, and reproducible tests."
+    },
+    {
+      "id": "python",
+      "name": "Python",
+      "screenreader": "NOT_VALIDATED",
+      "uefi_bare_metal": "NOT_VALIDATED",
+      "os": "NOT_VALIDATED",
+      "notes": "Capability depends on compiler, runtime, target APIs, and reproducible tests."
+    },
+    {
+      "id": "javascript",
+      "name": "JavaScript",
+      "screenreader": "NOT_VALIDATED",
+      "uefi_bare_metal": "NOT_VALIDATED",
+      "os": "NOT_VALIDATED",
+      "notes": "Capability depends on compiler, runtime, target APIs, and reproducible tests."
+    },
+    {
+      "id": "typescript",
+      "name": "TypeScript",
+      "screenreader": "NOT_VALIDATED",
+      "uefi_bare_metal": "NOT_VALIDATED",
+      "os": "NOT_VALIDATED",
+      "notes": "Capability depends on compiler, runtime, target APIs, and reproducible tests."
+    },
+    {
+      "id": "scratch",
+      "name": "Scratch",
+      "screenreader": "NOT_VALIDATED",
+      "uefi_bare_metal": "NOT_VALIDATED",
+      "os": "NOT_VALIDATED",
+      "notes": "Educational track; not a production UEFI/OS release target."
+    },
+    {
+      "id": "u",
+      "name": "U (ulanguage.org)",
+      "screenreader": "NOT_VALIDATED",
+      "uefi_bare_metal": "NOT_VALIDATED",
+      "os": "NOT_VALIDATED",
+      "notes": "Validate the exact U compiler/toolchain before claiming support."
+    },
+    {
+      "id": "julia",
+      "name": "Julia",
+      "screenreader": "NOT_VALIDATED",
+      "uefi_bare_metal": "NOT_VALIDATED",
+      "os": "NOT_VALIDATED",
+      "notes": "Capability depends on compiler, runtime, target APIs, and reproducible tests."
+    },
+    {
+      "id": "mojo",
+      "name": "Mojo",
+      "screenreader": "NOT_VALIDATED",
+      "uefi_bare_metal": "NOT_VALIDATED",
+      "os": "NOT_VALIDATED",
+      "notes": "Capability depends on compiler, runtime, target APIs, and reproducible tests."
+    },
+    {
+      "id": "chapel",
+      "name": "Chapel",
+      "screenreader": "NOT_VALIDATED",
+      "uefi_bare_metal": "NOT_VALIDATED",
+      "os": "NOT_VALIDATED",
+      "notes": "Capability depends on compiler, runtime, target APIs, and reproducible tests."
+    },
+    {
+      "id": "r",
+      "name": "R",
+      "screenreader": "NOT_VALIDATED",
+      "uefi_bare_metal": "NOT_VALIDATED",
+      "os": "NOT_VALIDATED",
+      "notes": "Capability depends on compiler, runtime, target APIs, and reproducible tests."
+    },
+    {
+      "id": "apl",
+      "name": "APL",
+      "screenreader": "NOT_VALIDATED",
+      "uefi_bare_metal": "NOT_VALIDATED",
+      "os": "NOT_VALIDATED",
+      "notes": "Capability depends on compiler, runtime, target APIs, and reproducible tests."
+    },
+    {
+      "id": "j",
+      "name": "J",
+      "screenreader": "NOT_VALIDATED",
+      "uefi_bare_metal": "NOT_VALIDATED",
+      "os": "NOT_VALIDATED",
+      "notes": "Capability depends on compiler, runtime, target APIs, and reproducible tests."
+    },
+    {
+      "id": "k",
+      "name": "K",
+      "screenreader": "NOT_VALIDATED",
+      "uefi_bare_metal": "NOT_VALIDATED",
+      "os": "NOT_VALIDATED",
+      "notes": "Capability depends on compiler, runtime, target APIs, and reproducible tests."
+    },
+    {
+      "id": "q",
+      "name": "q",
+      "screenreader": "NOT_VALIDATED",
+      "uefi_bare_metal": "NOT_VALIDATED",
+      "os": "NOT_VALIDATED",
+      "notes": "Capability depends on compiler, runtime, target APIs, and reproducible tests."
+    },
+    {
+      "id": "lua",
+      "name": "Lua",
+      "screenreader": "NOT_VALIDATED",
+      "uefi_bare_metal": "NOT_VALIDATED",
+      "os": "NOT_VALIDATED",
+      "notes": "Capability depends on compiler, runtime, target APIs, and reproducible tests."
+    }
+  ]
+}
