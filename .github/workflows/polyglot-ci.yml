@@ -1,11 +1,11 @@
-name: Polyglot CI (Go, C, Rust)
+name: Polyglot CI (Go, C, Rust, D, Ada, Zig, Nim, Swift)
 
 on:
   push:
     branches: [main]
     paths:
       - "cmd/**"
-      - "components/core-c/**"
+      - "components/**"
       - "crates/**"
       - "data/resources.csv"
       - "go.mod"
@@ -13,7 +13,7 @@ on:
   pull_request:
     paths:
       - "cmd/**"
-      - "components/core-c/**"
+      - "components/**"
       - "crates/**"
       - "data/resources.csv"
       - "go.mod"
@@ -32,22 +32,17 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version: "1.23.x"
-      - name: Test Go code
-        run: go test ./...
-      - name: Validate resource catalog
-        run: go run ./cmd/catalog-validator data/resources.csv
+      - run: go test ./...
+      - run: go run ./cmd/catalog-validator data/resources.csv
 
   c:
     name: C11 core
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Configure
-        run: cmake -S components/core-c -B build/core-c
-      - name: Build
-        run: cmake --build build/core-c --parallel 2
-      - name: Test
-        run: ctest --test-dir build/core-c --output-on-failure
+      - run: cmake -S components/core-c -B build/core-c
+      - run: cmake --build build/core-c --parallel 2
+      - run: ctest --test-dir build/core-c --output-on-failure
 
   rust:
     name: Rust no_std core
@@ -55,7 +50,58 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
-      - name: Test
-        run: cargo test --manifest-path crates/accessibility-core/Cargo.toml
-      - name: Check no_std library
-        run: cargo check --manifest-path crates/accessibility-core/Cargo.toml --lib
+      - run: cargo test --manifest-path crates/accessibility-core/Cargo.toml
+      - run: cargo check --manifest-path crates/accessibility-core/Cargo.toml --lib
+
+  d:
+    name: D event core
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dlang-community/setup-dlang@v2
+        with:
+          compiler: dmd
+      - working-directory: components/core-d
+        run: dub test
+
+  ada:
+    name: Ada event core
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update && sudo apt-get install -y gnat
+      - working-directory: components/core-ada
+        run: |
+          gnatmake -gnata test_accessibility_event.adb accessibility_event.adb
+          ./test_accessibility_event
+
+  zig:
+    name: Zig event core
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: mlugg/setup-zig@v1
+        with:
+          version: 0.13.0
+      - run: zig test components/core-zig/src/accessibility_event.zig
+
+  nim:
+    name: Nim event core
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          sudo apt-get update
+          sudo apt-get install -y nim
+      - run: nim c -r --hints:off components/core-nim/src/accessibility_event.nim
+
+  swift:
+    name: Swift package
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: swift-actions/setup-swift@v2
+        with:
+          swift-version: "6.0.3"
+      - working-directory: components/core-swift
+        run: swift test
