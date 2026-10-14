@@ -94,3 +94,12 @@ jobs:
         run: cargo build --manifest-path src/rust-uefi/Cargo.toml --target x86_64-unknown-uefi --release
       - name: Verify EFI artifact exists
         run: test -s src/rust-uefi/target/x86_64-unknown-uefi/release/accessibility_uefi_rust.efi
+
+  c-kernel-object:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile C entry sketch as a freestanding object
+        run: cc -std=c11 -ffreestanding -fno-stack-protector -Wall -Wextra -Werror -c src/c/kernel/kernel.c -o /tmp/accessibility-kernel-c.o
+      - name: Verify object exists
+        run: test -s /tmp/accessibility-kernel-c.o
