@@ -2,10 +2,23 @@ const std = @import("std");
 
 pub const Role = enum(u8) {
     unknown = 0,
-    window = 1,
-    button = 2,
-    text_field = 3,
-    heading = 4,
+    application = 1,
+    window = 2,
+    group = 3,
+    text = 4,
+    button = 5,
+    checkbox = 6,
+    radio = 7,
+    textbox = 8,
+    link = 9,
+    heading = 10,
+    list = 11,
+    list_item = 12,
+    table = 13,
+    row = 14,
+    cell = 15,
+    menu = 16,
+    menu_item = 17,
 };
 
 pub const AccessibilityEvent = struct {
@@ -16,7 +29,7 @@ pub const AccessibilityEvent = struct {
     pub fn isValid(self: AccessibilityEvent) bool {
         return self.abi_version == 1 and
             self.role != .unknown and
-            self.name.len <= 256;
+            self.name.len <= 4096;
     }
 };
 
