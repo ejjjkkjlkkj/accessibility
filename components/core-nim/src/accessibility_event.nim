@@ -13,7 +13,6 @@ type
 
 proc isValid*(event: AccessibilityEvent): bool =
   event.abiVersion == 1'u32 and
-    event.role != erUnknown and
     event.name.len <= 4096
 
 when isMainModule:
