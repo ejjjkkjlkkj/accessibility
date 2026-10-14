@@ -68,7 +68,7 @@ pub const EventQueue = struct {
 pub fn announce(allocator: std.mem.Allocator, node: Node) ![]u8 {
     if (!node.focused) return try allocator.dupe(u8, "");
     const role = if (node.role.len == 0) "élément" else node.role;
-    var result: std.ArrayList(u8) = .{};
+    var result: std.ArrayList(u8) = .empty;
     defer result.deinit(allocator);
     try result.appendSlice(allocator, role);
     if (node.name.len > 0) {
