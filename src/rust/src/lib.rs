@@ -145,4 +145,22 @@ mod tests {
         for _ in 0..16 { assert!(queue.pop().is_some()); }
         assert!(queue.is_empty());
     }
+
+    #[test]
+    fn queue_wraparound_preserves_fifo_order() {
+        let mut queue = EventQueue::new();
+        let a = Node { role: "bouton", name: "A", value: "", focused: true, disabled: false };
+        let b = Node { role: "bouton", name: "B", value: "", focused: true, disabled: false };
+        let c = Node { role: "bouton", name: "C", value: "", focused: true, disabled: false };
+        for _ in 0..12 { queue.push(EventKind::Focus, &a).unwrap(); }
+        for _ in 0..8 { assert_eq!(queue.pop().unwrap().name.as_str(), "A"); }
+        for _ in 0..12 { queue.push(EventKind::Focus, &b).unwrap(); }
+        assert_eq!(queue.len(), 16);
+        for _ in 0..4 { assert_eq!(queue.pop().unwrap().name.as_str(), "A"); }
+        for _ in 0..12 { assert_eq!(queue.pop().unwrap().name.as_str(), "B"); }
+        assert!(queue.is_empty());
+        queue.push(EventKind::Focus, &c).unwrap();
+        assert_eq!(queue.pop().unwrap().name.as_str(), "C");
+    }
+
 }
