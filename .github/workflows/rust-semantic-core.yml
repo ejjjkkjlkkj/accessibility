@@ -1,0 +1,49 @@
+name: Rust semantic core test builds
+
+on:
+  push:
+    branches: [main, "**"]
+    paths:
+      - "crates/accessibility-core/**"
+      - ".github/workflows/rust-semantic-core.yml"
+  pull_request:
+    paths:
+      - "crates/accessibility-core/**"
+      - ".github/workflows/rust-semantic-core.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: rust-semantic-core-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Test / ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v6
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+      - name: Run unit tests
+        run: cargo test --manifest-path crates/accessibility-core/Cargo.toml
+      - name: Run interactive semantic demo
+        run: cargo run --manifest-path crates/accessibility-core/Cargo.toml --example semantic_tree_demo
+      - name: Build Windows test executable
+        if: runner.os == 'Windows'
+        run: cargo build --release --manifest-path crates/accessibility-core/Cargo.toml --example semantic_tree_demo
+      - name: Upload Windows demo
+        if: runner.os == 'Windows'
+        uses: actions/upload-artifact@v6
+        with:
+          name: accessibility-semantic-demo-windows-x64
+          path: crates/accessibility-core/target/release/examples/semantic_tree_demo.exe
+          if-no-files-found: error
+          retention-days: 14
