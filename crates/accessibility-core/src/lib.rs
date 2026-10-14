@@ -5,7 +5,7 @@ pub mod screenreader;
 pub const ABI_VERSION: u32 = 1;
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 #[repr(u32)]
-pub enum Role { Unknown = 0, Button = 1, Text = 2, Checkbox = 3, Dialog = 4 }
+pub enum Role { Unknown = 0, Application = 1, Window = 2, Group = 3, Text = 4, Button = 5, Checkbox = 6, Radio = 7, Textbox = 8, Link = 9, Heading = 10, List = 11, ListItem = 12, Table = 13, Row = 14, Cell = 15, Menu = 16, MenuItem = 17 }
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct AccessibleEvent<'a> {
     pub abi_version: u32, pub role: Role, pub state_flags: u64, pub source_id: u64, pub name: &'a str,
