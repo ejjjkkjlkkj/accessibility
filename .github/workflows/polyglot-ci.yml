@@ -1,10 +1,5 @@
 name: Polyglot CI (Go, C, Rust, D, Ada, Zig, Nim, Swift)
 on:
-  push:
-    branches: [main]
-    paths: ["cmd/**", "components/**", "crates/**", "internal/**", "data/resources.csv", "go.mod", ".github/workflows/polyglot-ci.yml"]
-  pull_request:
-    paths: ["cmd/**", "components/**", "crates/**", "internal/**", "data/resources.csv", "go.mod", ".github/workflows/polyglot-ci.yml"]
   workflow_dispatch:
 permissions:
   contents: read
