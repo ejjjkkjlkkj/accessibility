@@ -53,6 +53,9 @@ pub enum QueueError {
 
 impl Event {
     fn from_node(kind: EventKind, node: &Node<'_>) -> Result<Self, QueueError> {
+        if node.role.len() >= 96 || node.name.len() >= 96 || node.value.len() >= 96 {
+            return Err(QueueError::TextTooLong);
+        }
         let mut role = String::<96>::new();
         let mut name = String::<96>::new();
         let mut value = String::<96>::new();
