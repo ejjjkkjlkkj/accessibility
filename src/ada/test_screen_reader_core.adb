@@ -54,5 +54,12 @@ begin
       if not Pop (Queue, Got) then raise Program_Error with "queue drain failed"; end if;
    end loop;
    if Pop (Queue, Got) then raise Program_Error with "queue not empty"; end if;
+   Item.Role_Last := 0;
+   Item.Name_Last := 0;
+   Item.Value_Last := 2;
+   Item.Value (1 .. 2) := "42";
+   if Announce (Item) /= "élément, 42" then raise Program_Error with "fallback role mismatch"; end if;
+   Item.Value_Last := 0;
+   if Announce (Item) /= "élément" then raise Program_Error with "empty fields mismatch"; end if;
    Put_Line ("Ada screen-reader core tests passed");
 end Test_Screen_Reader_Core;
