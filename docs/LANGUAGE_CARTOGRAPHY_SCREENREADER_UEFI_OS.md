@@ -48,6 +48,10 @@ This document maps candidate languages to three independent deliverables: a nati
 
 ## Language-by-language execution map
 
+### Progress update — 13 full language records
+
+The repository now includes initial portable-core scaffolding for C++, Free Pascal and Odin, plus a Fortran portable core/test source and an Objective-C Foundation-based announcement core. UEFI and kernel status for these additions remains NOT_VALIDATED, NOT_IMPLEMENTED or BLOCKED as stated in `projects/manifest.json`. CI jobs were added for C++ and Free Pascal, and Fortran. Their results are pending; no PASS is claimed. Objective-C is scoped to Apple-specific adapter work, not a shared bare-metal kernel.
+
 ### Existing eight priority tracks
 
 #### C
@@ -189,3 +193,8 @@ These candidates expand the language survey. They must first pass a toolchain/AB
 ## Current baseline
 
 The eight existing language cores remain PARTIAL until real native accessibility adapters and speech backends are connected. C and Rust UEFI sources must be treated as prototypes until EFI build and runtime evidence is current. Do not mark any of the eight OS/kernel tracks as complete without a reproducible boot image and recorded boot tests. Additional candidates above are mapped for feasibility, not claimed implemented.
+
+
+## Latest expansion status
+
+The project manifest has been expanded to 13 language tracks (39 language/component records). C++ and Free Pascal have portable core test programs and CI jobs; Fortran has a portable core test program and CI job. Odin and Objective-C source has been added but is not yet compiler-validated. UEFI and kernel work for all new tracks remains unproven; see the manifest and CI runs. Architecture assembly is tracked as support code, not a standalone complete screen reader.
