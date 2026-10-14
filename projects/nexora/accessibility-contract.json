@@ -126,4 +126,4 @@
     "maximum_children_per_node": 10000,
     "sequence_numbers_monotonic_per_source": true
   }
-}\n
+}
