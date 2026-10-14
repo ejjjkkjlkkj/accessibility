@@ -201,3 +201,47 @@ The project manifest has been expanded to 14 language tracks (42 language/compon
 
 
 C# addition: the hosted .NET core has announcement and bounded FIFO queue smoke checks. Its UEFI and freestanding kernel tracks are explicitly BLOCKED until a compatible runtime/ABI is proven; .NET Native AOT alone is not UEFI or kernel proof.
+
+
+## Expanded machine-language coverage and completion policy (2026-10-14)
+
+The scope is expanded from the initial 14 records to a feasibility-driven catalog. A language is a track only where a maintained compiler/toolchain and a technically meaningful target exist. Every eligible track has three separate work packages: **screen reader**, **UEFI application**, and **OS/kernel**. This catalog is a work plan, not a claim that any track is complete.
+
+### Tier A — primary implementation languages
+
+C, C++, Rust, Zig, Ada, Assembly (x86-64, AArch64, RISC-V support modules), Go, D, Nim, Swift, Free Pascal/Object Pascal, Odin, Fortran, C#, Objective-C.
+
+- **Screen reader:** native accessibility adapter where the host OS supports it, semantic event model, focus/navigation, live announcements, speech backend, cancellation, settings, automated conformance tests.
+- **UEFI:** EFI ABI and PE/COFF build, ConsoleIn/ConsoleOut, GOP, robust input/navigation, error reporting, artifact hashes and emulator logs. No generic firmware audio claim.
+- **OS/kernel:** independently bootable image, declared architecture/boot protocol, serial diagnostics, memory map/allocator, exception and interrupt path, keyboard/display drivers, event model, and speech/audio driver for declared hardware before calling the system an accessible OS.
+- C and Rust are reference vertical slices, not substitutes for independent validation in the other languages.
+
+### Tier B — additional systems-language feasibility tracks
+
+V, Crystal, Modula-2, COBOL, PL/I, and other compiled languages discovered in the repository/toolchain inventory. For each, first record compiler availability/version, target architecture, runtime/GC dependencies, ABI, freestanding viability, native accessibility bindings, and a reproducible minimal build. Promote only after that gate passes. Do not add empty source placeholders merely to inflate language counts.
+
+### Tier C — host/platform-specific reader tracks
+
+Java, Kotlin, Python, JavaScript/TypeScript, and Objective-C/C# hosted integrations may implement full native screen-reader applications on supported OS platforms where their runtimes and accessibility APIs are appropriate. They must not be misrepresented as freestanding UEFI or kernel languages. Where a language cannot credibly produce UEFI or a freestanding kernel, mark that component BLOCKED with the exact technical reason and retain the shared C ABI/IPC boundary; the deliverable is complete only within its declared feasible scope.
+
+### AI-language tracks shared with repository `ejjjkkjlkkj/ia`
+
+Use the same language catalog and stable language IDs in the AI repository. Each language track includes:
+1. parser/compiler/toolchain-aware source ingestion and diagnostics;
+2. code corpus provenance, license and deduplication checks;
+3. language-specific tokenizer/parser/indexing and retrieval tests where applicable;
+4. code generation/editing/evaluation harness and security tests;
+5. optional adapter/fine-tune experiment only when suitable licensed data, compute, and evaluation are available;
+6. local inference integration and a shared cross-language orchestration contract.
+
+A separate foundation model trained from scratch for every programming language is **not** a default assumption. Share a local base model and build per-language adapters, retrieval indexes, tools and evaluations first. Report any fine-tuning as experimental until measured against a held-out benchmark. No cloud/API dependency is mandatory.
+
+### Release status vocabulary
+
+- `PASS`: reproducible evidence exists for the stated target and environment.
+- `PARTIAL`: meaningful implementation exists, but required functionality is missing.
+- `BLOCKED`: a documented runtime, ABI, SDK, hardware or toolchain constraint prevents the stated target.
+- `NOT_VALIDATED`: implementation exists but no trustworthy build/runtime evidence is recorded.
+- `NOT_IMPLEMENTED`: no implementation for that component.
+
+Do not use “complete” based on a source file, host unit tests, a successful compile alone, a PCM buffer, or QEMU alone. Host, emulator and physical evidence remain separate. Never write firmware/NVRAM, flash firmware, alter the user's Windows disk, or reboot physical hardware unattended.
