@@ -72,7 +72,7 @@ jobs:
       - run: sudo apt-get update && sudo apt-get install -y gnat
       - working-directory: components/core-ada
         run: |
-          gnatmake -gnata test_accessibility_event.adb accessibility_event.adb
+          gnatmake -gnata test_accessibility_event.adb
           ./test_accessibility_event
 
   zig:
