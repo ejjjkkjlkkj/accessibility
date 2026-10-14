@@ -34,3 +34,8 @@ unittest {
     foreach (i; 0 .. 12) { assert(q.pop(e)); assert(e.name[0 .. e.nameLength] == "B"); }
     assert(!q.pop(e));
 }
+
+unittest {
+    assert(announce(Node("", "", "42", true, false)) == "élément, 42");
+    assert(announce(Node("", "", "", true, false)) == "élément");
+}
