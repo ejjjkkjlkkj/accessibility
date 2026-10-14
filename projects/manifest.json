@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "project_goal": "Thirteen language-specific screen-reader, UEFI/pre-OS and OS/kernel tracks, plus architecture-specific assembly support",
+  "project_goal": "Fourteen language-specific screen-reader, UEFI/pre-OS and OS/kernel tracks, plus architecture-specific assembly support",
   "evidence_policy": {
     "initial_status": "NOT_IMPLEMENTED",
     "emulator_is_physical_proof": false,
@@ -225,6 +225,23 @@
         "operating_system_kernel": {
           "status": "BLOCKED",
           "evidence": "Objective-C runtime/startup is not proven freestanding; scope is Apple-platform accessibility integration, not a common kernel."
+        }
+      }
+    },
+    {
+      "language": "C#",
+      "components": {
+        "screen_reader": {
+          "status": "PARTIAL",
+          "evidence": "Hosted C# portable announcement formatter and bounded event queue with source-level smoke tests added; native platform accessibility APIs and speech backend are not connected; CI result pending."
+        },
+        "uefi_pre_os": {
+          "status": "BLOCKED",
+          "evidence": "A normal .NET executable is not a UEFI application; no freestanding/AOT EFI ABI, PE/COFF entry point or compatible runtime has been demonstrated."
+        },
+        "operating_system_kernel": {
+          "status": "BLOCKED",
+          "evidence": "Hosted .NET runtime, garbage collection and startup dependencies are not proven freestanding; no bootable kernel exists."
         }
       }
     }
