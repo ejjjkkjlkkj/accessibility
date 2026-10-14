@@ -1,14 +1,14 @@
 cmake_minimum_required(VERSION 3.20)
 project(accessibility_core_c C)
-
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_C_EXTENSIONS OFF)
-
-add_library(accessibility_core STATIC src/accessibility_event.c)
+add_library(accessibility_core STATIC src/accessibility_event.c src/screenreader_cursor.c)
 target_include_directories(accessibility_core PUBLIC include)
-
 enable_testing()
 add_executable(accessibility_event_test tests/accessibility_event_test.c)
 target_link_libraries(accessibility_event_test PRIVATE accessibility_core)
 add_test(NAME accessibility_event_test COMMAND accessibility_event_test)
+add_executable(screenreader_cursor_test tests/screenreader_cursor_test.c)
+target_link_libraries(screenreader_cursor_test PRIVATE accessibility_core)
+add_test(NAME screenreader_cursor_test COMMAND screenreader_cursor_test)
