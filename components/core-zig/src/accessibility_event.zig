@@ -28,7 +28,6 @@ pub const AccessibilityEvent = struct {
 
     pub fn isValid(self: AccessibilityEvent) bool {
         return self.abi_version == 1 and
-            self.role != .unknown and
             self.name.len <= 4096;
     }
 };
