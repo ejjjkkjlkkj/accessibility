@@ -1,17 +1,11 @@
 package screenreader
 
-import "strings"
-
 const eventTextLimit = 96
 const eventQueueLimit = 16
 
 // Node is normalized focus metadata. Native accessibility API adapters are separate.
-type Node struct {
-	Role, Name, Value string
-	Focused, Disabled bool
-}
+type Node struct { Role, Name, Value string; Focused, Disabled bool }
 
-// Announce returns a short announcement, or an empty string if focus is absent.
 func Announce(n Node) string {
 	if !n.Focused { return "" }
 	role := n.Role
@@ -24,21 +18,10 @@ func Announce(n Node) string {
 }
 
 type EventKind uint8
-const (
-	FocusEvent EventKind = iota + 1
-	ValueChangedEvent
-	StateChangedEvent
-)
-
-type Event struct {
-	Kind EventKind
-	Role, Name, Value string
-	Focused, Disabled bool
-}
-
+const ( FocusEvent EventKind = iota + 1; ValueChangedEvent; StateChangedEvent )
+type Event struct { Kind EventKind; Role, Name, Value string; Focused, Disabled bool }
 type EventQueue struct { items [eventQueueLimit]Event; head, count int }
 
-// Push stores an owned value snapshot. It rejects oversized fields and a full queue.
 func (q *EventQueue) Push(kind EventKind, n Node) bool {
 	if q == nil || q.count == eventQueueLimit || kind < FocusEvent || kind > StateChangedEvent { return false }
 	if len(n.Role) >= eventTextLimit || len(n.Name) >= eventTextLimit || len(n.Value) >= eventTextLimit { return false }
@@ -47,15 +30,10 @@ func (q *EventQueue) Push(kind EventKind, n Node) bool {
 	q.count++
 	return true
 }
-
 func (q *EventQueue) Pop() (Event, bool) {
 	if q == nil || q.count == 0 { return Event{}, false }
-	event := q.items[q.head]
-	q.items[q.head] = Event{}
-	q.head = (q.head + 1) % eventQueueLimit
-	q.count--
+	event := q.items[q.head]; q.items[q.head] = Event{}
+	q.head = (q.head + 1) % eventQueueLimit; q.count--
 	return event, true
 }
-
 func (q *EventQueue) Len() int { if q == nil { return 0 }; return q.count }
-var _ = strings.Join
