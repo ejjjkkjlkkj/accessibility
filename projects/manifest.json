@@ -11,14 +11,16 @@
       "language": "C",
       "components": {
         "screen_reader": {
-          "status": "NOT_IMPLEMENTED"
+          "status": "PARTIAL",
+          "evidence": "Portable announcement core and bounded event queue with C tests; no native UI API adapter or speech output."
         },
         "uefi_pre_os": {
           "status": "NOT_VALIDATED",
-          "evidence": "Console-only EDK2 C source exists; build/runtime not yet validated."
+          "evidence": "Console-only EDK2 source and validation gates documented; no confirmed EFI build/run."
         },
         "operating_system_kernel": {
-          "status": "NOT_IMPLEMENTED"
+          "status": "NOT_IMPLEMENTED",
+          "evidence": "Independent kernel entry sketch/documentation exists, but no complete bootable kernel or OS."
         }
       }
     },
@@ -26,14 +28,16 @@
       "language": "Rust",
       "components": {
         "screen_reader": {
-          "status": "NOT_IMPLEMENTED"
+          "status": "PARTIAL",
+          "evidence": "no_std announcement core and bounded event queue with unit tests; no native platform adapter or speech output."
         },
         "uefi_pre_os": {
           "status": "NOT_VALIDATED",
-          "evidence": "Rust UEFI console entry point and CI build job added; build result pending."
+          "evidence": "Console-only Rust UEFI source and CI build job added; current build result not yet confirmed."
         },
         "operating_system_kernel": {
-          "status": "NOT_IMPLEMENTED"
+          "status": "NOT_IMPLEMENTED",
+          "evidence": "Independent kernel entry sketch/documentation exists, but no complete bootable kernel or OS."
         }
       }
     },
@@ -41,13 +45,16 @@
       "language": "Go",
       "components": {
         "screen_reader": {
-          "status": "NOT_IMPLEMENTED"
+          "status": "PARTIAL",
+          "evidence": "Announcement core and bounded FIFO queue with tests; standard runtime is used; no native adapter or speech output."
         },
         "uefi_pre_os": {
-          "status": "NOT_IMPLEMENTED"
+          "status": "NOT_IMPLEMENTED",
+          "evidence": "Toolchain/ABI/runtime feasibility gates documented; no implementation validated."
         },
         "operating_system_kernel": {
-          "status": "NOT_IMPLEMENTED"
+          "status": "NOT_IMPLEMENTED",
+          "evidence": "Independent kernel entry sketch/documentation exists, but no complete bootable kernel or OS."
         }
       }
     },
@@ -55,13 +62,16 @@
       "language": "D",
       "components": {
         "screen_reader": {
-          "status": "NOT_IMPLEMENTED"
+          "status": "PARTIAL",
+          "evidence": "Announcement core and fixed-capacity event queue with tests; runtime/toolchain limitations remain."
         },
         "uefi_pre_os": {
-          "status": "NOT_IMPLEMENTED"
+          "status": "NOT_IMPLEMENTED",
+          "evidence": "Toolchain/ABI/runtime feasibility gates documented; no implementation validated."
         },
         "operating_system_kernel": {
-          "status": "NOT_IMPLEMENTED"
+          "status": "NOT_IMPLEMENTED",
+          "evidence": "Independent kernel entry sketch/documentation exists, but no complete bootable kernel or OS."
         }
       }
     },
@@ -69,13 +79,16 @@
       "language": "Ada",
       "components": {
         "screen_reader": {
-          "status": "NOT_IMPLEMENTED"
+          "status": "PARTIAL",
+          "evidence": "Announcement core and fixed-capacity event queue; CI must validate queue tests before claiming a pass."
         },
         "uefi_pre_os": {
-          "status": "NOT_IMPLEMENTED"
+          "status": "NOT_IMPLEMENTED",
+          "evidence": "Toolchain/ABI/runtime feasibility gates documented; no implementation validated."
         },
         "operating_system_kernel": {
-          "status": "NOT_IMPLEMENTED"
+          "status": "NOT_IMPLEMENTED",
+          "evidence": "Independent kernel entry sketch/documentation exists, but no complete bootable kernel or OS."
         }
       }
     },
@@ -83,13 +96,16 @@
       "language": "Zig",
       "components": {
         "screen_reader": {
-          "status": "NOT_IMPLEMENTED"
+          "status": "PARTIAL",
+          "evidence": "Announcement core and fixed-capacity queue; compiler/API compatibility remains subject to CI."
         },
         "uefi_pre_os": {
-          "status": "NOT_IMPLEMENTED"
+          "status": "NOT_IMPLEMENTED",
+          "evidence": "Toolchain/ABI/runtime feasibility gates documented; no implementation validated."
         },
         "operating_system_kernel": {
-          "status": "NOT_IMPLEMENTED"
+          "status": "NOT_IMPLEMENTED",
+          "evidence": "Independent kernel entry sketch/documentation exists, but no complete bootable kernel or OS."
         }
       }
     },
@@ -97,13 +113,16 @@
       "language": "Nim",
       "components": {
         "screen_reader": {
-          "status": "NOT_IMPLEMENTED"
+          "status": "PARTIAL",
+          "evidence": "Announcement core and fixed-capacity queue; generated/runtime behavior and tests need CI confirmation."
         },
         "uefi_pre_os": {
-          "status": "NOT_IMPLEMENTED"
+          "status": "NOT_IMPLEMENTED",
+          "evidence": "Toolchain/ABI/runtime feasibility gates documented; no implementation validated."
         },
         "operating_system_kernel": {
-          "status": "NOT_IMPLEMENTED"
+          "status": "NOT_IMPLEMENTED",
+          "evidence": "Independent kernel entry sketch/documentation exists, but no complete bootable kernel or OS."
         }
       }
     },
@@ -111,13 +130,16 @@
       "language": "Swift",
       "components": {
         "screen_reader": {
-          "status": "NOT_IMPLEMENTED"
+          "status": "PARTIAL",
+          "evidence": "Announcement core and bounded queue; tests need CI confirmation; native API and speech not wired."
         },
         "uefi_pre_os": {
-          "status": "NOT_IMPLEMENTED"
+          "status": "NOT_IMPLEMENTED",
+          "evidence": "Toolchain/ABI/runtime feasibility gates documented; no implementation validated."
         },
         "operating_system_kernel": {
-          "status": "NOT_IMPLEMENTED"
+          "status": "NOT_IMPLEMENTED",
+          "evidence": "Independent kernel entry sketch/documentation exists, but no complete bootable kernel or OS."
         }
       }
     }
