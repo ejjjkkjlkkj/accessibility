@@ -36,7 +36,7 @@ bool isValid(const ref AccessibilityEvent event) {
         event.name.length <= 4096;
 }
 
-unittest {
+unittest {\n    assert(cast(ubyte)Role.button == 5);\n    assert(cast(ubyte)Role.menuItem == 17);
     auto valid = AccessibilityEvent(1, Role.button, "Save");
     assert(isValid(valid));
     auto invalid = AccessibilityEvent(2, Role.button, "Save");
