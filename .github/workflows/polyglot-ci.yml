@@ -1,4 +1,4 @@
-name: Polyglot CI (C, C++, Rust, Go, D, Ada, Zig, Nim, Swift, Pascal, Odin, Fortran, Objective-C)
+name: Polyglot CI (C, C++, Rust, Go, D, Ada, Zig, Nim, Swift, Pascal, Odin, Fortran, Objective-C, C#)
 on:
   push:
     branches: [main, "work/**"]
@@ -83,6 +83,15 @@ jobs:
       - run: sudo apt-get update && sudo apt-get install -y gfortran
       - run: gfortran -J/tmp -I/tmp src/fortran/screenreader_core.f90 src/fortran/test_screenreader_core.f90 -o /tmp/test-screenreader-fortran
       - run: /tmp/test-screenreader-fortran
+  csharp-screenreader:
+    name: C# portable screen-reader core
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+      - run: dotnet run --project src/csharp/ScreenReaderCore.Tests.csproj --configuration Release
   rust:
     name: Rust no_std core
     runs-on: ubuntu-latest
