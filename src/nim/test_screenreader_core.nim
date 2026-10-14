@@ -17,3 +17,18 @@ for i in 0 ..< EventQueueCapacity: doAssert q.pop(ev)
 doAssert not q.pop(ev)
 doAssert not q.push(focusEvent, FocusNode(name: repeat('x', EventTextLimit)))
 echo "Nim screen-reader core tests passed"
+
+var wrapQ: EventQueue
+var wrapEv: SemanticEvent
+let a = FocusNode(role: "bouton", name: "A", focused: true)
+let b = FocusNode(role: "bouton", name: "B", focused: true)
+for i in 0 ..< 12: doAssert wrapQ.push(focusEvent, a)
+for i in 0 ..< 8:
+  doAssert wrapQ.pop(wrapEv) and wrapEv.node.name == "A"
+for i in 0 ..< 12: doAssert wrapQ.push(focusEvent, b)
+doAssert wrapQ.len == EventQueueCapacity
+for i in 0 ..< 4:
+  doAssert wrapQ.pop(wrapEv) and wrapEv.node.name == "A"
+for i in 0 ..< 12:
+  doAssert wrapQ.pop(wrapEv) and wrapEv.node.name == "B"
+doAssert not wrapQ.pop(wrapEv)
