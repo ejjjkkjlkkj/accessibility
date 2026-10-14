@@ -20,6 +20,12 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - name: Checkout IA language catalog
+        uses: actions/checkout@v4
+        with:
+          repository: ejjjkkjlkkj/ia
+          ref: main
+          path: ia-repo
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -42,7 +48,7 @@ jobs:
           from pathlib import Path
           errors = []
           for path in Path(".").rglob("*.json"):
-              if any(part in {".git", ".github"} for part in path.parts):
+              if any(part in {".git", ".github", "ia-repo"} for part in path.parts):
                   continue
               try:
                   json.loads(path.read_text(encoding="utf-8"))
@@ -50,7 +56,7 @@ jobs:
                   errors.append(f"{path}: invalid JSON: {exc}")
           pattern = re.compile(r'(?<!!)\[[^\]]*\]\(([^)]+)\)')
           for source in Path(".").rglob("*.md"):
-              if ".git" in source.parts:
+              if ".git" in source.parts or "ia-repo" in source.parts:
                   continue
               try:
                   content = source.read_text(encoding="utf-8")
@@ -68,4 +74,24 @@ jobs:
               print("\n".join(errors))
               raise SystemExit(f"FAIL: {len(errors)} validation error(s)")
           print("PASS: JSON manifests and local Markdown links")
+          PY
+      - name: Check language IDs against IA catalog
+        run: |
+          python - <<'PY'
+          import json
+          import re
+          from pathlib import Path
+          manifest = json.loads(Path("projects/manifest.json").read_text(encoding="utf-8"))
+          manifest_ids = {entry["id"] for entry in manifest["languages"]}
+          catalog = Path("ia-repo/LANGUAGE-CATALOG.md").read_text(encoding="utf-8")
+          catalog_ids = set()
+          for line in catalog.splitlines():
+              match = re.match(r"^\|\s*([a-z0-9][a-z0-9_-]*)\s*\|\s*([^|]+?)\s*\|", line, re.I)
+              if match and match.group(1) not in {"ID", "---"}:
+                  catalog_ids.add(match.group(1))
+          if manifest_ids != catalog_ids:
+              print("Only in accessibility manifest:", sorted(manifest_ids - catalog_ids))
+              print("Only in IA catalog:", sorted(catalog_ids - manifest_ids))
+              raise SystemExit("FAIL: language IDs are not synchronized")
+          print(f"PASS: {len(manifest_ids)} language IDs synchronized with IA")
           PY
