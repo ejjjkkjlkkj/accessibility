@@ -11,8 +11,11 @@ int accessibility_event_init(accessibility_event *event,
     if (event == NULL || name == NULL) {
         return -1;
     }
-    if (role < ACCESSIBILITY_ROLE_UNKNOWN || role > ACCESSIBILITY_ROLE_DIALOG) {
+    if ((int)role < ACCESSIBILITY_ROLE_UNKNOWN || (int)role > ACCESSIBILITY_ROLE_MENU_ITEM) {
         return -2;
+    }
+    if (strlen(name) >= ACCESSIBILITY_NAME_CAPACITY) {
+        return -3;
     }
 
     memset(event, 0, sizeof(*event));
