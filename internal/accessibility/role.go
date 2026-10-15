@@ -1,5 +1,7 @@
 package accessibility
 
+import "unicode/utf8"
+
 // Role is the stable logical role identifier defined by docs/ACCESSIBILITY-ROLE-CODES-V1.md.
 // It is a wire-level code, not a platform handle or a complete binary ABI.
 type Role uint32
@@ -53,4 +55,22 @@ func (s StateFlags) Valid() bool {
 		return false
 	}
 	return true
+}
+
+// Event is the language-level semantic event contract, not a native binary ABI.
+type Event struct {
+	ABIVersion uint32
+	Role       Role
+	StateFlags StateFlags
+	SourceID   uint64
+	Name       string
+}
+
+// Valid checks the version, role, state flags, UTF-8 encoding, and byte limit.
+func (e Event) Valid() bool {
+	return e.ABIVersion == 1 &&
+		e.Role.Valid() &&
+		e.StateFlags.Valid() &&
+		utf8.ValidString(e.Name) &&
+		len(e.Name) <= 4096
 }

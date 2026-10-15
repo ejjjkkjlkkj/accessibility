@@ -2,6 +2,34 @@ package accessibility
 
 import "testing"
 
+func TestEventContractV1(t *testing.T) {
+	valid := Event{
+		ABIVersion: 1,
+		Role:       RoleButton,
+		StateFlags: StateFocusable | StateEnabled | StateFocused,
+		SourceID:   42,
+		Name:       "Continue",
+	}
+	if !valid.Valid() {
+		t.Fatal("valid semantic event rejected")
+	}
+	for _, event := range []Event{
+		{ABIVersion: 2, Role: RoleButton, Name: "Continue"},
+		{ABIVersion: 1, Role: Role(18), Name: "Continue"},
+		{ABIVersion: 1, Role: RoleButton, StateFlags: StateFocused, Name: "Continue"},
+		{ABIVersion: 1, Role: RoleButton, Name: string([]byte{0xff})},
+		{ABIVersion: 1, Role: RoleButton, Name: string(make([]byte, 4097))},
+	} {
+		if event.Valid() {
+			t.Fatalf("invalid event accepted: %#v", event)
+		}
+	}
+	maxName := Event{ABIVersion: 1, Role: RoleButton, Name: string(make([]byte, 4096))}
+	if !maxName.Valid() {
+		t.Fatal("valid 4096-byte UTF-8 event name rejected")
+	}
+}
+
 func TestSemanticStateFlagsV1(t *testing.T) {
 	valid := StateFocusable | StateEnabled | StateFocused
 	if !valid.Valid() {

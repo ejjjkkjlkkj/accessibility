@@ -144,7 +144,7 @@ class AccessibilityRoleContractTests(unittest.TestCase):
         implementations = {
             "C": ("components/core-c/include/accessibility_event.h", "ACCESSIBILITY_STATE_FOCUSED", "accessibility_event_set_state_flags"),
             "Rust": ("crates/accessibility-core/src/tree.rs", "STATE_FOCUSED", "state_flags_are_valid"),
-            "Go": ("internal/accessibility/role.go", "StateFocused", "func (s StateFlags) Valid()"),
+            "Go": ("internal/accessibility/role.go", "type Event struct", "func (e Event) Valid()"),
             "D": ("components/core-d/src/accessibility_event.d", "STATE_FOCUSED", "isValidStateFlags"),
             "Ada": ("components/core-ada/accessibility_event.ads", "State_Focused", "State_Flags_Valid"),
             "Nim": ("components/core-nim/src/accessibility_event.nim", "STATE_FOCUSED", "isValidStateFlags"),
