@@ -46,7 +46,7 @@ def read_checkpoint(path: Path) -> dict:
         raise AerlError("checkpoint sequence must be a non-negative integer")
     if not isinstance(data["head_hash"], str) or not HASH_RE.fullmatch(data["head_hash"]):
         raise AerlError("checkpoint head_hash must be 64 lowercase hexadecimal characters")
-    if canonical_json(data) + b"\\n" != raw:
+    if canonical_json(data) + b"\n" != raw:
         raise AerlError("checkpoint is not canonical JSON or lacks its final newline")
     return data
 
