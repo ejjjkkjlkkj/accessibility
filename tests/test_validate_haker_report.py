@@ -51,7 +51,7 @@ class HakerReportValidatorTests(unittest.TestCase):
 
     def test_rejects_path_traversal(self):
         data = report()
-        data["findings"][0]["path"] = "../outside.txt"
+        data["findings"][0]["path"] = r"C:\runner\private.txt"
         result = self.run_validator(data)
         self.assertEqual(result.returncode, 1)
         self.assertIn("relative and confined", result.stderr)
