@@ -202,6 +202,37 @@ class AccessibilityRoleContractTests(unittest.TestCase):
                 for marker in markers:
                     self.assertIn(marker, source, f"{path}: missing {marker}")
 
+    def test_screenreader_cursor_contract_and_bindings(self):
+        contract_path = ROOT / "data" / "screenreader-cursor-contract-v1.json"
+        contract = json.loads(contract_path.read_text(encoding="utf-8"))
+        self.assertEqual(contract, {
+            "schema_version": 1,
+            "contract": "SCREENREADER_CURSOR_V1",
+            "index_base": 0,
+            "no_implicit_wrap": True,
+            "empty_count_has_no_current_item": True,
+            "first_selects_index_zero": True,
+            "repeated_first_resets_to_zero": True,
+            "failed_next_preserves_current": True,
+            "failed_previous_preserves_current": True,
+            "failed_navigation_does_not_create_focus": True,
+        })
+        implementations = {
+            "Rust": ("crates/accessibility-core/src/screenreader.rs", ["pub fn first", "pub fn next", "pub fn previous", "pub fn current"]),
+            "C": ("components/core-c/src/screenreader_cursor.c", ["screenreader_cursor_first", "screenreader_cursor_next", "screenreader_cursor_previous"]),
+            "Go": ("internal/screenreader/cursor.go", ["func (c *Cursor) First", "func (c *Cursor) Next", "func (c *Cursor) Previous"]),
+            "D": ("components/core-d/src/screenreader_cursor.d", ["bool first", "bool next", "bool previous"]),
+            "Ada": ("components/core-ada/screenreader_cursor.ads", ["function First", "function Next", "function Previous"]),
+            "Nim": ("components/core-nim/src/screenreader_cursor.nim", ["proc first", "proc next", "proc previous"]),
+            "Zig": ("components/core-zig/src/screenreader_cursor.zig", ["pub fn first", "pub fn next", "pub fn previous"]),
+            "Swift": ("components/core-swift/Sources/AccessibilityCore/ScreenReaderCursor.swift", ["mutating func first", "mutating func next", "mutating func previous"]),
+        }
+        for language, (relative_path, required) in implementations.items():
+            source = (ROOT / relative_path).read_text(encoding="utf-8")
+            with self.subTest(language=language):
+                for marker in required:
+                    self.assertIn(marker, source, relative_path)
+
     def test_shared_name_limit_is_enforced(self):
         c_header = (ROOT / "components/core-c/include/accessibility_event.h").read_text(encoding="utf-8")
         self.assertIn("ACCESSIBILITY_NAME_CAPACITY 4097u", c_header)
