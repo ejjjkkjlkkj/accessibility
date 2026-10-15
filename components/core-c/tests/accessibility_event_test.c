@@ -50,6 +50,21 @@ int main(void) {
     assert(event.name[ACCESSIBILITY_NAME_CAPACITY - 1u] == '\0');
 
     assert(accessibility_event_init(&event, ACCESSIBILITY_ROLE_BUTTON, 10u, "caf\xC3\xA9") == 0);
+    {
+        const char embedded_nul[] = {'b', 'a', 'd', '\0', 'x'};
+        const char truncated_utf8[] = {'c', 'a', 'f', (char)0xC3};
+        const char valid_utf8[] = {'c', 'a', 'f', (char)0xC3, (char)0xA9};
+        assert(accessibility_event_init_n(&event, ACCESSIBILITY_ROLE_BUTTON, 12u,
+                                          embedded_nul, sizeof(embedded_nul)) == -4);
+        assert(accessibility_event_init_n(&event, ACCESSIBILITY_ROLE_BUTTON, 12u,
+                                          truncated_utf8, sizeof(truncated_utf8)) == -4);
+        assert(accessibility_event_init_n(&event, ACCESSIBILITY_ROLE_BUTTON, 12u,
+                                          valid_utf8, sizeof(valid_utf8)) == 0);
+        assert(strcmp(event.name, "caf\xC3\xA9") == 0);
+        assert(accessibility_event_init_n(&event, ACCESSIBILITY_ROLE_BUTTON, 12u,
+                                          NULL, 0u) == 0);
+        assert(event.name[0] == '\0');
+    }
     const char *invalid_utf8[] = {
         "\xC0\xAF",             /* overlong two-byte sequence */
         "\xED\xA0\x80",       /* UTF-16 surrogate */

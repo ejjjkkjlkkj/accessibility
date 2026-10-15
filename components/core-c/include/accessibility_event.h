@@ -53,6 +53,12 @@ int accessibility_event_init(accessibility_event *event,
                              accessibility_role role,
                              uint64_t source_id,
                              const char *name);
+/* Length-aware entry point: rejects embedded NUL and invalid UTF-8. */
+int accessibility_event_init_n(accessibility_event *event,
+                               accessibility_role role,
+                               uint64_t source_id,
+                               const char *name,
+                               size_t name_length);
 int accessibility_state_flags_valid(uint64_t state_flags);
 /* Set flags only after validation; failure leaves the event unchanged. */
 int accessibility_event_set_state_flags(accessibility_event *event, uint64_t state_flags);

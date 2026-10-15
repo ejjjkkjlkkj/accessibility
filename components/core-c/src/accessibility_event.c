@@ -75,34 +75,34 @@ static int accessibility_utf8_valid(const unsigned char *text, size_t length) {
     return 1;
 }
 
-int accessibility_event_init(accessibility_event *event,
-                             accessibility_role role,
-                             uint64_t source_id,
-                             const char *name) {
-    size_t i = 0;
-
-    if (event == NULL || name == NULL) {
-        return -1;
-    }
-    if ((int)role < ACCESSIBILITY_ROLE_UNKNOWN || (int)role > ACCESSIBILITY_ROLE_MENU_ITEM) {
-        return -2;
-    }
-    /* Bound the scan before copying; do not call unbounded strlen on external input. */
-    while (i < ACCESSIBILITY_NAME_CAPACITY && name[i] != '\0') {
-        ++i;
-    }
-    if (i >= ACCESSIBILITY_NAME_CAPACITY) {
-        return -3;
-    }
-    if (!accessibility_utf8_valid((const unsigned char *)name, i)) {
-        return -4;
-    }
+int accessibility_event_init_n(accessibility_event *event,
+                               accessibility_role role,
+                               uint64_t source_id,
+                               const char *name,
+                               size_t name_length) {
+    if (event == NULL || (name == NULL && name_length != 0u)) return -1;
+    if ((int)role < ACCESSIBILITY_ROLE_UNKNOWN || (int)role > ACCESSIBILITY_ROLE_MENU_ITEM) return -2;
+    if (name_length > ACCESSIBILITY_NAME_CAPACITY - 1u) return -3;
+    if (name_length != 0u && memchr(name, '\0', name_length) != NULL) return -4;
+    if (!accessibility_utf8_valid((const unsigned char *)name, name_length)) return -4;
 
     memset(event, 0, sizeof(*event));
     event->abi_version = ACCESSIBILITY_EVENT_ABI_VERSION;
     event->role = (uint32_t)role;
     event->source_id = source_id;
-    memcpy(event->name, name, i);
-    event->name[i] = '\0';
+    if (name_length != 0u) memcpy(event->name, name, name_length);
+    event->name[name_length] = '\0';
     return 0;
+}
+
+int accessibility_event_init(accessibility_event *event,
+                             accessibility_role role,
+                             uint64_t source_id,
+                             const char *name) {
+    size_t length = 0;
+    if (event == NULL || name == NULL) return -1;
+    /* Compatibility API: caller must provide a readable NUL-terminated C string. */
+    while (length < ACCESSIBILITY_NAME_CAPACITY && name[length] != '\0') ++length;
+    if (length >= ACCESSIBILITY_NAME_CAPACITY) return -3;
+    return accessibility_event_init_n(event, role, source_id, name, length);
 }
