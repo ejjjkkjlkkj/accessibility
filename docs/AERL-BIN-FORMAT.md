@@ -43,6 +43,23 @@ Hash courant attendu :
 
 Le test Rust binary_format_matches_published_golden_vector doit produire cette tête exacte. Les implémentations d'autres langages peuvent utiliser ce vecteur avant d'être reliées à la même interface binaire.
 
+
+## Payload sémantique d'accessibilité ACCE/1
+
+La fonction Rust append_accessible_event accepte un AccessibleEvent validé provenant de accessibility-core et crée un payload de 25 octets :
+
+| Offset du payload | Longueur | Champ |
+|---:|---:|---|
+| 0 | 4 | Magic ASCII ACCE |
+| 4 | 1 | Version du payload, 0x01 |
+| 5 | 4 | Code de rôle partagé u32 little-endian |
+| 9 | 8 | Drapeaux d'état u64 little-endian |
+| 17 | 8 | Identifiant source u64 little-endian |
+
+Le type d'événement AERL est accessibility.semantic. Le nom accessible n'est volontairement pas écrit : les libellés d'interface peuvent contenir des informations privées. L'identifiant source peut lui-même permettre une corrélation; l'adaptateur doit utiliser un identifiant éphémère limité à la session plutôt qu'un identifiant global personnel.
+
+La fonction refuse un événement sémantique invalide avant toute écriture. Cela relie le contrat logique rôles/états au journal vérifiable sans enregistrer le texte de l'interface.
+
 ## Limites de sécurité
 
 - SHA-256 chaîné détecte les altérations de trames. Ce n'est ni une signature, ni un MAC; un attaquant qui peut réécrire le journal entier peut recalculer tous les hashes.

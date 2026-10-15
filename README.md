@@ -20,7 +20,7 @@ Dépôt de référence pour cartographier et développer les composants d'access
 
 ## AERL — journal d'audit vérifiable
 
-AERL comprend un CLI Python de journaux de preuves JSONL et un noyau Rust no_std à tampon fixe pour UEFI/bas niveau. Les deux profils structurent les événements, chaînent les hashes SHA-256 et peuvent vérifier un checkpoint externe. Ils complètent syslog pour la conservation de preuves; ils ne remplacent pas les journaux système. Voir [la conception et les limites AERL](docs/AERL.md).
+AERL comprend un CLI Python de journaux de preuves JSONL et un noyau Rust no_std à tampon fixe pour UEFI/bas niveau. Le noyau peut journaliser des rôles et états d'accessibilité validés sans enregistrer le nom accessible brut. Les profils structurent les événements, chaînent SHA-256 et peuvent vérifier un checkpoint externe. Ils complètent syslog pour la conservation de preuves, sans le remplacer. Voir [AERL](docs/AERL.md) et le [format binaire](docs/AERL-BIN-FORMAT.md).
 
 
 ## Catalogue et feuille de route

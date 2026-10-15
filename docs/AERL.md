@@ -91,3 +91,8 @@ AERL n'accède pas au réseau et les tests n'attaquent que des fichiers temporai
 ## Format binaire AERL-BIN/1
 
 Le noyau Rust utilise un format binaire distinct du JSONL Python. Le contrat byte-à-byte, les offsets, l'ordre little-endian, la couverture SHA-256 et un vecteur connu sont décrits dans [AERL-BIN-FORMAT.md](AERL-BIN-FORMAT.md).
+
+
+## Journalisation sémantique d'accessibilité
+
+Le noyau Rust expose append_accessible_event pour enregistrer un rôle, des états et un identifiant source limité à la session. Le nom accessible n'est pas écrit dans le payload par défaut afin d'éviter de journaliser du texte utilisateur ou des libellés contenant des informations personnelles. Le timestamp est fourni par l'adaptateur et n'est pas attesté.
