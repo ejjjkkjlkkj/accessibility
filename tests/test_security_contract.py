@@ -1,6 +1,7 @@
 import json
 import subprocess
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -38,6 +39,51 @@ class SecurityContractTests(unittest.TestCase):
         data = json.loads(MANIFEST.read_text(encoding="utf-8"))
         self.assertIn("physical_hardware_proof", data["release_gate"])
         self.assertIn("not", data["operating_rules"]["no_false_claims"].lower())
+
+    def run_validator_with_data(self, data):
+        with tempfile.TemporaryDirectory() as temp:
+            manifest = Path(temp) / "manifest.json"
+            manifest.write_text(json.dumps(data), encoding="utf-8")
+            return subprocess.run(
+                [sys.executable, str(VALIDATOR), "--manifest", str(manifest)],
+                text=True, capture_output=True, check=False, timeout=10,
+            )
+
+    def test_rejects_non_object_manifest_without_traceback(self):
+        result = self.run_validator_with_data([])
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("manifest root must be a JSON object", result.stderr)
+        self.assertNotIn("Traceback", result.stderr)
+
+    def test_rejects_unhashable_agent_id_without_traceback(self):
+        data = json.loads(MANIFEST.read_text(encoding="utf-8"))
+        data["agents"][0]["id"] = ["DARK-LEAD"]
+        result = self.run_validator_with_data(data)
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("id must be a non-empty string", result.stderr)
+        self.assertNotIn("Traceback", result.stderr)
+
+    def test_rejects_non_string_capability(self):
+        data = json.loads(MANIFEST.read_text(encoding="utf-8"))
+        data["agents"][0]["capabilities"][0] = 17
+        result = self.run_validator_with_data(data)
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("capabilities entries must be non-empty strings", result.stderr)
+
+    def test_rejects_unhashable_release_status_without_traceback(self):
+        data = json.loads(MANIFEST.read_text(encoding="utf-8"))
+        data["release_gate"]["required_statuses"] = [["PASS"]]
+        result = self.run_validator_with_data(data)
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("required_statuses must be an array of strings", result.stderr)
+        self.assertNotIn("Traceback", result.stderr)
+
+    def test_rejects_boolean_runtime_limit(self):
+        data = json.loads(MANIFEST.read_text(encoding="utf-8"))
+        data["agents"][3]["limits"]["max_runtime_seconds"] = True
+        result = self.run_validator_with_data(data)
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("max_runtime_seconds must be a positive integer", result.stderr)
 
 
 if __name__ == "__main__":
