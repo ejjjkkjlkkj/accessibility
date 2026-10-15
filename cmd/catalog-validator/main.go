@@ -4,6 +4,7 @@ import (
 	"encoding/csv"
 	"fmt"
 	"io"
+	"net/url"
 	"os"
 	"strings"
 )
@@ -17,15 +18,27 @@ func validate(r io.Reader) error {
 	if err != nil {
 		return fmt.Errorf("read header: %w", err)
 	}
+	if len(header) == 0 {
+		return fmt.Errorf("empty CSV header")
+	}
+
 	index := make(map[string]int, len(header))
-	for i, name := range header {
-		index[strings.TrimSpace(name)] = i
+	for i, rawName := range header {
+		name := strings.TrimSpace(rawName)
+		if name == "" {
+			return fmt.Errorf("header column %d is empty", i+1)
+		}
+		if _, exists := index[name]; exists {
+			return fmt.Errorf("duplicate header column %q", name)
+		}
+		index[name] = i
 	}
 	for _, name := range required {
 		if _, ok := index[name]; !ok {
 			return fmt.Errorf("missing required column %q", name)
 		}
 	}
+
 	seen := map[string]bool{}
 	line := 1
 	for {
@@ -37,12 +50,11 @@ func validate(r io.Reader) error {
 		if err != nil {
 			return fmt.Errorf("CSV line %d: %w", line, err)
 		}
+		if len(row) != len(header) {
+			return fmt.Errorf("CSV line %d: got %d fields, expected %d", line, len(row), len(header))
+		}
 		value := func(key string) string {
-			i := index[key]
-			if i >= len(row) {
-				return ""
-			}
-			return strings.TrimSpace(row[i])
+			return strings.TrimSpace(row[index[key]])
 		}
 		id := value("id")
 		if id == "" {
@@ -57,9 +69,12 @@ func validate(r io.Reader) error {
 				return fmt.Errorf("CSV line %d: empty %s", line, key)
 			}
 		}
-		url := value("url")
-		if !strings.HasPrefix(url, "https://") && !strings.HasPrefix(url, "http://") {
-			return fmt.Errorf("CSV line %d: URL must use HTTP or HTTPS", line)
+
+		parsed, err := url.Parse(value("url"))
+		if err != nil || parsed == nil || parsed.Hostname() == "" ||
+			(parsed.Scheme != "https" && parsed.Scheme != "http") ||
+			parsed.User != nil {
+			return fmt.Errorf("CSV line %d: URL must be an absolute HTTP(S) URL with a hostname and no userinfo", line)
 		}
 	}
 	if len(seen) == 0 {
