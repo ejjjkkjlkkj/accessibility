@@ -75,7 +75,6 @@ class AccessibilityRoleContractTests(unittest.TestCase):
         contract_path = ROOT / "data" / "accessibility-state-flags-v1.json"
         state_contract = json.loads(contract_path.read_text(encoding="utf-8"))
         expected = {item["name"]: item["mask"] for item in state_contract["flags"]}
-        expected_bits = {item["name"]: item["bit"] for item in state_contract["flags"]}
         self.assertEqual(state_contract["schema_version"], 1)
         self.assertEqual(state_contract["known_mask"], sum(expected.values()))
         self.assertEqual(expected, {"focused": 1, "focusable": 2, "enabled": 4, "disabled": 8})
@@ -92,26 +91,33 @@ class AccessibilityRoleContractTests(unittest.TestCase):
 
         shift_patterns = {
             "C": ("components/core-c/include/accessibility_event.h",
-                  r"#define ACCESSIBILITY_STATE_([A-Z]+) \\(UINT64_C\\(1\\) << (\\d+)\\)"),
+                  r"#define ACCESSIBILITY_STATE_([A-Z]+) \(UINT64_C\(1\) << (\d+)\)"),
             "Rust": ("crates/accessibility-core/src/tree.rs",
-                     r"pub const STATE_([A-Z]+): u64 = 1 << (\\d+);"),
+                     r"pub const STATE_([A-Z]+): u64 = 1 << (\d+);"),
             "D": ("components/core-d/src/accessibility_event.d",
-                  r"enum ulong STATE_([A-Z]+) = 1UL << (\\d+);"),
+                  r"enum ulong STATE_([A-Z]+) = 1UL << (\d+);"),
             "Nim": ("components/core-nim/src/accessibility_event.nim",
-                    r"STATE_([A-Z]+)\\* = 1'u64 shl (\\d+)"),
+                    r"STATE_([A-Z]+)\* = 1'u64 shl (\d+)"),
             "Swift": ("components/core-swift/Sources/AccessibilityCore/AccessibilityEvent.swift",
-                      r"public static let ([a-z]+): UInt64 = 1 << (\\d+)"),
+                      r"public static let ([a-z]+): UInt64 = 1 << (\d+)"),
             "Zig": ("components/core-zig/src/accessibility_event.zig",
-                    r"pub const STATE_([A-Z]+): u64 = 1 << (\\d+);"),
+                    r"pub const STATE_([A-Z]+): u64 = 1 << (\d+);"),
         }
         for language, (path, pattern) in shift_patterns.items():
             with self.subTest(language=language):
                 self.assertEqual(shifted_map(path, pattern), expected, path)
 
         go_source = (ROOT / "internal/accessibility/role.go").read_text(encoding="utf-8")
-        self.assertIn("StateFocused StateFlags = 1 << iota", go_source)
-        go_names = re.findall(r"^\\s*(StateFocused|StateFocusable|StateEnabled|StateDisabled)\\s*$", go_source, re.MULTILINE)
-        self.assertEqual(go_names, ["StateFocusable", "StateEnabled", "StateDisabled"])
+        go_block = re.search(
+            r"const\s*\(\s*StateFocused StateFlags = 1 << iota(.*?)\)",
+            go_source,
+            re.DOTALL,
+        )
+        self.assertIsNotNone(go_block, "Go state flag iota block missing")
+        self.assertEqual(
+            re.findall(r"^\s*(StateFocusable|StateEnabled|StateDisabled)\s*$", go_block.group(1), re.MULTILINE),
+            ["StateFocusable", "StateEnabled", "StateDisabled"],
+        )
         self.assertEqual(
             {"focused": 1, "focusable": 2, "enabled": 4, "disabled": 8},
             expected,
@@ -121,16 +127,18 @@ class AccessibilityRoleContractTests(unittest.TestCase):
         ada_map = {
             name.lower(): int(mask)
             for name, mask in re.findall(
-                r"State_(Focused|Focusable|Enabled|Disabled)\\s*:\\s*constant Interfaces.Unsigned_64 := (\\d+);",
+                r"State_(Focused|Focusable|Enabled|Disabled)\s*:\s*constant Interfaces.Unsigned_64 := (\d+);",
                 ada_source,
             )
         }
         self.assertEqual(ada_map, expected)
-
-        nim_source = (ROOT / "components/core-nim/src/accessibility_event.nim").read_text(encoding="utf-8")
-        self.assertIn("STATE_KNOWN_MASK* = 0x0F'u64", nim_source)
-        zig_source = (ROOT / "components/core-zig/src/accessibility_event.zig").read_text(encoding="utf-8")
-        self.assertIn("STATE_KNOWN_MASK: u64 = 0x0F", zig_source)
+        for path, marker in [
+            ("components/core-ada/accessibility_event.ads", "State_Known_Mask : constant Interfaces.Unsigned_64 := 15"),
+            ("components/core-nim/src/accessibility_event.nim", "STATE_KNOWN_MASK* = 0x0F'u64"),
+            ("components/core-zig/src/accessibility_event.zig", "STATE_KNOWN_MASK: u64 = 0x0F"),
+            ("components/core-c/include/accessibility_event.h", "ACCESSIBILITY_STATE_KNOWN_MASK UINT64_C(0x0F)"),
+        ]:
+            self.assertIn(marker, (ROOT / path).read_text(encoding="utf-8"), path)
 
     def test_semantic_state_flag_contract_is_implemented_across_languages(self):
         implementations = {
