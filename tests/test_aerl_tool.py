@@ -117,7 +117,7 @@ class AerlToolTests(unittest.TestCase):
     def test_collect_refuses_symlinked_report(self):
         target = self.root / "real.json"
         target.write_text('{"status":"PASS"}', encoding="utf-8")
-        link = self.root / "junit-report.json"
+        link = self.root / "junit-results.xml"
         try:
             link.symlink_to(target)
         except (OSError, NotImplementedError):
