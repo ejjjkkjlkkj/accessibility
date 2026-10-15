@@ -73,13 +73,16 @@ def audit(root, exclude_paths=()):
         if content is None:
             continue
         scanned += 1
+        # Suppress scanner self-matches only in this scanner's own rule table.
+        # Other audited files must never be allowed to hide findings by declaring RULES.
+        is_scanner_source = path.resolve() == Path(__file__).resolve()
         in_rule_definitions = False
         for number, line in enumerate(content.splitlines(), 1):
             stripped = line.strip()
-            if stripped.startswith("RULES = ["):
+            if is_scanner_source and stripped.startswith("RULES = ["):
                 in_rule_definitions = True
                 continue
-            if in_rule_definitions:
+            if is_scanner_source and in_rule_definitions:
                 if stripped == "]":
                     in_rule_definitions = False
                 continue

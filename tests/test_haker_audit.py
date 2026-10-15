@@ -138,4 +138,18 @@ class HakerAuditTests(unittest.TestCase):
             self.assertEqual(result.returncode, 2)
             self.assertIn("must not be a symbolic link", result.stderr)
             self.assertEqual(target.read_text(encoding="utf-8"), '{"keep": true}')
+
+    def test_rule_table_marker_cannot_hide_findings_in_audited_source(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            candidate = root / "sample.py"
+            candidate.write_text(
+                'RULES = [\\npassword = "supersecretpasswordvalue"\\n]\\n',
+                encoding="utf-8",
+            )
+            result = self.run_scanner(root)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            self.assertIn("SEC002", result.stdout)
+            self.assertIn("sample.py:2", result.stdout)
+
 if __name__ == "__main__": unittest.main()
