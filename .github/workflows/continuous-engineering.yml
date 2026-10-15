@@ -69,6 +69,8 @@ jobs:
 
       - name: Run Python tests when present
         shell: bash
+        env:
+          PYTHONPATH: src
         run: |
           if find . -type f \( -name 'test_*.py' -o -name '*_test.py' \) -not -path './.git/*' | grep -q .; then
             python -m pip install --disable-pip-version-check pytest
@@ -77,24 +79,33 @@ jobs:
             echo "PARTIAL: no Python test files detected."
           fi
 
-      - name: Run Rust workspace tests when present
+      - name: Run Rust tests when manifests are present
         shell: bash
         run: |
-          if find . -name Cargo.toml -not -path './.git/*' | grep -q .; then
-            cargo test --workspace --all-targets
+          mapfile -t manifests < <(find . -name Cargo.toml -not -path './.git/*' -not -path '*/target/*')
+          if (( ${#manifests[@]} )); then
+            rustup toolchain install stable --profile minimal
+            for manifest in "${manifests[@]}"; do
+              echo "Testing Rust manifest: $manifest"
+              cargo +stable test --manifest-path "$manifest" --all-targets
+            done
           else
             echo "SKIP: no Cargo.toml detected."
           fi
 
-      - name: Run Go tests when present
+      - name: Run Go tests when modules are present
         shell: bash
         run: |
-          if find . -name go.mod -not -path './.git/*' | grep -q .; then
-            while IFS= read -r mod; do
+          mapfile -t modules < <(find . -name go.mod -not -path './.git/*' -not -path '*/vendor/*')
+          if (( ${#modules[@]} )); then
+            go_version="$(awk '/^go / {print $2; exit}' "${modules[0]}")"
+            if [[ -z "$go_version" ]]; then go_version="1.23"; fi
+            echo "Go modules detected; requested minimum Go version: $go_version"
+            for mod in "${modules[@]}"; do
               dir="$(dirname "$mod")"
               echo "Testing Go module: $dir"
               (cd "$dir" && go test ./...)
-            done < <(find . -name go.mod -not -path './.git/*')
+            done
           else
             echo "SKIP: no go.mod detected."
           fi
@@ -102,11 +113,14 @@ jobs:
       - name: Publish validation summary
         if: always()
         shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          COMMIT_SHA: ${{ github.sha }}
         run: |
           {
             echo "## Continuous engineering validation"
-            echo "- Trigger: `${{ github.event_name }}`"
-            echo "- Commit: `${{ github.sha }}`"
+            echo "- Trigger: $EVENT_NAME"
+            echo "- Commit: $COMMIT_SHA"
             echo "- This workflow validates repository code; it does not claim autonomous code generation."
-            echo "- QEMU/hosted CI cannot prove physical UEFI boot, hardware discovery, or real audio output."
+            echo "- Hosted CI does not prove physical UEFI boot, hardware discovery, or real audio output."
           } >> "$GITHUB_STEP_SUMMARY"
