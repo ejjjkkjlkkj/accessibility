@@ -157,6 +157,21 @@ func TestValidateAcceptsCaseInsensitiveFullyQualifiedDomain(t *testing.T) {
 	}
 }
 
+func TestValidateRejectsMalformedURLHostnames(t *testing.T) {
+	for _, rawURL := range []string{
+		"https://bad_host.example.org/",
+		"https://example..org/",
+		"https://-bad.example.org/",
+		"https://bad-.example.org/",
+		"https://[::1]/",
+	} {
+		row := "a,Example,example.org," + rawURL + ",docs,web,candidate,test\\n"
+		if err := validate(strings.NewReader(validHeader + row)); err == nil {
+			t.Errorf("expected invalid DNS hostname to fail: %q", rawURL)
+		}
+	}
+}
+
 func TestValidateRejectsMalformedURL(t *testing.T) {
 	for _, rawURL := range []string{"https://%", "http://[::1", "https://?query=missing-host"} {
 		row := "a,Example,example.org," + rawURL + ",docs,web,candidate,test\n"
