@@ -244,6 +244,9 @@ def parser() -> argparse.ArgumentParser:
     search.add_argument("--kind")
     search.add_argument("--actor")
     search.add_argument("--status", choices=["INFO", "PASS", "FAIL", "PARTIAL", "BLOCKED", "NOT_VALIDATED", "UNPROVEN"])
+    search.add_argument("--commit-sha", help="filter on payload.ci.commit_sha")
+    search.add_argument("--run-id", help="filter on payload.ci.run_id")
+    search.add_argument("--job", help="filter on payload.ci.job")
     search.add_argument("--limit", type=int, default=100)
     search.add_argument("--out", type=Path, help="write JSON results to a new file; refuses overwrite")
     collect_parser = sub.add_parser("collect", help="collect metadata from allowlisted repository reports")
@@ -327,13 +330,22 @@ def main(argv: list[str] | None = None) -> int:
         else:
             if isinstance(args.limit, bool) or not 1 <= args.limit <= MAX_QUERY:
                 raise AerlError(f"limit must be between 1 and {MAX_QUERY}")
-            selected = [r for r in records if
-                        (args.kind is None or r["kind"] == args.kind) and
-                        (args.actor is None or r["actor"] == args.actor) and
-                        (args.status is None or r["status"] == args.status)]
+            def matches(record):
+                payload = record.get("payload", {})
+                ci = payload.get("ci", {}) if isinstance(payload, dict) else {}
+                return (
+                    (args.kind is None or record["kind"] == args.kind) and
+                    (args.actor is None or record["actor"] == args.actor) and
+                    (args.status is None or record["status"] == args.status) and
+                    (args.commit_sha is None or ci.get("commit_sha") == args.commit_sha) and
+                    (args.run_id is None or ci.get("run_id") == args.run_id) and
+                    (args.job is None or ci.get("job") == args.job)
+                )
+            selected = [r for r in records if matches(r)]
             emit({"schema": "AERL-REPORT/1", "status": "PASS", "operation": "search",
                   "matches": len(selected), "head_hash": head,
-                  "filters": {"kind": args.kind, "actor": args.actor, "status": args.status},
+                  "filters": {"kind": args.kind, "actor": args.actor, "status": args.status,
+                              "commit_sha": args.commit_sha, "run_id": args.run_id, "job": args.job},
                   "events": selected[-args.limit:]}, args.out)
         return 0
     except (AerlError, OSError, ValueError, ET.ParseError) as exc:
