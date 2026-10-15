@@ -101,6 +101,28 @@ func TestValidateRejectsDuplicateHeadersAfterTrimming(t *testing.T) {
 	}
 }
 
+func TestValidateRejectsURLDomainMismatch(t *testing.T) {
+	for _, test := range []struct {
+		domain string
+		rawURL string
+	}{
+		{domain: "example.org", rawURL: "https://evil.test/"},
+		{domain: "example.org", rawURL: "https://example.org.evil.test/"},
+	} {
+		row := "a,Example," + test.domain + "," + test.rawURL + ",docs,web,candidate,test\n"
+		if err := validate(strings.NewReader(validHeader + row)); err == nil {
+			t.Errorf("expected domain mismatch to fail: domain=%q url=%q", test.domain, test.rawURL)
+		}
+	}
+}
+
+func TestValidateAcceptsSubdomainOfDeclaredDomain(t *testing.T) {
+	row := "a,Example,example.org,https://docs.example.org/,docs,web,candidate,test\n"
+	if err := validate(strings.NewReader(validHeader + row)); err != nil {
+		t.Fatalf("expected valid subdomain URL, got %v", err)
+	}
+}
+
 func TestValidateRejectsMalformedURL(t *testing.T) {
 	for _, rawURL := range []string{"https://%", "http://[::1", "https://?query=missing-host"} {
 		row := "a,Example,example.org," + rawURL + ",docs,web,candidate,test\n"
