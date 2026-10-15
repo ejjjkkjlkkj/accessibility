@@ -46,15 +46,17 @@ Ce contrôle ne valide pas le fonctionnement sur un PC physique. Le stockage, la
     python scripts/aerl_tool.py init --file .aerl/events.aerl
     python scripts/aerl_tool.py append --file .aerl/events.aerl --actor QA --kind accessibility.keyboard --status PASS --payload '{"checks":12}'
     python scripts/aerl_tool.py collect --root . --file .aerl/events.aerl
+    python scripts/aerl_tool.py import-ledger --source matrix-linux/events.aerl --file .aerl/events.aerl --source-label linux-py313
     python scripts/aerl_run.py --file .aerl/events.aerl --kind test.unit -- python -m unittest discover -s tests -p "test_aerl_tool.py" -v
     python scripts/aerl_tool.py verify --file .aerl/events.aerl
     python scripts/aerl_tool.py summary --file .aerl/events.aerl --out summary.json
     python scripts/aerl_tool.py search --file .aerl/events.aerl --status FAIL --limit 100
+    python scripts/aerl_tool.py search --file .aerl/events.aerl --commit-sha COMMIT_SHA --run-id RUN_ID --limit 100
     python scripts/aerl_tool.py checkpoint-create --file .aerl/events.aerl --out checkpoint.json
     python scripts/aerl_tool.py checkpoint-verify --file .aerl/events.aerl --checkpoint checkpoint.json
     python -m unittest discover -s tests -p "test_aerl_tool.py" -v
 
-Le lanceur `scripts/aerl_run.py` exécute une commande sans masquer sa sortie, puis inscrit son code de retour, sa durée, le nombre d'arguments et l'empreinte SHA-256 de la ligne de commande. Il ne journalise jamais la ligne de commande elle-même, qui pourrait contenir des secrets. Si le journal ne peut pas être écrit, il renvoie 125 même si la commande cible a réussi : aucune réussite n'est déclarée sans enregistrement de preuve. La matrice HAKER utilise ce lanceur pour les tests et finalise le journal même lorsqu'une étape échoue.\n\nLes rapports utilisent le schéma `AERL-REPORT/1`. Les sorties de rapport refusent l’écrasement de fichiers existants. La collecte est un point de départ borné, pas une capture exhaustive de chaque événement du dépôt; les producteurs de tests et d'agents doivent encore émettre des rapports structurés pour être collectés.
+Le lanceur `scripts/aerl_run.py` exécute une commande sans masquer sa sortie, puis inscrit son code de retour, sa durée, le nombre d'arguments et l'empreinte SHA-256 de la ligne de commande. Il ne journalise jamais la ligne de commande elle-même, qui pourrait contenir des secrets. Si le journal ne peut pas être écrit, il renvoie 125 même si la commande cible a réussi : aucune réussite n'est déclarée sans enregistrement de preuve. La matrice HAKER utilise ce lanceur pour les tests et finalise le journal même lorsqu'une étape échoue. Le job d'agrégation vérifie chaque journal de matrice source, importe chaque événement avec son hash et sa provenance, déduplique les imports répétés, puis produit un journal maître `aerl-master-evidence`. Le hash source et le hash de chaque enregistrement sont conservés; le timestamp source n'est pas réutilisé comme timestamp maître. Le journal maître est un artefact de cette exécution CI, pas encore un stockage permanent inter-exécutions.\n\nLes rapports utilisent le schéma `AERL-REPORT/1`. Les sorties de rapport refusent l’écrasement de fichiers existants. La collecte est un point de départ borné, pas une capture exhaustive de chaque événement du dépôt; les producteurs de tests et d'agents doivent encore émettre des rapports structurés pour être collectés.
 
 ## Exemple Windows PowerShell
 
