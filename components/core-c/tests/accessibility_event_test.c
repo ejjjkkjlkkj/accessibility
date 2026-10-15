@@ -13,6 +13,15 @@ int main(void) {
     assert(ACCESSIBILITY_ROLE_MENU_ITEM == 17);
     assert(event.source_id == 42u);
     assert(strcmp(event.name, "Continue") == 0);
+    assert(event.state_flags == 0u);
+    assert(accessibility_state_flags_valid(0u));
+    assert(accessibility_state_flags_valid(ACCESSIBILITY_STATE_FOCUSABLE |
+                                           ACCESSIBILITY_STATE_ENABLED |
+                                           ACCESSIBILITY_STATE_FOCUSED));
+    assert(!accessibility_state_flags_valid(ACCESSIBILITY_STATE_ENABLED |
+                                            ACCESSIBILITY_STATE_DISABLED));
+    assert(!accessibility_state_flags_valid(ACCESSIBILITY_STATE_FOCUSED));
+    assert(!accessibility_state_flags_valid(UINT64_C(1) << 63));
 
     assert(accessibility_event_init(NULL, ACCESSIBILITY_ROLE_BUTTON, 1u, "x") != 0);
     assert(accessibility_event_init(&event, ACCESSIBILITY_ROLE_BUTTON, 1u, NULL) != 0);

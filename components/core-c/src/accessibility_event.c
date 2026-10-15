@@ -2,6 +2,17 @@
 
 #include <string.h>
 
+int accessibility_state_flags_valid(uint64_t state_flags) {
+    if ((state_flags & ~ACCESSIBILITY_STATE_KNOWN_MASK) != 0u) return 0;
+    if ((state_flags & ACCESSIBILITY_STATE_ENABLED) != 0u &&
+        (state_flags & ACCESSIBILITY_STATE_DISABLED) != 0u) return 0;
+    if ((state_flags & ACCESSIBILITY_STATE_FOCUSED) != 0u &&
+        ((state_flags & ACCESSIBILITY_STATE_FOCUSABLE) == 0u ||
+         (state_flags & ACCESSIBILITY_STATE_ENABLED) == 0u ||
+         (state_flags & ACCESSIBILITY_STATE_DISABLED) != 0u)) return 0;
+    return 1;
+}
+
 int accessibility_event_init(accessibility_event *event,
                              accessibility_role role,
                              uint64_t source_id,
