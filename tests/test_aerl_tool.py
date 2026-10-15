@@ -149,5 +149,36 @@ class AerlToolTests(unittest.TestCase):
         self.assertEqual(selected[0]["hash"], records[-1]["hash"])
 
 
+    def test_import_ledger_preserves_provenance_and_is_idempotent(self):
+        source = self.root / "source.aerl"
+        master = self.root / "master.aerl"
+        aerl.append_event(source, "CI", "test.unit", "PASS", {"suite": "unit", "checks": 4})
+        aerl.append_event(source, "CI", "test.integration", "FAIL", {"suite": "integration"})
+        aerl.append_event(master, "AGGREGATOR", "aggregate.started", "INFO", {})
+        first = aerl_tool.import_ledger(source, master, "linux-python-3.13")
+        self.assertEqual(first["events_imported"], 2)
+        self.assertEqual(first["duplicates_skipped"], 0)
+        second = aerl_tool.import_ledger(source, master, "linux-python-3.13")
+        self.assertEqual(second["events_imported"], 0)
+        self.assertEqual(second["duplicates_skipped"], 2)
+        records, _ = aerl_tool.load_records(master)
+        imported = [r for r in records if r["kind"] == "import.event"]
+        self.assertEqual([r["status"] for r in imported], ["PASS", "FAIL"])
+        self.assertEqual(imported[0]["payload"]["source_kind"], "test.unit")
+        self.assertEqual(imported[0]["payload"]["source_payload"]["checks"], 4)
+        self.assertEqual(len(imported[0]["payload"]["source_record_hash"]), 64)
+
+    def test_import_ledger_refuses_corrupt_source_before_appending(self):
+        source = self.root / "bad-source.aerl"
+        master = self.root / "master.aerl"
+        aerl.append_event(source, "CI", "test.unit", "PASS", {})
+        aerl.append_event(master, "AGGREGATOR", "aggregate.started", "INFO", {})
+        source.write_bytes(source.read_bytes().replace(b'"PASS"', b'"FAIL"', 1))
+        with self.assertRaisesRegex(aerl.AerlError, "hash mismatch"):
+            aerl_tool.import_ledger(source, master)
+        records, _ = aerl_tool.load_records(master)
+        self.assertEqual(len(records), 1)
+
+
 if __name__ == "__main__":
     unittest.main()
