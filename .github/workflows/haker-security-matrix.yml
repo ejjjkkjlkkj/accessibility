@@ -51,10 +51,14 @@ jobs:
         run: python -m unittest discover -s tests -p "test_security_contract.py" -v
       - name: Run HAKER scanner tests
         run: python -m unittest discover -s tests -p "test_haker_audit.py" -v
+      - name: Validate HAKER report schema and evidence
+        run: python -m unittest discover -s tests -p "test_validate_haker_report.py" -v
       - name: Run bounded offline audit
         run: python scripts/haker_audit.py --json-out haker-audit-report.json
+      - name: Validate generated HAKER report
+        run: python scripts/validate_haker_report.py haker-audit-report.json
       - name: Compile Python security tools
-        run: python -m py_compile scripts/validate_security_contract.py scripts/haker_audit.py
+        run: python -m py_compile scripts/validate_security_contract.py scripts/haker_audit.py scripts/validate_haker_report.py
       - name: Upload audit report
         if: always()
         uses: actions/upload-artifact@v4
