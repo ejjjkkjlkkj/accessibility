@@ -9,6 +9,10 @@ pub const STATE_FOCUSABLE: u64 = 1 << 1;
 pub const STATE_ENABLED: u64 = 1 << 2;
 pub const STATE_DISABLED: u64 = 1 << 3;
 pub const MAX_NODE_NAME_UTF8_BYTES: usize = 4096;
+/// Bound validation work for externally supplied trees in no_std environments.
+pub const MAX_ACCESSIBLE_TREE_NODES: usize = 512;
+/// Maximum number of parent links accepted between a node and the root.
+pub const MAX_ACCESSIBLE_TREE_DEPTH: usize = 64;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct AccessibleNode<'a> {
@@ -37,10 +41,11 @@ impl<'a> AccessibleNode<'a> {
     }
 }
 
-/// Validate unique IDs, exactly one root, parent references, acyclic ancestry,
-/// and the shared UTF-8 name limit. An empty slice is not a valid tree.
+/// Validate unique IDs, exactly one root, parent references, bounded acyclic ancestry,
+/// and the shared UTF-8 name limit. Empty, oversized, or excessively deep trees are invalid.
+/// Bounds keep validation finite for untrusted input without heap allocation.
 pub fn validate_tree(nodes: &[AccessibleNode<'_>]) -> bool {
-    if nodes.is_empty() {
+    if nodes.is_empty() || nodes.len() > MAX_ACCESSIBLE_TREE_NODES {
         return false;
     }
 
@@ -64,8 +69,8 @@ pub fn validate_tree(nodes: &[AccessibleNode<'_>]) -> bool {
         return false;
     }
 
-    // Every ancestry chain must terminate at the single root. The depth bound
-    // also rejects cycles without recursion or heap allocation.
+    // Parent lookup is linear, so explicitly bound both node count and ancestry depth.
+    // No recursion or heap allocation is required.
     for node in nodes {
         let mut parent_id = node.parent_id;
         let mut depth = 0usize;
@@ -75,6 +80,9 @@ pub fn validate_tree(nodes: &[AccessibleNode<'_>]) -> bool {
                 None => return false,
             };
             depth += 1;
+            if depth > MAX_ACCESSIBLE_TREE_DEPTH {
+                return false;
+            }
             if depth >= nodes.len() && parent.parent_id.is_some() {
                 return false;
             }
@@ -152,5 +160,26 @@ mod tests {
         let long_name = "x".repeat(MAX_NODE_NAME_UTF8_BYTES + 1);
         let oversized = [AccessibleNode::new(1, None, Role::Window, 0, &long_name)];
         assert!(!validate_tree(&oversized));
+    }
+
+    #[test]
+    fn rejects_tree_above_node_limit() {
+        let mut nodes = Vec::with_capacity(MAX_ACCESSIBLE_TREE_NODES + 1);
+        nodes.push(AccessibleNode::new(0, None, Role::Window, 0, "root"));
+        for id in 1..=MAX_ACCESSIBLE_TREE_NODES as u64 {
+            nodes.push(AccessibleNode::new(id, Some(0), Role::Group, 0, ""));
+        }
+        assert_eq!(nodes.len(), MAX_ACCESSIBLE_TREE_NODES + 1);
+        assert!(!validate_tree(&nodes));
+    }
+
+    #[test]
+    fn rejects_tree_above_depth_limit() {
+        let mut nodes = Vec::with_capacity(MAX_ACCESSIBLE_TREE_DEPTH + 2);
+        nodes.push(AccessibleNode::new(0, None, Role::Window, 0, "root"));
+        for id in 1..=(MAX_ACCESSIBLE_TREE_DEPTH as u64 + 1) {
+            nodes.push(AccessibleNode::new(id, Some(id - 1), Role::Group, 0, ""));
+        }
+        assert!(!validate_tree(&nodes));
     }
 }
