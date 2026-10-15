@@ -17,11 +17,11 @@ class AerlRunTests(unittest.TestCase):
         self.addCleanup(self.temp.cleanup)
         self.ledger = Path(self.temp.name) / "events.aerl"
 
-    def run_cli(self, *args):
+    def run_cli(self, *args, env=None):
         return subprocess.run(
             [sys.executable, str(ROOT / "scripts" / "aerl_run.py"), "--file", str(self.ledger),
              "--kind", "test.wrapper", *args],
-            text=True, capture_output=True, check=False, timeout=10,
+            text=True, capture_output=True, check=False, timeout=10, env=env,
         )
 
     def test_records_pass_without_recording_command_text(self):
@@ -46,6 +46,44 @@ class AerlRunTests(unittest.TestCase):
         result = self.run_cli()
         self.assertEqual(result.returncode, 2)
         self.assertFalse(self.ledger.exists())
+
+    def test_timeout_is_recorded_as_blocked_and_returns_124(self):
+        result = self.run_cli(
+            "--timeout-seconds", "1", "--", sys.executable, "-c",
+            "import time; time.sleep(5)",
+        )
+        self.assertEqual(result.returncode, 124, result.stdout + result.stderr)
+        records, _ = aerl_tool.load_records(self.ledger)
+        self.assertEqual(len(records), 1)
+        self.assertEqual(records[0]["status"], "BLOCKED")
+        self.assertEqual(records[0]["payload"]["exit_code"], 124)
+        self.assertEqual(records[0]["payload"]["launch_error_type"], "timeout")
+
+    def test_launch_failure_is_recorded_without_leaking_command(self):
+        result = self.run_cli("--", str(Path(self.ledger.parent) / "missing-executable"))
+        self.assertEqual(result.returncode, 127)
+        records, _ = aerl_tool.load_records(self.ledger)
+        self.assertEqual(records[0]["status"], "FAIL")
+        self.assertEqual(records[0]["payload"]["launch_error_type"], "FileNotFoundError")
+        self.assertNotIn("missing-executable", json.dumps(records[0]))
+
+    def test_ci_correlation_metadata_is_recorded_without_environment_dump(self):
+        env = dict(__import__("os").environ)
+        env.update({
+            "GITHUB_SHA": "abc123",
+            "GITHUB_RUN_ID": "98765",
+            "GITHUB_JOB": "unit-tests",
+            "SECRET_TOKEN": "must-not-be-recorded",
+        })
+        result = self.run_cli("--", sys.executable, "-c", "pass", env=env)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        records, _ = aerl_tool.load_records(self.ledger)
+        ci = records[0]["payload"]["ci"]
+        self.assertEqual(ci["commit_sha"], "abc123")
+        self.assertEqual(ci["run_id"], "98765")
+        self.assertEqual(ci["job"], "unit-tests")
+        self.assertNotIn("SECRET_TOKEN", json.dumps(records[0]))
+        self.assertNotIn("must-not-be-recorded", json.dumps(records[0]))
 
     def test_rejects_invalid_timeout(self):
         result = self.run_cli("--timeout-seconds", "86401", "--", sys.executable, "-c", "pass")
