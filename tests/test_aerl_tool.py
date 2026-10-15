@@ -142,14 +142,9 @@ class AerlToolTests(unittest.TestCase):
             "ci": {"commit_sha": "abc123", "run_id": "456", "job": "linux-py313"}
         })
         records, head = aerl_tool.load_records(self.ledger)
-        args = aerl_tool.parser().parse_args([
-            "search", "--file", str(self.ledger), "--commit-sha", "abc123",
-            "--run-id", "456", "--job", "linux-py313",
-        ])
-        selected = [r for r in records if
-                    r["payload"].get("ci", {}).get("commit_sha") == args.commit_sha and
-                    r["payload"].get("ci", {}).get("run_id") == args.run_id and
-                    r["payload"].get("ci", {}).get("job") == args.job]
+        selected = aerl_tool.search_records(
+            records, commit_sha="abc123", run_id="456", job="linux-py313"
+        )
         self.assertEqual(len(selected), 1)
         self.assertEqual(selected[0]["hash"], records[-1]["hash"])
 
