@@ -63,6 +63,30 @@ def summary(records: list[dict], head: str, path: Path) -> dict:
     }
 
 
+def search_records(records: list[dict], *, kind: str | None = None,
+                  actor: str | None = None, status: str | None = None,
+                  commit_sha: str | None = None, run_id: str | None = None,
+                  job: str | None = None) -> list[dict]:
+    selected = []
+    for record in records:
+        payload = record.get("payload", {})
+        ci = payload.get("ci", {}) if isinstance(payload, dict) else {}
+        if kind is not None and record["kind"] != kind:
+            continue
+        if actor is not None and record["actor"] != actor:
+            continue
+        if status is not None and record["status"] != status:
+            continue
+        if commit_sha is not None and ci.get("commit_sha") != commit_sha:
+            continue
+        if run_id is not None and ci.get("run_id") != run_id:
+            continue
+        if job is not None and ci.get("job") != job:
+            continue
+        selected.append(record)
+    return selected
+
+
 def _report_candidate(path: Path) -> bool:
     name = path.name.lower()
     return name in REPORT_NAMES or name.endswith(REPORT_SUFFIXES) or (
@@ -330,18 +354,9 @@ def main(argv: list[str] | None = None) -> int:
         else:
             if isinstance(args.limit, bool) or not 1 <= args.limit <= MAX_QUERY:
                 raise AerlError(f"limit must be between 1 and {MAX_QUERY}")
-            def matches(record):
-                payload = record.get("payload", {})
-                ci = payload.get("ci", {}) if isinstance(payload, dict) else {}
-                return (
-                    (args.kind is None or record["kind"] == args.kind) and
-                    (args.actor is None or record["actor"] == args.actor) and
-                    (args.status is None or record["status"] == args.status) and
-                    (args.commit_sha is None or ci.get("commit_sha") == args.commit_sha) and
-                    (args.run_id is None or ci.get("run_id") == args.run_id) and
-                    (args.job is None or ci.get("job") == args.job)
-                )
-            selected = [r for r in records if matches(r)]
+            selected = search_records(records, kind=args.kind, actor=args.actor,
+                                       status=args.status, commit_sha=args.commit_sha,
+                                       run_id=args.run_id, job=args.job)
             emit({"schema": "AERL-REPORT/1", "status": "PASS", "operation": "search",
                   "matches": len(selected), "head_hash": head,
                   "filters": {"kind": args.kind, "actor": args.actor, "status": args.status,
