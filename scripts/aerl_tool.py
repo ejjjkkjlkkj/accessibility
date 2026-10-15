@@ -211,8 +211,15 @@ def collect(root: Path, ledger: Path, actor: str = "AERL-COLLECTOR") -> dict:
     root = root.resolve()
     ledger_resolved = ledger.resolve()
     existing, _ = load_records(ledger) if ledger.exists() else ([], "0" * 64)
-    seen = {(r["payload"].get("source_path"), r["payload"].get("source_sha256"))
-            for r in existing if isinstance(r.get("payload"), dict)}
+    seen = set()
+    for record in existing:
+        payload = record.get("payload")
+        if not record.get("kind", "").startswith("report.") or not isinstance(payload, dict):
+            continue
+        source_path = payload.get("source_path")
+        source_hash = payload.get("source_sha256")
+        if isinstance(source_path, str) and isinstance(source_hash, str):
+            seen.add((source_path, source_hash))
     scanned = appended = duplicates = refused = 0
     errors = []
     for base, dirs, files in os.walk(root, followlinks=False):
