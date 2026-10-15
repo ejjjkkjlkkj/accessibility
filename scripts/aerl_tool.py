@@ -254,6 +254,61 @@ def collect(root: Path, ledger: Path, actor: str = "AERL-COLLECTOR") -> dict:
                             "Collection does not discover every repository event or prove report truthfulness."]}
 
 
+def import_ledger(source: Path, destination: Path, source_label: str | None = None) -> dict:
+    """Verify and import source events into a master ledger with explicit provenance."""
+    if source.resolve() == destination.resolve():
+        raise AerlError("source and destination ledgers must be different files")
+    source_records, source_head = load_records(source)
+    destination_records, destination_head = load_records(destination)
+    known = {
+        r.get("payload", {}).get("source_event_id")
+        for r in destination_records
+        if r.get("kind") == "import.event" and isinstance(r.get("payload"), dict)
+        and isinstance(r["payload"].get("source_event_id"), str)
+    }
+    label = source_label or source.name
+    if not isinstance(label, str) or not label or len(label) > 240 or "\\x00" in label:
+        raise AerlError("source label must be 1..240 characters without NUL")
+    imported = duplicates = 0
+    for record in source_records:
+        event_id = hashlib.sha256(
+            (source_head + ":" + str(record["seq"]) + ":" + record["hash"]).encode("ascii")
+        ).hexdigest()
+        if event_id in known:
+            duplicates += 1
+            continue
+        payload = {
+            "source_label": label,
+            "source_ledger_head": source_head,
+            "source_event_id": event_id,
+            "source_sequence": record["seq"],
+            "source_record_hash": record["hash"],
+            "source_actor": record["actor"],
+            "source_timestamp": record["ts"],
+            "source_kind": record["kind"],
+            "source_payload_sha256": hashlib.sha256(
+                json.dumps(record["payload"], ensure_ascii=False, sort_keys=True,
+                           separators=(",", ":"), allow_nan=False).encode("utf-8")
+            ).hexdigest(),
+        }
+        # Preserve source metadata when it fits; fall back to its digest for max-size events.
+        payload_with_source = {**payload, "source_payload": record["payload"]}
+        try:
+            append_event(destination, "AERL-IMPORT", "import.event", record["status"], payload_with_source)
+        except AerlError as exc:
+            if "payload exceeds" not in str(exc) and "record exceeds" not in str(exc):
+                raise
+            append_event(destination, "AERL-IMPORT", "import.event", record["status"], payload)
+        known.add(event_id)
+        imported += 1
+    count, head = __import__("aerl").verify_file(destination)
+    return {"schema": "AERL-REPORT/1", "status": "PASS", "operation": "import-ledger",
+            "source": str(source), "source_records": len(source_records),
+            "source_head_hash": source_head, "destination": str(destination),
+            "destination_records": count, "destination_head_hash": head,
+            "events_imported": imported, "duplicates_skipped": duplicates}
+
+
 def parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(description="AERL unified local log tool (offline; standard library only).")
     sub = p.add_subparsers(dest="command", required=True)
@@ -280,6 +335,10 @@ def parser() -> argparse.ArgumentParser:
     search.add_argument("--job", help="filter on payload.ci.job")
     search.add_argument("--limit", type=int, default=100)
     search.add_argument("--out", type=Path, help="write JSON results to a new file; refuses overwrite")
+    importer = sub.add_parser("import-ledger", help="verify and import another ledger with provenance")
+    importer.add_argument("--source", required=True, type=Path)
+    importer.add_argument("--file", required=True, type=Path, help="destination master ledger")
+    importer.add_argument("--source-label", help="short source label for provenance")
     collect_parser = sub.add_parser("collect", help="collect metadata from allowlisted repository reports")
     collect_parser.add_argument("--root", type=Path, default=Path("."))
     collect_parser.add_argument("--file", required=True, type=Path, help="shared AERL ledger")
@@ -340,6 +399,9 @@ def main(argv: list[str] | None = None) -> int:
             report = collect(args.root, args.file, args.actor)
             emit(report)
             return 1 if report["status"] == "PARTIAL" else 0
+        if args.command == "import-ledger":
+            emit(import_ledger(args.source, args.file, args.source_label))
+            return 0
         if args.command == "checkpoint-create":
             value = aerl_checkpoint.create_checkpoint(args.file, args.out)
             emit({"schema": "AERL-REPORT/1", "status": "PASS", "operation": "checkpoint-created", **value})
