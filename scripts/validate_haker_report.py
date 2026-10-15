@@ -127,7 +127,7 @@ def load_report(path: Path) -> object:
     """Read a bounded regular file without following a final-component symlink."""
     if path.is_symlink():
         raise ValueError("report input must not be a symbolic link")
-    flags = os.O_RDONLY | getattr(os, "O_BINARY", 0)
+    flags = os.O_RDONLY | getattr(os, "O_BINARY", 0) | getattr(os, "O_NONBLOCK", 0)
     if hasattr(os, "O_NOFOLLOW"):
         flags |= os.O_NOFOLLOW
     descriptor = os.open(path, flags)
