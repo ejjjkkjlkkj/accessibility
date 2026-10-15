@@ -41,14 +41,19 @@ Ce contrôle ne valide pas le fonctionnement sur un PC physique. Le stockage, la
 
 ## Console unifiée pour les journaux du dépôt
 
-`scripts/aerl_tool.py` fournit une interface unique pour vérifier, résumer et rechercher dans le journal, en validant toute la chaîne avant de retourner les événements. Il ne collecte pas automatiquement tous les fichiers du dépôt et ne prétend pas que les événements enregistrés sont vrais : les producteurs doivent émettre des événements structurés explicites.
+`scripts/aerl_tool.py` devient la console unifiée pour initialiser, alimenter, collecter, vérifier, résumer, rechercher et créer/vérifier un checkpoint. La collecte automatique est volontairement bornée : elle ne parcourt que les rapports machine aux noms autorisés (par exemple `haker-audit-report.json`, `junit*.xml`, `test-results.json`). Elle n'enregistre ni le contenu brut ni les messages d'erreur des rapports : uniquement chemin relatif, SHA-256, taille et compteurs/status autorisés. Les sources inconnues sont ignorées; les doublons de même chemin + même hash sont ignorés. Les nouveaux contenus d'un même chemin sont collectés à nouveau.
 
-    python scripts/aerl_tool.py verify --file $ledger
-    python scripts/aerl_tool.py summary --file $ledger --out summary.json
-    python scripts/aerl_tool.py search --file $ledger --status FAIL --limit 100
+    python scripts/aerl_tool.py init --file .aerl/events.aerl
+    python scripts/aerl_tool.py append --file .aerl/events.aerl --actor QA --kind accessibility.keyboard --status PASS --payload '{"checks":12}'
+    python scripts/aerl_tool.py collect --root . --file .aerl/events.aerl
+    python scripts/aerl_tool.py verify --file .aerl/events.aerl
+    python scripts/aerl_tool.py summary --file .aerl/events.aerl --out summary.json
+    python scripts/aerl_tool.py search --file .aerl/events.aerl --status FAIL --limit 100
+    python scripts/aerl_tool.py checkpoint-create --file .aerl/events.aerl --out checkpoint.json
+    python scripts/aerl_tool.py checkpoint-verify --file .aerl/events.aerl --checkpoint checkpoint.json
     python -m unittest discover -s tests -p "test_aerl_tool.py" -v
 
-Les rapports utilisent le schéma `AERL-REPORT/1`. Les sorties de rapport refusent l’écrasement de fichiers existants.
+Les rapports utilisent le schéma `AERL-REPORT/1`. Les sorties de rapport refusent l’écrasement de fichiers existants. La collecte est un point de départ borné, pas une capture exhaustive de chaque événement du dépôt; les producteurs de tests et d'agents doivent encore émettre des rapports structurés pour être collectés.
 
 ## Exemple Windows PowerShell
 
