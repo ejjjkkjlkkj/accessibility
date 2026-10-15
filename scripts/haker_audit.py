@@ -53,6 +53,15 @@ def read_bounded_text(path):
             metadata = os.fstat(stream.fileno())
             if not stat.S_ISREG(metadata.st_mode) or metadata.st_size > MAX_FILE_BYTES:
                 return None
+
+            # Detect path replacement and refuse symlinks even where O_NOFOLLOW
+            # is unavailable; the opened descriptor must match the current entry.
+            current = path.lstat()
+            if not stat.S_ISREG(current.st_mode):
+                return None
+            if (metadata.st_dev, metadata.st_ino) != (current.st_dev, current.st_ino):
+                return None
+
             raw = stream.read(MAX_FILE_BYTES + 1)
             if len(raw) > MAX_FILE_BYTES:
                 return None
@@ -95,6 +104,21 @@ def audit(root, exclude_paths=()):
     counts = {s: sum(f["severity"] == s for f in findings) for s in ("CRITICAL", "HIGH", "MEDIUM", "LOW", "INFO")}
     return {"schema_version":"1.0", "audit_type":"OFFLINE_HEURISTIC_STATIC_REVIEW", "root":".", "files_scanned":scanned, "unreadable_files":unreadable, "finding_count":len(findings), "severity_counts":counts, "findings":findings, "limitations":["Heuristic false positives and false negatives are possible.", "Findings require human reproduction and validation.", "No AI agent is launched and inspected code is not executed.", "A clean report does not prove absence of vulnerabilities.", "Hardware, firmware, runtime, and physical-device behavior are not validated."]}
 
+def unique_json_object(pairs):
+    """Reject duplicate keys in a prior report instead of accepting ambiguity."""
+    result = {}
+    for key, value in pairs:
+        if key in result:
+            raise ValueError(f"duplicate JSON object key: {key}")
+        result[key] = value
+    return result
+
+
+def reject_json_constant(value):
+    """Reject NaN and Infinity, which are not standard JSON constants."""
+    raise ValueError(f"non-standard JSON constant: {value}")
+
+
 def is_previous_report(path):
     """Recognize a bounded regular HAKER report without blocking on special files."""
     if path.suffix.lower() != ".json" or path.is_symlink():
@@ -123,7 +147,11 @@ def is_previous_report(path):
             raw = stream.read(MAX_REPORT_BYTES + 1)
             if len(raw) > MAX_REPORT_BYTES:
                 return False
-        previous = json.loads(raw.decode("utf-8"))
+        previous = json.loads(
+            raw.decode("utf-8"),
+            object_pairs_hook=unique_json_object,
+            parse_constant=reject_json_constant,
+        )
     except (OSError, UnicodeDecodeError, json.JSONDecodeError, ValueError, RecursionError):
         return False
     finally:
