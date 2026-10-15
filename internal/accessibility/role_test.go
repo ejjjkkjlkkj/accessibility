@@ -1,6 +1,9 @@
 package accessibility
 
-import "testing"
+import (
+	"strings"
+	"testing"
+)
 
 func TestEventContractV1(t *testing.T) {
 	valid := Event{
