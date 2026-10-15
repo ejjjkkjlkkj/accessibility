@@ -1,4 +1,5 @@
 import json
+import os
 import subprocess
 import sys
 import tempfile
@@ -198,6 +199,21 @@ class HakerReportValidatorTests(unittest.TestCase):
         self.assertEqual(result.returncode, 1)
         self.assertIn("limitations[0] must be a non-empty string", result.stderr)
 
+
+
+    def test_rejects_fifo_report_without_blocking(self):
+        if not hasattr(os, "mkfifo"):
+            self.skipTest("named pipes unavailable on this platform")
+        with tempfile.TemporaryDirectory() as temp:
+            path = Path(temp) / "report.fifo"
+            os.mkfifo(path)
+            result = subprocess.run(
+                [sys.executable, str(VALIDATOR), str(path)],
+                text=True, capture_output=True, check=False, timeout=3,
+            )
+            self.assertEqual(result.returncode, 2)
+            self.assertIn("report input must be a regular file", result.stderr)
+            self.assertNotIn("Traceback", result.stderr)
 
     def test_rejects_symlinked_report_input(self):
         with tempfile.TemporaryDirectory() as temp:
