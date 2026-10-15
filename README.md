@@ -59,3 +59,7 @@ Les [portes de validation sécurité et fiabilité](docs/ZERO-KNOWN-VULNERABILIT
 ## Deuxième passe — audit de complétude
 
 L’[audit de deuxième passe de complétude, sécurité, chaîne d’approvisionnement, matériel et accessibilité](docs/OS-COMPLETENESS-SECOND-PASS-AUDIT.md) recense les lacunes encore à traiter et leur priorité. Verdict documentaire : **PARTIAL** ; HAKER et ZERO ne sont pas déclarés fonctionnels, et la validation matérielle reste séparée.
+
+## Troisième passe — angles morts critiques
+
+L’[audit critique des risques de deuxième ordre](docs/CRITICAL-SECOND-ORDER-RISKS-AUDIT.md) ajoute les contrôles à examiner sur la chaîne CI, la disponibilité, la racine de confiance matérielle, les agents IA, la confidentialité, les incidents et le cycle de vie. Statut : **PARTIAL / NOT_CERTIFIED** ; cette liste n'est pas une preuve d'exhaustivité.
