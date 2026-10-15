@@ -43,3 +43,8 @@ The accessibility boundary for the experimental NEXORA language is documented in
 ## Architecture rules
 
 - [Independent implementation tracks for every language and the separate NEXORA universal language](docs/ARCHITECTURE-INDEPENDENT-LANGUAGE-TRACKS-AND-NEXORA.md)
+
+
+## HAKER — offensive/defensive security
+
+The [HAKER reference playbook](docs/HAKER-REFERENCE-PLAYBOOK.md) maps external primary references to repository-specific security checks. It is a plan and maturity ledger, not a claim of complete security coverage. CI, emulation, and physical-hardware evidence remain separate.
