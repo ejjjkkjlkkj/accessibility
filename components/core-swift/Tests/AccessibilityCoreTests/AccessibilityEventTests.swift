@@ -32,6 +32,8 @@ final class AccessibilityEventTests: XCTestCase {
         XCTAssertEqual(cursor.current, 0)
         var empty = ScreenReaderCursor(count: 0)
         XCTAssertNil(empty.first())
+        XCTAssertNil(empty.next())
+        XCTAssertNil(empty.previous())
         XCTAssertFalse(empty.hasItem)
     }
 }

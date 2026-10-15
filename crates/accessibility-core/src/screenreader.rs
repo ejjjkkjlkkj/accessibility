@@ -31,6 +31,8 @@ mod tests {
 
   let mut empty = Cursor::new(0);
   assert_eq!(empty.first(), None);
+  assert_eq!(empty.next(), None);
+  assert_eq!(empty.previous(), None);
   assert_eq!(empty.current(), None);
 
   let mut c = Cursor::new(2);

@@ -4,6 +4,7 @@
   "index_base": 0,
   "no_implicit_wrap": true,
   "empty_count_has_no_current_item": true,
+  "empty_count_next_previous_fail": true,
   "first_selects_index_zero": true,
   "repeated_first_resets_to_zero": true,
   "failed_next_preserves_current": true,

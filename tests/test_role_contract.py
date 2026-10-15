@@ -211,6 +211,7 @@ class AccessibilityRoleContractTests(unittest.TestCase):
             "index_base": 0,
             "no_implicit_wrap": True,
             "empty_count_has_no_current_item": True,
+            "empty_count_next_previous_fail": True,
             "first_selects_index_zero": True,
             "repeated_first_resets_to_zero": True,
             "failed_next_preserves_current": True,
