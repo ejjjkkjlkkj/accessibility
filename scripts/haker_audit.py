@@ -57,7 +57,7 @@ def audit(root):
                 if pattern.search(line):
                     findings.append({"id": rule_id, "severity": severity, "title": title, "path": rel, "line": number, "evidence": line.strip()[:240], "status": "UNCONFIRMED_REVIEW_REQUIRED"})
     counts = {s: sum(f["severity"] == s for f in findings) for s in ("CRITICAL", "HIGH", "MEDIUM", "LOW", "INFO")}
-    return {"schema_version":"1.0", "audit_type":"OFFLINE_HEURISTIC_STATIC_REVIEW", "root":str(root), "files_scanned":scanned, "unreadable_files":unreadable, "finding_count":len(findings), "severity_counts":counts, "findings":findings, "limitations":["Heuristic false positives and false negatives are possible.", "Findings require human reproduction and validation.", "No AI agent is launched and inspected code is not executed.", "A clean report does not prove absence of vulnerabilities.", "Hardware, firmware, runtime, and physical-device behavior are not validated."]}
+    return {"schema_version":"1.0", "audit_type":"OFFLINE_HEURISTIC_STATIC_REVIEW", "root":".", "files_scanned":scanned, "unreadable_files":unreadable, "finding_count":len(findings), "severity_counts":counts, "findings":findings, "limitations":["Heuristic false positives and false negatives are possible.", "Findings require human reproduction and validation.", "No AI agent is launched and inspected code is not executed.", "A clean report does not prove absence of vulnerabilities.", "Hardware, firmware, runtime, and physical-device behavior are not validated."]}
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
