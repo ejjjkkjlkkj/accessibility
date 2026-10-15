@@ -77,7 +77,8 @@ def validate(report: object) -> list[str]:
         for key in ("id", "severity", "title", "path", "line", "evidence", "status"):
             if key not in finding:
                 errors.append(f"finding {index} missing {key}")
-        if finding.get("severity") not in SEVERITIES:
+        severity = finding.get("severity")
+        if not isinstance(severity, str) or severity not in SEVERITIES:
             errors.append(f"finding {index} has invalid severity")
         path = finding.get("path")
         if isinstance(path, str) and not confined_relative_path(path):
