@@ -56,6 +56,10 @@ La politique [Réduction de la surface réseau](docs/NETWORK-PORT-MINIMIZATION.m
 
 Les [portes de validation sécurité et fiabilité](docs/ZERO-KNOWN-VULNERABILITIES-AND-RELEASE-GATES.md) définissent les contrôles attendus pour le réseau, les logiciels/dépendances, les pilotes, le noyau, la récupération et l'accessibilité, ainsi que les critères qui bloquent une livraison. Il s'agit d'un objectif de **zéro vulnérabilité critique/haute connue non résolue**, pas d'une promesse impossible de zéro faille absolue. À ce stade, le document est une spécification : les mécanismes doivent encore être implémentés et validés.
 
+## Mises à jour sans casser le système ou le matériel
+
+La politique [Mise à jour sûre et compatibilité matérielle](docs/SAFE-UPDATE-AND-HARDWARE-COMPATIBILITY.md) impose des portes séparées pour intégrité/signature, compatibilité, tests de non-régression, déploiement progressif, installation atomique, retour arrière, récupération accessible et essais sur le matériel exact. Les mises à jour firmware/UEFI/microcode sont séparées et bloquées par défaut. Statut actuel du mécanisme : **SPECIFICATION / NOT_IMPLEMENTED / NOT_VALIDATED** ; QEMU ne valide pas le matériel physique.
+
 ## Deuxième passe — audit de complétude
 
 L’[audit de deuxième passe de complétude, sécurité, chaîne d’approvisionnement, matériel et accessibilité](docs/OS-COMPLETENESS-SECOND-PASS-AUDIT.md) recense les lacunes encore à traiter et leur priorité. Verdict documentaire : **PARTIAL** ; HAKER et ZERO ne sont pas déclarés fonctionnels, et la validation matérielle reste séparée.
