@@ -144,7 +144,7 @@ mod tests {
 
     #[test]
     fn rejects_tree_larger_than_fixed_bound() {
-        let nodes = std::vec![
+        let nodes = [
             AccessibleNode::new(1, None, Role::Window, 0, "Main");
             MAX_TREE_NODES + 1
         ];
