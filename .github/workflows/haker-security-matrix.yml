@@ -89,6 +89,7 @@ jobs:
             aerl-summary.json
             .aerl-ci.events
           if-no-files-found: ignore
+          include-hidden-files: true
           retention-days: 14
 
   aggregate-evidence:
@@ -140,4 +141,5 @@ jobs:
             .aerl-run.events
             aerl-run-summary.json
           if-no-files-found: warn
+          include-hidden-files: true
           retention-days: 30
