@@ -191,6 +191,32 @@ class HakerReportValidatorTests(unittest.TestCase):
         self.assertIn("non-standard JSON constant: NaN", result.stderr)
         self.assertNotIn("Traceback", result.stderr)
 
+    def test_rejects_empty_limitation_text(self):
+        data = report()
+        data["limitations"] = ["   "]
+        result = self.run_validator(data)
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("limitations[0] must be a non-empty string", result.stderr)
+
+    def test_rejects_oversized_report_before_parsing(self):
+        with tempfile.TemporaryDirectory() as temp:
+            path = Path(temp) / "large.json"
+            path.write_bytes(b" " * (8 * 1024 * 1024 + 1))
+            result = subprocess.run(
+                [sys.executable, str(VALIDATOR), str(path)],
+                text=True, capture_output=True, check=False, timeout=10,
+            )
+            self.assertEqual(result.returncode, 2)
+            self.assertIn("report exceeds 8388608 bytes", result.stderr)
+            self.assertNotIn("Traceback", result.stderr)
+
+    def test_rejects_deeply_nested_json_without_traceback(self):
+        raw = "[" * 1500 + "0" + "]" * 1500
+        result = self.run_validator_raw(raw)
+        self.assertEqual(result.returncode, 2)
+        self.assertIn("cannot read valid JSON report", result.stderr)
+        self.assertNotIn("Traceback", result.stderr)
+
 
 if __name__ == "__main__":
     unittest.main()

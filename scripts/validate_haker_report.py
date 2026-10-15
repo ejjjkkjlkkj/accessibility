@@ -7,6 +7,7 @@ import sys
 from pathlib import Path, PureWindowsPath
 
 SEVERITIES = {"CRITICAL", "HIGH", "MEDIUM", "LOW", "INFO"}
+MAX_REPORT_BYTES = 8 * 1024 * 1024
 REQUIRED = {
     "schema_version", "audit_type", "root", "files_scanned", "unreadable_files",
     "finding_count", "severity_counts", "findings", "limitations",
@@ -110,9 +111,27 @@ def validate(report: object) -> list[str]:
             if not isinstance(finding.get(field), str) or not finding[field].strip():
                 errors.append(f"finding {index} {field} must be a non-empty string")
 
-    if not isinstance(report["limitations"], list) or not all(isinstance(item, str) for item in report["limitations"]):
+    limitations = report["limitations"]
+    if not isinstance(limitations, list) or not all(isinstance(item, str) for item in limitations):
         errors.append("limitations must be a list of strings")
+    else:
+        for index, item in enumerate(limitations):
+            if not item.strip():
+                errors.append(f"limitations[{index}] must be a non-empty string")
     return errors
+
+
+def load_report(path: Path) -> object:
+    """Read a bounded UTF-8 report and reject ambiguous or non-standard JSON."""
+    with path.open("rb") as stream:
+        raw = stream.read(MAX_REPORT_BYTES + 1)
+    if len(raw) > MAX_REPORT_BYTES:
+        raise ValueError(f"report exceeds {MAX_REPORT_BYTES} bytes")
+    return json.loads(
+        raw.decode("utf-8"),
+        object_pairs_hook=unique_object,
+        parse_constant=reject_json_constant,
+    )
 
 
 def main() -> int:
@@ -120,12 +139,8 @@ def main() -> int:
         print("Usage: validate_haker_report.py REPORT.json", file=sys.stderr)
         return 2
     try:
-        report = json.loads(
-            Path(sys.argv[1]).read_text(encoding="utf-8"),
-            object_pairs_hook=unique_object,
-            parse_constant=reject_json_constant,
-        )
-    except (OSError, UnicodeDecodeError, json.JSONDecodeError, ValueError) as exc:
+        report = load_report(Path(sys.argv[1]))
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError, ValueError, RecursionError) as exc:
         print(f"FAIL: cannot read valid JSON report: {exc}", file=sys.stderr)
         return 2
     errors = validate(report)
