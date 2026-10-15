@@ -195,6 +195,18 @@ func TestValidateRejectsMalformedURLHostnames(t *testing.T) {
 	}
 }
 
+func TestValidateAcceptsCaseInsensitiveHTTPScheme(t *testing.T) {
+	for _, rawURL := range []string{
+		"HTTPS://example.org/",
+		"HtTpS://docs.example.org/path",
+	} {
+		row := "a,Example,example.org," + rawURL + ",docs,web,candidate,test\n"
+		if err := validate(strings.NewReader(validHeader + row)); err != nil {
+			t.Errorf("expected case-insensitive HTTP(S) scheme to pass for %q, got %v", rawURL, err)
+		}
+	}
+}
+
 func TestValidateRejectsMalformedURL(t *testing.T) {
 	for _, rawURL := range []string{"https://%", "http://[::1", "https://?query=missing-host"} {
 		row := "a,Example,example.org," + rawURL + ",docs,web,candidate,test\n"
