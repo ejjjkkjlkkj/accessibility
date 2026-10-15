@@ -18,8 +18,15 @@ func validate(r io.Reader) error {
 		return fmt.Errorf("read header: %w", err)
 	}
 	index := make(map[string]int, len(header))
-	for i, name := range header {
-		index[strings.TrimSpace(name)] = i
+	for i, rawName := range header {
+		name := strings.TrimSpace(rawName)
+		if name == "" {
+			return fmt.Errorf("header column %d has an empty name", i+1)
+		}
+		if _, exists := index[name]; exists {
+			return fmt.Errorf("duplicate header column %q", name)
+		}
+		index[name] = i
 	}
 	for _, name := range required {
 		if _, ok := index[name]; !ok {
