@@ -1,30 +1,40 @@
 # Accessibility Hardware Bridge
 
-A small `no_std` Rust contract for the accessibility repository's hardware-facing architecture.
+A small `no_std` Rust foundation for a hardware-facing accessibility architecture. It is an inventory and event contract, not a hypervisor or device emulator.
 
-## Current implementation
+## Implemented in this branch
 
-- Typed PCI address metadata with bounds checks.
-- Device descriptors distinguishing physical inventory, firmware-reported, and software-defined origins.
-- Resource-window validation using checked arithmetic and half-open ranges.
-- Resource overlap detection.
-- A capability-free inventory entry for sharing hardware metadata with higher accessibility layers.
+- Typed PCI addresses and device descriptors with bounds and identifier checks.
+- Resource-window validation using checked arithmetic and domain-aware overlap checks.
+- Bounded ACPI parsers for RSDP, SDT, RSDT/XSDT and MCFG structures, including length, checksum, reserved-byte, bus-range and ECAM-alignment checks.
+- A `PciConfigReader` contract for a future authorized UEFI PCI I/O Protocol adapter, plus bounded bus/device/function enumeration logic over that contract.
+- Explicit provenance records that distinguish ACPI bytes, firmware-reported devices, OS-reported inventory, synthetic fixtures and manual observation. The provenance log is not a cryptographic attestation.
+- Fixed-capacity, allocation-free accessibility event FIFO with explicit backpressure. Producers cannot silently overwrite queued events.
+- Read-only Windows Plug and Play inventory probe at `tools/hardware-bridge-inventory.ps1`; JSON output defaults to the system temporary directory. It labels data as OS-reported, not physically verified.
+- GitHub Actions checks for Rust unit tests, a release `no_std` library build on Linux and Windows, and a Windows PowerShell self-test.
 
-## Explicit non-goals in this increment
+## Safety and evidence boundary
 
-This crate does **not** probe PCI configuration space, map MMIO, access I/O ports, configure DMA, register interrupts, emulate PCI devices, drive audio, or change firmware/NVRAM. It contains no unsafe code and no operating-system dependency. Describing a resource does not authorize access to it.
+This branch does **not** directly map ECAM/MMIO, perform port I/O or DMA, register interrupts, drive audio, mutate firmware/NVRAM, or reboot the PC. The UEFI PCI reader is an interface contract; the native firmware protocol binding is not implemented yet. ACPI parsing only accepts byte slices supplied by a caller and does not locate or map firmware tables itself.
 
-## Validation status
+Windows PnP inventory is useful for exercising the pipeline but can include virtual and software-defined devices. It is not independent proof of physical bus presence. Passing unit tests or CI is software validation only, not physical-hardware proof.
 
-- Unit tests are provided for metadata validation, PCI bounds, malformed identifiers, range overflow, overlap, and adjacency.
-- These tests validate the data model only.
-- Physical hardware discovery and I/O are **NOT_VALIDATED** until a separate platform adapter is implemented and tested on the target machine.
-- Emulator results, if later added, must not be reported as physical-hardware proof.
+## Run the Windows inventory probe
 
-## Next engineering increments
+From the repository root in PowerShell:
 
-1. Add read-only discovery adapters for UEFI PCI I/O and ACPI/SMBIOS inventory, each behind an explicit platform feature.
-2. Normalize discovered devices into these descriptors while preserving provenance and per-field confidence.
-3. Add a resource authorization layer separate from inventory metadata.
-4. Add accessibility event translation so device status, errors, and changes can be spoken or brailled by the screen-reader runtime.
-5. Validate build/test matrices in CI; reserve physical proof for a documented run on real hardware.
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\hardware-bridge-inventory.ps1 -SelfTest
+powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\hardware-bridge-inventory.ps1
+```
+
+Default report: `%TEMP%\accessibility-hardware-inventory.json`.
+
+## Validation labels
+
+- **Implemented:** source code and contract tests exist.
+- **CI PASS:** only when the current commit's required jobs report success.
+- **NOT_VALIDATED:** not yet run on the target physical machine.
+- **NOT_IMPLEMENTED:** native UEFI protocol binding, physical PCI probing, hardware-backed accessibility output and resource authorization remain future work.
+
+Do not label QEMU or another simulated environment as physical validation.
