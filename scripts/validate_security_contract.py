@@ -33,6 +33,21 @@ def fail(message: str) -> None:
     raise SystemExit(1)
 
 
+def unique_object(pairs: list[tuple[str, object]]) -> dict[str, object]:
+    """Reject duplicate JSON keys instead of silently accepting the last value."""
+    result: dict[str, object] = {}
+    for key, value in pairs:
+        if key in result:
+            raise ValueError(f"duplicate JSON object key: {key}")
+        result[key] = value
+    return result
+
+
+def reject_json_constant(value: str) -> None:
+    """Reject NaN and Infinity, which are not valid JSON constants."""
+    raise ValueError(f"non-standard JSON constant: {value}")
+
+
 def non_empty_string(value: object) -> bool:
     return isinstance(value, str) and bool(value.strip())
 
@@ -48,13 +63,19 @@ def main() -> int:
     args = parser.parse_args()
 
     try:
-        data = json.loads(args.manifest.read_text(encoding="utf-8"))
+        data = json.loads(
+            args.manifest.read_text(encoding="utf-8"),
+            object_pairs_hook=unique_object,
+            parse_constant=reject_json_constant,
+        )
     except OSError as exc:
         fail(f"cannot read manifest: {exc}")
     except UnicodeDecodeError as exc:
         fail(f"manifest is not valid UTF-8: {exc}")
     except json.JSONDecodeError as exc:
         fail(f"invalid JSON at line {exc.lineno}, column {exc.colno}: {exc.msg}")
+    except ValueError as exc:
+        fail(f"invalid JSON: {exc}")
 
     if not isinstance(data, dict):
         fail("manifest root must be a JSON object")
