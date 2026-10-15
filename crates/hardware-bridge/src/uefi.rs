@@ -38,6 +38,7 @@ pub struct PciFunction {
     pub subclass: u8,
     pub base_class: u8,
     pub header_type: u8,
+    pub multifunction: bool,
 }
 
 impl PciFunction {
@@ -64,13 +65,8 @@ impl PciFunction {
             subclass: config[10],
             base_class: config[11],
             header_type: config[14] & 0x7f,
+            multifunction: config[14] & 0x80 != 0,
         }))
-    }
-
-    pub const fn multifunction(&self) -> bool {
-        // Bit 7 is read from the raw header-type register. Kept separately
-        // below by raw_header_type() in the reader path.
-        false
     }
 
     pub const fn class_code(&self) -> u32 {
@@ -103,7 +99,7 @@ pub fn enumerate<R, F>(
     mut visit: F,
 ) -> Result<(), PciReadError>
 where
-    R: PciHeaderFlags,
+    R: PciConfigReader,
     F: FnMut(PciFunction),
 {
     if start_bus > end_bus {
@@ -115,7 +111,7 @@ where
             let Some(function0) = PciFunction::read(reader, first)? else {
                 continue;
             };
-            let multi = reader.header_multifunction(first)?;
+            let multi = function0.multifunction;
             visit(function0);
             if multi {
                 for function in 1u8..8 {
@@ -128,12 +124,6 @@ where
         }
     }
     Ok(())
-}
-
-/// Optional extension to read the multifunction bit from configuration header.
-/// Kept separate so a platform adapter can reuse a cached first-header read.
-pub trait PciHeaderFlags: PciConfigReader {
-    fn header_multifunction(&mut self, address: PciAddress) -> Result<bool, PciReadError>;
 }
 
 #[cfg(test)]
