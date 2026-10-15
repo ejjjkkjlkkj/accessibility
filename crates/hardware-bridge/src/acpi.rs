@@ -231,6 +231,55 @@ mod tests {
         checksum_table(b)
     }
 
+
+    fn set_checksum(bytes: &mut [u8], checksum_index: usize, range_end: usize) {
+        bytes[checksum_index] = 0;
+        let sum = bytes[..range_end].iter().fold(0u8, |acc, b| acc.wrapping_add(*b));
+        bytes[checksum_index] = 0u8.wrapping_sub(sum);
+    }
+
+    #[test]
+    fn parses_rsdp_v1_and_v2_and_rejects_bad_checksums() {
+        let mut v1 = vec![0u8; RSDP_V1_LEN];
+        v1[0..8].copy_from_slice(b"RSD PTR ");
+        v1[15] = 0;
+        v1[16..20].copy_from_slice(&0x1234_5000u32.to_le_bytes());
+        set_checksum(&mut v1, 8, RSDP_V1_LEN);
+        let parsed = parse_rsdp(&v1).unwrap();
+        assert_eq!(parsed.rsdt_address, 0x1234_5000);
+        assert_eq!(parsed.xsdt_address, None);
+
+        let mut v2 = vec![0u8; RSDP_V2_MIN_LEN];
+        v2[0..8].copy_from_slice(b"RSD PTR ");
+        v2[15] = 2;
+        v2[16..20].copy_from_slice(&0x1234_5000u32.to_le_bytes());
+        v2[20..24].copy_from_slice(&(RSDP_V2_MIN_LEN as u32).to_le_bytes());
+        v2[24..32].copy_from_slice(&0x1234_5678_9abc_def0u64.to_le_bytes());
+        set_checksum(&mut v2, 8, RSDP_V1_LEN);
+        set_checksum(&mut v2, 32, RSDP_V2_MIN_LEN);
+        let parsed = parse_rsdp(&v2).unwrap();
+        assert_eq!(parsed.xsdt_address, Some(0x1234_5678_9abc_def0));
+        assert_eq!(parsed.length, RSDP_V2_MIN_LEN);
+
+        v2[27] ^= 1;
+        assert_eq!(parse_rsdp(&v2), Err(AcpiError::BadChecksum));
+    }
+
+    #[test]
+    fn rejects_invalid_rsdp_signature_and_declared_length() {
+        let mut bytes = vec![0u8; RSDP_V2_MIN_LEN];
+        bytes[0..8].copy_from_slice(b"BAD PTR ");
+        set_checksum(&mut bytes, 8, RSDP_V1_LEN);
+        set_checksum(&mut bytes, 32, RSDP_V2_MIN_LEN);
+        assert_eq!(parse_rsdp(&bytes), Err(AcpiError::BadSignature));
+
+        bytes[0..8].copy_from_slice(b"RSD PTR ");
+        bytes[20..24].copy_from_slice(&19u32.to_le_bytes());
+        set_checksum(&mut bytes, 8, RSDP_V1_LEN);
+        set_checksum(&mut bytes, 32, RSDP_V2_MIN_LEN);
+        assert_eq!(parse_rsdp(&bytes), Err(AcpiError::InvalidLength));
+    }
+
     #[test]
     fn parses_sdt_and_rejects_bad_signature_length_and_checksum() {
         let mut b = vec![0u8; SDT_HEADER_LEN];
