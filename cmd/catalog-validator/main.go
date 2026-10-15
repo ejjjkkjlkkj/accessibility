@@ -7,6 +7,7 @@ import (
 	"net"
 	"net/url"
 	"os"
+	"strconv"
 	"strings"
 )
 
@@ -88,6 +89,12 @@ func validate(r io.Reader) error {
 		parsedURL, err := url.Parse(value("url"))
 		if err != nil || (strings.ToLower(parsedURL.Scheme) != "https" && strings.ToLower(parsedURL.Scheme) != "http") || parsedURL.Hostname() == "" || parsedURL.User != nil {
 			return fmt.Errorf("CSV line %d: URL must be absolute HTTP(S), include a hostname, and contain no userinfo", line)
+		}
+		if port := parsedURL.Port(); port != "" {
+			portNumber, err := strconv.Atoi(port)
+			if err != nil || portNumber < 1 || portNumber > 65535 {
+				return fmt.Errorf("CSV line %d: URL port must be between 1 and 65535", line)
+			}
 		}
 		domain := strings.TrimSuffix(strings.ToLower(value("domain")), ".")
 		hostname := strings.TrimSuffix(strings.ToLower(parsedURL.Hostname()), ".")
