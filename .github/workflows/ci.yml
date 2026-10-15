@@ -2,7 +2,6 @@ name: Accessibility and ZERO CI
 
 on:
   push:
-    branches: [main, master]
   pull_request:
   workflow_dispatch:
   schedule:
@@ -23,11 +22,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Verify required ZERO documents
+      - name: Verify required ZERO and agent-contract documents
         shell: bash
         run: |
           set -euo pipefail
-          for f in ZERO/README.md ZERO/LANGUAGE-AUDIT.md ZERO/REQUIREMENTS.md; do
+          for f in AGENTS.md ZERO/README.md ZERO/LANGUAGE-AUDIT.md ZERO/REQUIREMENTS.md; do
             test -s "$f" || { echo "FAIL: missing or empty $f"; exit 1; }
             echo "PASS: $f"
           done
@@ -61,6 +60,31 @@ jobs:
               sys.exit(1)
           print("PASS: Markdown relative links")
 
+      - name: Parse PowerShell automation scripts
+        shell: bash
+        run: |
+          set -euo pipefail
+          if command -v pwsh >/dev/null 2>&1; then
+            pwsh -NoProfile -Command '
+              $files = Get-ChildItem -Path . -Recurse -Filter *.ps1 -File |
+                Where-Object { $_.FullName -notmatch "[/\\](\.git|target|build|dist)[/\\]" }
+              $failed = $false
+              foreach ($file in $files) {
+                $tokens = $null
+                $parseErrors = $null
+                [System.Management.Automation.Language.Parser]::ParseFile($file.FullName, [ref]$tokens, [ref]$parseErrors) | Out-Null
+                if ($parseErrors.Count -gt 0) {
+                  $parseErrors | ForEach-Object { Write-Error ("{0}: {1}" -f $file.FullName, $_.Message) }
+                  $failed = $true
+                }
+              }
+              if ($failed) { exit 1 }
+              Write-Output ("PASS: parsed {0} PowerShell scripts" -f $files.Count)
+            '
+          else
+            echo "PARTIAL: pwsh unavailable; PowerShell syntax was not checked"
+          fi
+
       - name: Inventory implementation and tests
         shell: bash
         run: |
@@ -77,15 +101,20 @@ jobs:
           else
             echo "PARTIAL: no root Cargo.toml; no Rust workspace test was inferred"
           fi
-          if [ -f pyproject.toml ] || [ -d tests ]; then
+          if find . -path './.git' -prune -o -name '*.py' -print -quit | grep -q .; then
             python -m compileall -q .
+            echo "PASS: Python syntax compilation"
+          else
+            echo "PARTIAL: no Python source files found"
+          fi
+          if [ -d tests ]; then
             if python -c "import pytest" >/dev/null 2>&1; then
               python -m pytest -q
             else
-              echo "PARTIAL: Python sources compiled; pytest is not installed"
+              python -m unittest discover -s tests
             fi
           else
-            echo "PARTIAL: no root Python project/tests detected"
+            echo "PARTIAL: no root tests/ directory; inspect Rust manifests separately"
           fi
 
   security-baseline:
@@ -102,3 +131,26 @@ jobs:
             exit 1
           fi
           echo "PASS: no common secret-like filenames detected"
+
+  go-cross-platform:
+    name: Go tests and vet (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Run Go unit tests
+        run: go test ./...
+
+      - name: Run Go static analysis
+        run: go vet ./...

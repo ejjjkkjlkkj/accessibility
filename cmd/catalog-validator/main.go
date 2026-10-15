@@ -19,8 +19,16 @@ func validate(r io.Reader) error {
 	}
 	index := make(map[string]int, len(header))
 	for i, name := range header {
-		index[strings.TrimSpace(name)] = i
+		name = strings.TrimSpace(name)
+		if name == "" {
+			return fmt.Errorf("header column %d is empty", i+1)
+		}
+		if _, exists := index[name]; exists {
+			return fmt.Errorf("duplicate header column %q", name)
+		}
+		index[name] = i
 	}
+	reader.FieldsPerRecord = len(header)
 	for _, name := range required {
 		if _, ok := index[name]; !ok {
 			return fmt.Errorf("missing required column %q", name)

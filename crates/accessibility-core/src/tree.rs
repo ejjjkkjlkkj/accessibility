@@ -9,6 +9,7 @@ pub const STATE_FOCUSABLE: u64 = 1 << 1;
 pub const STATE_ENABLED: u64 = 1 << 2;
 pub const STATE_DISABLED: u64 = 1 << 3;
 pub const MAX_NODE_NAME_UTF8_BYTES: usize = 4096;
+pub const MAX_TREE_NODES: usize = 4096;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct AccessibleNode<'a> {
@@ -37,10 +38,11 @@ impl<'a> AccessibleNode<'a> {
     }
 }
 
-/// Validate unique IDs, exactly one root, parent references, acyclic ancestry,
-/// and the shared UTF-8 name limit. An empty slice is not a valid tree.
+/// Validate a bounded, parent-before-child tree with unique IDs, exactly one
+/// root, valid parent references, and bounded UTF-8 names. Parent-before-child
+/// ordering makes cycles impossible without recursion or heap allocation.
 pub fn validate_tree(nodes: &[AccessibleNode<'_>]) -> bool {
-    if nodes.is_empty() {
+    if nodes.is_empty() || nodes.len() > MAX_TREE_NODES {
         return false;
     }
 
@@ -54,34 +56,23 @@ pub fn validate_tree(nodes: &[AccessibleNode<'_>]) -> bool {
                 return false;
             }
         }
-        if node.parent_id.is_none() {
-            roots += 1;
-        } else if node.parent_id == Some(node.id) {
-            return false;
-        }
-    }
-    if roots != 1 {
-        return false;
-    }
-
-    // Every ancestry chain must terminate at the single root. The depth bound
-    // also rejects cycles without recursion or heap allocation.
-    for node in nodes {
-        let mut parent_id = node.parent_id;
-        let mut depth = 0usize;
-        while let Some(id) = parent_id {
-            let parent = match nodes.iter().find(|candidate| candidate.id == id) {
-                Some(value) => value,
-                None => return false,
-            };
-            depth += 1;
-            if depth >= nodes.len() && parent.parent_id.is_some() {
-                return false;
+        match node.parent_id {
+            None => {
+                roots += 1;
+                if index != 0 {
+                    return false;
+                }
             }
-            parent_id = parent.parent_id;
+            Some(parent_id) => {
+                if parent_id == node.id
+                    || !nodes[..index].iter().any(|candidate| candidate.id == parent_id)
+                {
+                    return false;
+                }
+            }
         }
     }
-    true
+    roots == 1
 }
 
 /// Return the next enabled, focusable node in slice order. No wraparound.
@@ -139,6 +130,25 @@ mod tests {
             AccessibleNode::new(2, Some(99), Role::Button, TARGET, "x"),
         ];
         assert!(!validate_tree(&missing_parent));
+    }
+
+    #[test]
+    fn rejects_forward_parent_references() {
+        let nodes = [
+            AccessibleNode::new(1, None, Role::Window, 0, "Main"),
+            AccessibleNode::new(2, Some(3), Role::Button, TARGET, "Child"),
+            AccessibleNode::new(3, Some(1), Role::Group, 0, "Parent"),
+        ];
+        assert!(!validate_tree(&nodes));
+    }
+
+    #[test]
+    fn rejects_tree_larger_than_fixed_bound() {
+        let nodes = [
+            AccessibleNode::new(1, None, Role::Window, 0, "Main");
+            MAX_TREE_NODES + 1
+        ];
+        assert!(!validate_tree(&nodes));
     }
 
     #[test]
