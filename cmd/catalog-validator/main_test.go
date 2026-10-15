@@ -141,6 +141,15 @@ func TestValidateRejectsIPLiteralAsDomain(t *testing.T) {
 	}
 }
 
+func TestValidateRejectsIPLiteralAsURLHostname(t *testing.T) {
+	for _, rawURL := range []string{"https://127.0.0.1/", "http://192.168.1.10/"} {
+		row := "a,Example,example.org," + rawURL + ",docs,web,candidate,test\n"
+		if err := validate(strings.NewReader(validHeader + row)); err == nil {
+			t.Errorf("expected IP URL hostname to be rejected: %q", rawURL)
+		}
+	}
+}
+
 func TestValidateAcceptsCaseInsensitiveFullyQualifiedDomain(t *testing.T) {
 	row := "a,Example,Example.ORG.,https://docs.example.org./,docs,web,candidate,test\n"
 	if err := validate(strings.NewReader(validHeader + row)); err != nil {
