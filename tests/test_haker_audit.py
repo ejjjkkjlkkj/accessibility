@@ -1,4 +1,4 @@
-import json, subprocess, sys, tempfile, unittest
+import json, os, subprocess, sys, tempfile, unittest
 from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 SCANNER = ROOT / "scripts" / "haker_audit.py"
@@ -188,5 +188,26 @@ class HakerAuditTests(unittest.TestCase):
             self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
             self.assertIn("refusing to overwrite", result.stderr)
             self.assertEqual(report.stat().st_size, original_size)
+
+
+    def test_bounded_reader_rejects_fifo_without_blocking(self):
+        if not hasattr(os, "mkfifo"):
+            self.skipTest("named pipes unavailable on this platform")
+        with tempfile.TemporaryDirectory() as temp:
+            fifo = Path(temp) / "scanner-input.fifo"
+            os.mkfifo(fifo)
+            probe = (
+                "import sys; from pathlib import Path; "
+                f"sys.path.insert(0, {str(SCANNER.parent)!r}); "
+                "import haker_audit; "
+                "print(repr(haker_audit.read_bounded_text(Path(sys.argv[1]))))"
+            )
+            result = subprocess.run(
+                [sys.executable, "-c", probe, str(fifo)],
+                text=True, capture_output=True, check=False, timeout=3,
+            )
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            self.assertEqual(result.stdout.strip(), "None")
+            self.assertNotIn("Traceback", result.stderr)
 
 if __name__ == "__main__": unittest.main()
