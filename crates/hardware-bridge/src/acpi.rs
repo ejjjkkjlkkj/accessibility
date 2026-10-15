@@ -202,6 +202,43 @@ impl<'a> McfgTable<'a> {
     }
 }
 
+
+/// Validated RSDT/XSDT table-address list. Addresses are metadata only; the
+/// caller must validate and authorize each table before reading it.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct RootTable<'a> {
+    pub header: SdtHeader<'a>,
+    entry_width: usize,
+    entries: &'a [u8],
+}
+
+impl<'a> RootTable<'a> {
+    pub fn parse(bytes: &'a [u8], xsdt: bool) -> Result<Self, AcpiError> {
+        let signature = if xsdt { *b"XSDT" } else { *b"RSDT" };
+        let header = parse_sdt(bytes, signature)?;
+        let entry_width = if xsdt { 8 } else { 4 };
+        let payload = &header.bytes[SDT_HEADER_LEN..];
+        if payload.len() % entry_width != 0 {
+            return Err(AcpiError::InvalidLength);
+        }
+        Ok(Self { header, entry_width, entries: payload })
+    }
+
+    pub const fn entry_count(&self) -> usize {
+        self.entries.len() / self.entry_width
+    }
+
+    pub fn entry_address(&self, index: usize) -> Option<u64> {
+        let start = index.checked_mul(self.entry_width)?;
+        let entry = self.entries.get(start..start.checked_add(self.entry_width)?)?;
+        Some(if self.entry_width == 8 {
+            u64::from_le_bytes([entry[0], entry[1], entry[2], entry[3], entry[4], entry[5], entry[6], entry[7]])
+        } else {
+            u32::from_le_bytes([entry[0], entry[1], entry[2], entry[3]]) as u64
+        })
+    }
+}
+
 #[cfg(test)]
 extern crate std;
 
@@ -236,6 +273,41 @@ mod tests {
         bytes[checksum_index] = 0;
         let sum = bytes[..range_end].iter().fold(0u8, |acc, b| acc.wrapping_add(*b));
         bytes[checksum_index] = 0u8.wrapping_sub(sum);
+    }
+
+
+    #[test]
+    fn parses_rsdt_and_xsdt_address_entries() {
+        let mut rsdt = vec![0u8; SDT_HEADER_LEN + 8];
+        rsdt[0..4].copy_from_slice(b"RSDT");
+        let length = rsdt.len() as u32;
+        rsdt[4..8].copy_from_slice(&length.to_le_bytes());
+        rsdt[SDT_HEADER_LEN..SDT_HEADER_LEN + 4].copy_from_slice(&0x1234_5000u32.to_le_bytes());
+        rsdt[SDT_HEADER_LEN + 4..].copy_from_slice(&0x5678_9000u32.to_le_bytes());
+        let rsdt = checksum_table(rsdt);
+        let parsed = RootTable::parse(&rsdt, false).unwrap();
+        assert_eq!(parsed.entry_count(), 2);
+        assert_eq!(parsed.entry_address(0), Some(0x1234_5000));
+        assert_eq!(parsed.entry_address(2), None);
+
+        let mut xsdt = vec![0u8; SDT_HEADER_LEN + 8];
+        xsdt[0..4].copy_from_slice(b"XSDT");
+        let length = xsdt.len() as u32;
+        xsdt[4..8].copy_from_slice(&length.to_le_bytes());
+        xsdt[SDT_HEADER_LEN..].copy_from_slice(&0x1234_5678_9abc_def0u64.to_le_bytes());
+        let xsdt = checksum_table(xsdt);
+        let parsed = RootTable::parse(&xsdt, true).unwrap();
+        assert_eq!(parsed.entry_address(0), Some(0x1234_5678_9abc_def0));
+    }
+
+    #[test]
+    fn rejects_root_table_payload_with_partial_address() {
+        let mut bytes = vec![0u8; SDT_HEADER_LEN + 5];
+        bytes[0..4].copy_from_slice(b"RSDT");
+        let length = bytes.len() as u32;
+        bytes[4..8].copy_from_slice(&length.to_le_bytes());
+        let bytes = checksum_table(bytes);
+        assert_eq!(RootTable::parse(&bytes, false), Err(AcpiError::InvalidLength));
     }
 
     #[test]
