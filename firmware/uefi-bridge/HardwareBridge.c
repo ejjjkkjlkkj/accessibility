@@ -11,6 +11,8 @@
 #include <Library/MemoryAllocationLib.h>
 #include <Protocol/PciIo.h>
 
+#define MAX_PCI_HANDLES 4096
+
 EFI_STATUS
 EFIAPI
 UefiMain (
@@ -24,6 +26,7 @@ UefiMain (
   UINTN       Index;
   UINTN       Found;
   UINTN       ReadErrors;
+  BOOLEAN     Truncated;
 
   (VOID)ImageHandle;
   (VOID)SystemTable;
@@ -31,6 +34,7 @@ UefiMain (
   HandleCount = 0;
   Found = 0;
   ReadErrors = 0;
+  Truncated = FALSE;
 
   Print (L"Accessibility Hardware Bridge - read-only UEFI PCI inventory\r\n");
   Print (L"Evidence: firmware-reported; not a cryptographic attestation.\r\n");
@@ -45,6 +49,11 @@ UefiMain (
   if (EFI_ERROR (Status)) {
     Print (L"FAIL: LocateHandleBuffer(PciIo): %r\r\n", Status);
     return Status;
+  }
+
+  if (HandleCount > MAX_PCI_HANDLES) {
+    HandleCount = MAX_PCI_HANDLES;
+    Truncated = TRUE;
   }
 
   for (Index = 0; Index < HandleCount; ++Index) {
@@ -144,7 +153,7 @@ UefiMain (
     FreePool (Handles);
   }
 
-  Print (L"Summary: %u PCI functions reported; %u read errors.\r\n", Found, ReadErrors);
+  Print (L"Summary: %u PCI functions reported; %u read errors; truncated=%d.\r\n", Found, ReadErrors, Truncated);
   Print (L"No PCI writes, MMIO mappings, DMA, firmware-variable writes, or reboot requested.\r\n");
   return (ReadErrors == 0) ? EFI_SUCCESS : EFI_DEVICE_ERROR;
 }
