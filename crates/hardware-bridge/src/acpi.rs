@@ -346,6 +346,7 @@ mod tests {
         assert_eq!(parse_rsdp(&bytes), Err(AcpiError::BadSignature));
 
         bytes[0..8].copy_from_slice(b"RSD PTR ");
+        bytes[15] = 2; // Revision 2+ is required to interpret the extended length field.
         bytes[20..24].copy_from_slice(&19u32.to_le_bytes());
         set_checksum(&mut bytes, 8, RSDP_V1_LEN);
         set_checksum(&mut bytes, 32, RSDP_V2_MIN_LEN);
