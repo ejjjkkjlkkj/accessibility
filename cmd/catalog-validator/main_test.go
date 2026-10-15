@@ -86,16 +86,16 @@ func TestValidateRejectsEmptyRequiredFields(t *testing.T) {
 }
 
 func TestValidateRejectsMissingRequiredHeader(t *testing.T) {
-	header := "id,name,domain,url,category,layer,official_status\\n"
-	row := "a,Example,example.org,https://example.org/,docs,web,candidate\\n"
+	header := "id,name,domain,url,category,layer,official_status\n"
+	row := "a,Example,example.org,https://example.org/,docs,web,candidate\n"
 	if err := validate(strings.NewReader(header + row)); err == nil {
 		t.Fatal("expected missing required header to fail")
 	}
 }
 
 func TestValidateRejectsDuplicateHeadersAfterTrimming(t *testing.T) {
-	header := "id,name, name ,domain,url,category,layer,official_status,notes\\n"
-	row := "a,Example,Shadow,example.org,https://example.org/,docs,web,candidate,test\\n"
+	header := "id,name, name ,domain,url,category,layer,official_status,notes\n"
+	row := "a,Example,Shadow,example.org,https://example.org/,docs,web,candidate,test\n"
 	if err := validate(strings.NewReader(header + row)); err == nil {
 		t.Fatal("expected whitespace-normalized duplicate header to fail")
 	}
@@ -125,7 +125,7 @@ func TestValidateAcceptsSubdomainOfDeclaredDomain(t *testing.T) {
 
 func TestValidateRejectsMalformedDeclaredDomain(t *testing.T) {
 	for _, domain := range []string{"example..org", "-example.org", "example-.org", "exa_mple.org", "example.org/path", strings.Repeat("a", 64) + ".org"} {
-		row := "a,Example," + domain + ",https://example.org/,docs,web,candidate,test\\n"
+		row := "a,Example," + domain + ",https://example.org/,docs,web,candidate,test\n"
 		if err := validate(strings.NewReader(validHeader + row)); err == nil {
 			t.Errorf("expected malformed declared domain to fail: %q", domain)
 		}
@@ -142,7 +142,7 @@ func TestValidateRejectsIPLiteralAsDomain(t *testing.T) {
 }
 
 func TestValidateAcceptsCaseInsensitiveFullyQualifiedDomain(t *testing.T) {
-	row := "a,Example,Example.ORG.,https://docs.example.org./,docs,web,candidate,test\\n"
+	row := "a,Example,Example.ORG.,https://docs.example.org./,docs,web,candidate,test\n"
 	if err := validate(strings.NewReader(validHeader + row)); err != nil {
 		t.Fatalf("expected normalized DNS domain to pass, got %v", err)
 	}
