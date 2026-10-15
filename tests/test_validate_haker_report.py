@@ -198,6 +198,24 @@ class HakerReportValidatorTests(unittest.TestCase):
         self.assertEqual(result.returncode, 1)
         self.assertIn("limitations[0] must be a non-empty string", result.stderr)
 
+
+    def test_rejects_symlinked_report_input(self):
+        with tempfile.TemporaryDirectory() as temp:
+            target = Path(temp) / "valid-target.json"
+            target.write_text(json.dumps(report()), encoding="utf-8")
+            link = Path(temp) / "report.json"
+            try:
+                link.symlink_to(target)
+            except (OSError, NotImplementedError):
+                self.skipTest("file symlinks unavailable")
+            result = subprocess.run(
+                [sys.executable, str(VALIDATOR), str(link)],
+                text=True, capture_output=True, check=False, timeout=10,
+            )
+            self.assertEqual(result.returncode, 2)
+            self.assertIn("cannot read valid JSON report", result.stderr)
+            self.assertNotIn("Traceback", result.stderr)
+
     def test_rejects_oversized_report_before_parsing(self):
         with tempfile.TemporaryDirectory() as temp:
             path = Path(temp) / "large.json"
