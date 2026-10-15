@@ -39,3 +39,8 @@ The accessibility boundary for the experimental NEXORA language is documented in
 ## Dark Team — threat research and security engineering
 
 The Dark Team workstreams cover authorized Red Team testing, Blue Team detection and response, physical hardware/silicon, UEFI/firmware, memory safety, screen-reader attack surfaces, Surface/Deep/Dark Web research, overlay networks, supply-chain provenance, forensics, cross-platform validation and accessible security tools. Scope, safety constraints, evidence labels and implementation gates are defined in [the Dark Team architecture](docs/DARK-TEAM-ARCHITECTURE-AND-IMPLEMENTATION.md); its current machine-readable workstream inventory is [projects/dark-team/manifest.json](projects/dark-team/manifest.json). These are plans and inventory, not claims that all modules are already implemented.
+
+
+## Équipe d'agents IA
+
+Le projet définit une équipe **Dark / White / Gray** avec rôles distincts, permissions minimales, vérification indépendante et statuts de preuve : [contrat de l'équipe d'agents](docs/AI-AGENT-TEAMS-DARK-WHITE-GRAY.md), [manifeste machine-readable](projects/ai-agent-teams/manifest.json). La CI valide la structure et les garde-fous. Les agents restent NOT_VALIDATED tant qu'un runtime réel, les outils autorisés et les exécutions ne sont pas configurés et testés.
