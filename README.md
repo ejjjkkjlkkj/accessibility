@@ -20,7 +20,7 @@ Dépôt de référence pour cartographier et développer les composants d'access
 
 ## AERL — journal d'audit vérifiable
 
-Le prototype local AERL ajoute des événements structurés avec séquence et chaîne SHA-256, validation stricte, limites d'entrée et vérification d'un checkpoint externe. Il complète syslog pour la conservation de preuves; il ne remplace pas les journaux système. Voir [la conception et les limites AERL](docs/AERL.md).
+AERL comprend un CLI Python de journaux de preuves JSONL et un noyau Rust no_std à tampon fixe pour UEFI/bas niveau. Les deux profils structurent les événements, chaînent les hashes SHA-256 et peuvent vérifier un checkpoint externe. Ils complètent syslog pour la conservation de preuves; ils ne remplacent pas les journaux système. Voir [la conception et les limites AERL](docs/AERL.md).
 
 
 ## Catalogue et feuille de route

@@ -15,7 +15,7 @@ import sys
 from contextlib import contextmanager
 from pathlib import Path
 
-SCHEMA = "AERL/1"
+SCHEMA = "AERL-JSONL/1"
 ZERO_HASH = "0" * 64
 MAX_LEDGER_BYTES = 64 * 1024 * 1024
 MAX_RECORD_BYTES = 32 * 1024

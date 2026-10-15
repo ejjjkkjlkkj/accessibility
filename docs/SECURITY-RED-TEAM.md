@@ -47,4 +47,4 @@ Use local fixtures only, bounded inputs and timeouts, no network access, and a t
 
 The manifest is a role and policy contract, not an agent runtime. The CI validates the contract and source syntax; it does not execute AI agents, prove the absence of vulnerabilities, or validate physical hardware.
 
-AERL is a local structured evidence-ledger prototype. Its hash chain detects record-level changes and ordering breaks; a separately protected checkpoint is needed to detect whole-ledger replacement or tail truncation. It is not a tamper-proof store, does not sign authorship, and does not replace OS logging infrastructure. See docs/AERL.md.
+AERL is a structured evidence-ledger prototype with a Python JSONL CLI and a no_std fixed-buffer Rust core. Its hash chain detects record-level changes and ordering breaks; a separately protected checkpoint is needed to detect whole-ledger replacement or tail truncation. It is not a tamper-proof store, does not sign authorship, and does not replace OS logging infrastructure. See docs/AERL.md.

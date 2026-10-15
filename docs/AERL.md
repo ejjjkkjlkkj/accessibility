@@ -22,6 +22,23 @@ Le lecteur vérifie :
 
 Les valeurs de statut possibles sont INFO, PASS, FAIL, PARTIAL, BLOCKED, NOT_VALIDATED et UNPROVEN.
 
+## Profil bas niveau Rust no_std
+
+Le noyau Rust binaire AERL-BIN/1 se trouve dans crates/aerl-core. Il utilise un tampon fourni par l'appelant, une trame binaire à longueur déterminée, une séquence, un hash précédent et SHA-256 via la bibliothèque RustCrypto sha2. Il n'a pas de système de fichiers, de réseau, d'allocation dynamique ni d'accès à l'horloge. Le timestamp est fourni par l'adaptateur; 0 signifie inconnu/non fiable.
+
+Le profil CLI Python est AERL-JSONL/1. Les profils JSONL et BIN ne sont pas interchangeables; aucun convertisseur entre les deux n'est revendiqué. Le noyau binaire accepte un payload opaque borné: c'est l'adaptateur qui doit sérialiser les données et ne jamais transmettre de secrets, de texte utilisateur ni de données personnelles inutiles.
+
+Validation du noyau :
+
+    cargo test --manifest-path crates/aerl-core/Cargo.toml
+
+Contrôle de compilation croisée, sans démarrage firmware :
+
+    rustup target add x86_64-unknown-uefi
+    cargo check --target x86_64-unknown-uefi --manifest-path crates/aerl-core/Cargo.toml
+
+Ce contrôle ne valide pas le fonctionnement sur un PC physique. Le stockage, la sérialisation du payload, l'accès concurrent au tampon et l'ancrage externe du checkpoint restent du ressort des adaptateurs.
+
 ## Exemple Windows PowerShell
 
     New-Item -ItemType Directory -Force "$env:LOCALAPPDATA\Accessibility\logs" | Out-Null
