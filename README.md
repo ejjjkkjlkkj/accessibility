@@ -42,3 +42,7 @@ Le plan [OS complet, chaîne logicielle accessible et validation HAKER](docs/OS-
 ## Audit des éléments manquants
 
 Le document [Audit des manques de l'OS complet accessible et de HAKER](docs/OS-COMPLETE-GAP-AUDIT.md) recense les écarts de couverture, les priorités P0/P1/P2, les critères d'acceptation et les références primaires (NIST, UEFI/ACPI, noyau Linux, W3C). C'est un audit documentaire : il ne certifie pas l'implémentation ni l'exhaustivité du projet.
+
+## Réduction des ports réseau exposés
+
+La politique [Réduction de la surface réseau](docs/NETWORK-PORT-MINIMIZATION.md) exige un refus par défaut, des exceptions minimales déclarées, un inventaire des sockets TCP/UDP IPv4/IPv6 et une comparaison entre ports attendus et réellement en écoute. Le document est une spécification : l'application automatique des règles et les validations natives restent **NOT_IMPLEMENTED / NOT_VALIDATED** jusqu'à preuve reproductible.
