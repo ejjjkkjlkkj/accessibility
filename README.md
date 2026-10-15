@@ -34,3 +34,8 @@ The accessibility boundary for the experimental NEXORA language is documented in
 ## Architecture rules
 
 - [Independent implementation tracks for every language and the separate NEXORA universal language](docs/ARCHITECTURE-INDEPENDENT-LANGUAGE-TRACKS-AND-NEXORA.md)
+
+
+## Dark Team — threat research and security engineering
+
+The Dark Team workstreams cover authorized Red Team testing, Blue Team detection and response, physical hardware/silicon, UEFI/firmware, memory safety, screen-reader attack surfaces, Surface/Deep/Dark Web research, overlay networks, supply-chain provenance, forensics, cross-platform validation and accessible security tools. Scope, safety constraints, evidence labels and implementation gates are defined in [the Dark Team architecture](docs/DARK-TEAM-ARCHITECTURE-AND-IMPLEMENTATION.md); its current machine-readable workstream inventory is [projects/dark-team/manifest.json](projects/dark-team/manifest.json). These are plans and inventory, not claims that all modules are already implemented.
