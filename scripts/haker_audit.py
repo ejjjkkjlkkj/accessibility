@@ -17,6 +17,9 @@ RULES = [
     ("SEC004", "MEDIUM", re.compile(r"(?i)\b(?:shell\s*=\s*True|os\.system\s*\(|eval\s*\(|exec\s*\()"), "Dynamic execution or shell invocation requires review"),
     ("SEC005", "MEDIUM", re.compile(r"(?i)\bunsafe\s*\{"), "Rust unsafe block requires manual safety review"),
     ("SEC006", "LOW", re.compile(r"(?i)\b(?:TODO|FIXME|XXX)\b.{0,100}(?:security|auth|overflow|unsafe|validation|permission)"), "Security-related unresolved marker"),
+    ("SEC007", "MEDIUM", re.compile(r"(?i)\b(?:pickle\.loads|marshal\.loads|yaml\.load)\s*\("), "Potential unsafe deserialization; verify input trust and loader configuration"),
+    ("SEC008", "LOW", re.compile(r"(?i)\bhashlib\.(?:md5|sha1)\s*\("), "Legacy hash primitive; unsuitable for security-sensitive integrity or authentication"),
+    ("SEC009", "MEDIUM", re.compile(r"(?i)\btempfile\.mktemp\s*\("), "Race-prone temporary path creation"),
 ]
 def iter_files(root, exclude_paths=()):
     """Yield eligible files in stable order without descending into excluded trees."""
@@ -101,7 +104,13 @@ def audit(root, exclude_paths=()):
                 continue
             for rule_id, severity, pattern, title in RULES:
                 if pattern.search(line):
-                    findings.append({"id": rule_id, "severity": severity, "title": title, "path": rel, "line": number, "evidence": line.strip()[:240], "status": "UNCONFIRMED_REVIEW_REQUIRED"})
+                    evidence = line.strip()[:240]
+                    # CI artifacts must not copy likely credential values or private-key markers.
+                    if rule_id == "SEC001":
+                        evidence = "[REDACTED: private-key marker]"
+                    elif rule_id == "SEC002":
+                        evidence = "[REDACTED: potential credential assignment]"
+                    findings.append({"id": rule_id, "severity": severity, "title": title, "path": rel, "line": number, "evidence": evidence, "status": "UNCONFIRMED_REVIEW_REQUIRED"})
     counts = {s: sum(f["severity"] == s for f in findings) for s in ("CRITICAL", "HIGH", "MEDIUM", "LOW", "INFO")}
     return {"schema_version":"1.0", "audit_type":"OFFLINE_HEURISTIC_STATIC_REVIEW", "root":".", "files_scanned":scanned, "unreadable_files":unreadable, "finding_count":len(findings), "severity_counts":counts, "findings":findings, "limitations":["Heuristic false positives and false negatives are possible.", "Findings require human reproduction and validation.", "No AI agent is launched and inspected code is not executed.", "A clean report does not prove absence of vulnerabilities.", "Hardware, firmware, runtime, and physical-device behavior are not validated."]}
 
