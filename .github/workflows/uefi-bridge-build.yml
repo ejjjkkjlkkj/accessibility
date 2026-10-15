@@ -1,0 +1,59 @@
+name: UEFI hardware bridge firmware build
+
+on:
+  push:
+    branches: ["**"]
+    paths:
+      - "firmware/uefi-bridge/**"
+      - ".github/workflows/uefi-bridge-build.yml"
+  pull_request:
+    paths:
+      - "firmware/uefi-bridge/**"
+      - ".github/workflows/uefi-bridge-build.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: uefi-bridge-build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v6
+      - name: Install EDK II build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential uuid-dev acpica-tools nasm python3 python3-pip python3-venv libssl-dev
+      - name: Fetch EDK II toolchain source
+        run: |
+          git clone --depth 1 --recurse-submodules https://github.com/tianocore/edk2.git "$RUNNER_TEMP/edk2"
+          make -C "$RUNNER_TEMP/edk2/BaseTools" -j2
+      - name: Stage module inside EDK II workspace
+        run: |
+          mkdir -p "$RUNNER_TEMP/edk2/AccessibilityHardwareBridge"
+          cp firmware/uefi-bridge/HardwareBridge.c "$RUNNER_TEMP/edk2/AccessibilityHardwareBridge/"
+          cp firmware/uefi-bridge/HardwareBridge.inf "$RUNNER_TEMP/edk2/AccessibilityHardwareBridge/"
+          python3 - "$RUNNER_TEMP/edk2/MdeModulePkg/MdeModulePkg.dsc" "$RUNNER_TEMP/edk2/AccessibilityHardwareBridge.dsc" <<'PY'
+          import pathlib, sys
+          source = pathlib.Path(sys.argv[1]).read_text(encoding="utf-8")
+          marker = "[Components]"
+          if marker not in source:
+              raise SystemExit("MdeModulePkg.dsc has no [Components] section")
+          source = source.replace(marker, marker + "\n  AccessibilityHardwareBridge/HardwareBridge.inf", 1)
+          pathlib.Path(sys.argv[2]).write_text(source, encoding="utf-8")
+          PY
+      - name: Build native UEFI application (compile only)
+        shell: bash
+        run: |
+          cd "$RUNNER_TEMP/edk2"
+          . ./edksetup.sh
+          build -p AccessibilityHardwareBridge.dsc -m AccessibilityHardwareBridge/HardwareBridge.inf -a X64 -t GCC5 -b RELEASE
+      - name: Locate and hash EFI output
+        shell: bash
+        run: |
+          find "$RUNNER_TEMP/edk2/Build" -type f -iname 'AccessibilityHardwareBridge.efi' -print -exec sha256sum {} \;
