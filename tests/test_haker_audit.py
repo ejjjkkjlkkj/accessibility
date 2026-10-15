@@ -19,9 +19,9 @@ class HakerAuditTests(unittest.TestCase):
     def test_detects_private_key_marker_without_executing_content(self):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
+            marker = "-----BEGIN RSA " + "PRIVATE KEY-----"
             (root / "sample.py").write_text(
-                "# SECURITY_SCANNER_TEST_FIXTURE\n"
-                "PRIVATE = '-----BEGIN RSA PRIVATE KEY-----'\n",
+                "PRIVATE = " + repr(marker) + "\n",
                 encoding="utf-8",
             )
             result = self.run_scanner(root)
