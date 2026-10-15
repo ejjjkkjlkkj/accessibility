@@ -23,6 +23,7 @@ impl<'a> AccessibleEvent<'a> {
     pub fn is_valid(&self) -> bool {
         self.abi_version == ABI_VERSION
             && self.name.len() <= tree::MAX_NODE_NAME_UTF8_BYTES
+            && !self.name.contains('\0')
             && tree::state_flags_are_valid(self.state_flags)
     }
 }

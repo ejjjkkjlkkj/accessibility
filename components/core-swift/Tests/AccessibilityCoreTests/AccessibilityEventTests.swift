@@ -15,6 +15,7 @@ final class AccessibilityEventTests: XCTestCase {
         XCTAssertFalse(AccessibilityState.isValid(AccessibilityState.focused))
         XCTAssertFalse(AccessibilityState.isValid(AccessibilityState.enabled | AccessibilityState.disabled))
         XCTAssertFalse(AccessibilityState.isValid(UInt64(1) << 63))
+        XCTAssertFalse(AccessibilityEvent(role: .button, name: "bad\0name").isValid)
     }
     func testScreenReaderCursorBoundaries() {
         var cursor = ScreenReaderCursor(count: 2)

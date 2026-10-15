@@ -18,13 +18,14 @@ func TestEventContractV1(t *testing.T) {
 		{ABIVersion: 1, Role: Role(18), Name: "Continue"},
 		{ABIVersion: 1, Role: RoleButton, StateFlags: StateFocused, Name: "Continue"},
 		{ABIVersion: 1, Role: RoleButton, Name: string([]byte{0xff})},
-		{ABIVersion: 1, Role: RoleButton, Name: string(make([]byte, 4097))},
+		{ABIVersion: 1, Role: RoleButton, Name: "bad\x00name"},
+		{ABIVersion: 1, Role: RoleButton, Name: strings.Repeat("a", 4097)},
 	} {
 		if event.Valid() {
 			t.Fatalf("invalid event accepted: %#v", event)
 		}
 	}
-	maxName := Event{ABIVersion: 1, Role: RoleButton, Name: string(make([]byte, 4096))}
+	maxName := Event{ABIVersion: 1, Role: RoleButton, Name: strings.Repeat("a", 4096)}
 	if !maxName.Valid() {
 		t.Fatal("valid 4096-byte UTF-8 event name rejected")
 	}

@@ -1,6 +1,9 @@
 package accessibility
 
-import "unicode/utf8"
+import (
+	"strings"
+	"unicode/utf8"
+)
 
 // Role is the stable logical role identifier defined by docs/ACCESSIBILITY-ROLE-CODES-V1.md.
 // It is a wire-level code, not a platform handle or a complete binary ABI.
@@ -72,5 +75,6 @@ func (e Event) Valid() bool {
 		e.Role.Valid() &&
 		e.StateFlags.Valid() &&
 		utf8.ValidString(e.Name) &&
+		!strings.ContainsRune(e.Name, 0) &&
 		len(e.Name) <= 4096
 }

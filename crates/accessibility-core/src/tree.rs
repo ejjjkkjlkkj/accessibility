@@ -69,7 +69,7 @@ pub fn validate_tree(nodes: &[AccessibleNode<'_>]) -> bool {
     let mut roots = 0usize;
     let mut focused_nodes = 0usize;
     for (index, node) in nodes.iter().enumerate() {
-        if node.name.len() > MAX_NODE_NAME_UTF8_BYTES {
+        if node.name.len() > MAX_NODE_NAME_UTF8_BYTES || node.name.contains('\0') {
             return false;
         }
         if !state_flags_are_valid(node.state_flags) {
@@ -182,6 +182,15 @@ mod tests {
         let long_name = "x".repeat(MAX_NODE_NAME_UTF8_BYTES + 1);
         let oversized = [AccessibleNode::new(1, None, Role::Window, 0, &long_name)];
         assert!(!validate_tree(&oversized));
+    }
+
+    #[test]
+    fn rejects_names_containing_nul() {
+        let nodes = [
+            AccessibleNode::new(1, None, Role::Window, 0, "Main"),
+            AccessibleNode::new(2, Some(1), Role::Button, TARGET, "Save\0malformed"),
+        ];
+        assert!(!validate_tree(&nodes));
     }
 
     #[test]
