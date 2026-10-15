@@ -3,6 +3,7 @@
 from __future__ import annotations
 import argparse, json, os, re, stat, sys, tempfile
 from pathlib import Path
+from validate_haker_report import REQUIRED as HAKER_REPORT_REQUIRED, validate as validate_haker_report
 
 ROOT = Path(__file__).resolve().parents[1]
 SKIP_DIRS = {".git", ".venv", "venv", "node_modules", "target", "dist", "build", "__pycache__", ".mypy_cache", ".pytest_cache"}
@@ -158,11 +159,12 @@ def is_previous_report(path):
         if descriptor >= 0:
             os.close(descriptor)
 
-    return (
-        isinstance(previous, dict)
-        and previous.get("schema_version") == "1.0"
-        and previous.get("audit_type") == "OFFLINE_HEURISTIC_STATIC_REVIEW"
-    )
+    # Only replace a file that fully conforms to the generated report contract.
+    # A matching pair of marker fields alone is insufficient: malformed JSON objects
+    # could otherwise be silently overwritten and destroy unrelated user data.
+    if not isinstance(previous, dict) or set(previous) != HAKER_REPORT_REQUIRED:
+        return False
+    return not validate_haker_report(previous)
 
 
 def write_report_atomically(path, rendered):
