@@ -50,3 +50,8 @@ La politique [Réduction de la surface réseau](docs/NETWORK-PORT-MINIMIZATION.m
 ## Réseau discret et modèle de menace
 
 [Conception réseau discrète et modèle de menace](docs/NETWORK-STEALTH-THREAT-MODEL.md) précise ce que « réseau invisible » peut réellement signifier, les surfaces d'attaque à examiner, les défenses en couches, les tests HAKER autorisés et les portes de validation. L'invisibilité absolue n'est pas garantie ; l'objectif est de réduire l'exposition, les communications non déclarées et les surprises, avec preuves par environnement.
+
+
+## Objectif zéro faille connue et réduction du temps perdu
+
+Les [portes de validation sécurité et fiabilité](docs/ZERO-KNOWN-VULNERABILITIES-AND-RELEASE-GATES.md) définissent les contrôles attendus pour le réseau, les logiciels/dépendances, les pilotes, le noyau, la récupération et l'accessibilité, ainsi que les critères qui bloquent une livraison. Il s'agit d'un objectif de **zéro vulnérabilité critique/haute connue non résolue**, pas d'une promesse impossible de zéro faille absolue. À ce stade, le document est une spécification : les mécanismes doivent encore être implémentés et validés.
