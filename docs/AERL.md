@@ -41,11 +41,12 @@ Ce contrôle ne valide pas le fonctionnement sur un PC physique. Le stockage, la
 
 ## Console unifiée pour les journaux du dépôt
 
-`scripts/aerl_tool.py` devient la console unifiée pour initialiser, alimenter, collecter, vérifier, résumer, rechercher et créer/vérifier un checkpoint. La collecte automatique est volontairement bornée : elle ne parcourt que les rapports machine aux noms autorisés (par exemple `haker-audit-report.json`, `junit*.xml`, `test-results.json`). Elle n'enregistre ni le contenu brut ni les messages d'erreur des rapports : uniquement chemin relatif, SHA-256, taille et compteurs/status autorisés. Les sources inconnues sont ignorées; les doublons de même chemin + même hash sont ignorés. Les nouveaux contenus d'un même chemin sont collectés à nouveau.
+`scripts/aerl_tool.py` devient la console unifiée pour initialiser, alimenter, collecter, vérifier, résumer, rechercher et créer/vérifier un checkpoint. La collecte automatique est volontairement bornée : elle ne parcourt que les rapports machine aux noms autorisés (par exemple `haker-audit-report.json`, `junit*.xml`, `test-results.json`). Elle n'enregistre ni le contenu brut ni les messages d'erreur des rapports : uniquement chemin relatif, SHA-256, taille et compteurs/status autorisés. Les sources inconnues sont ignorées; les doublons de même chemin + même hash sont ignorés. Les nouveaux contenus d'un même chemin sont collectés à nouveau. La collecte refuse les liens symboliques, fichiers spéciaux, rapports de plus de 2 Mio et XML invalides. Un refus rend la collecte PARTIAL et la commande échoue (code 1).
 
     python scripts/aerl_tool.py init --file .aerl/events.aerl
     python scripts/aerl_tool.py append --file .aerl/events.aerl --actor QA --kind accessibility.keyboard --status PASS --payload '{"checks":12}'
     python scripts/aerl_tool.py collect --root . --file .aerl/events.aerl
+    python scripts/aerl_run.py --file .aerl/events.aerl --kind test.unit -- python -m unittest discover -s tests -p "test_aerl_tool.py" -v
     python scripts/aerl_tool.py verify --file .aerl/events.aerl
     python scripts/aerl_tool.py summary --file .aerl/events.aerl --out summary.json
     python scripts/aerl_tool.py search --file .aerl/events.aerl --status FAIL --limit 100
@@ -53,7 +54,7 @@ Ce contrôle ne valide pas le fonctionnement sur un PC physique. Le stockage, la
     python scripts/aerl_tool.py checkpoint-verify --file .aerl/events.aerl --checkpoint checkpoint.json
     python -m unittest discover -s tests -p "test_aerl_tool.py" -v
 
-Les rapports utilisent le schéma `AERL-REPORT/1`. Les sorties de rapport refusent l’écrasement de fichiers existants. La collecte est un point de départ borné, pas une capture exhaustive de chaque événement du dépôt; les producteurs de tests et d'agents doivent encore émettre des rapports structurés pour être collectés.
+Le lanceur `scripts/aerl_run.py` exécute une commande sans masquer sa sortie, puis inscrit son code de retour, sa durée, le nombre d'arguments et l'empreinte SHA-256 de la ligne de commande. Il ne journalise jamais la ligne de commande elle-même, qui pourrait contenir des secrets. Si le journal ne peut pas être écrit, il renvoie 125 même si la commande cible a réussi : aucune réussite n'est déclarée sans enregistrement de preuve. La matrice HAKER utilise ce lanceur pour les tests et finalise le journal même lorsqu'une étape échoue.\n\nLes rapports utilisent le schéma `AERL-REPORT/1`. Les sorties de rapport refusent l’écrasement de fichiers existants. La collecte est un point de départ borné, pas une capture exhaustive de chaque événement du dépôt; les producteurs de tests et d'agents doivent encore émettre des rapports structurés pour être collectés.
 
 ## Exemple Windows PowerShell
 
@@ -87,8 +88,8 @@ Sans un checkpoint gardé séparément, une personne qui peut réécrire l'inté
     python -m unittest discover -s tests -p "test_aerl.py" -v
     python -m unittest discover -s tests -p "test_aerl_checkpoint.py" -v
     python -m unittest discover -s tests -p "test_aerl_tool.py" -v
-    python -m py_compile scripts/aerl.py scripts/aerl_checkpoint.py tests/test_aerl.py tests/test_aerl_checkpoint.py
-    python -m py_compile scripts/aerl.py tests/test_aerl.py
+    python -m unittest discover -s tests -p "test_aerl_run.py" -v
+    python -m py_compile scripts/aerl.py scripts/aerl_checkpoint.py scripts/aerl_tool.py scripts/aerl_run.py tests/test_aerl.py tests/test_aerl_checkpoint.py tests/test_aerl_tool.py tests/test_aerl_run.py
 
 AERL n'accède pas au réseau et les tests n'attaquent que des fichiers temporaires locaux.
 
