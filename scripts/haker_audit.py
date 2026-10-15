@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Offline heuristic security review; findings are leads, not confirmed vulnerabilities."""
 from __future__ import annotations
-import argparse, json, re, sys
+import argparse, json, os, re, sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -17,19 +17,26 @@ RULES = [
     ("SEC006", "LOW", re.compile(r"(?i)\b(?:TODO|FIXME|XXX)\b.{0,100}(?:security|auth|overflow|unsafe|validation|permission)"), "Security-related unresolved marker"),
 ]
 def iter_files(root):
-    for path in sorted(root.rglob("*")):
-        try:
-            if path.is_symlink() or not path.is_file():
+    """Yield eligible files in stable order without descending into excluded trees."""
+    for current, dirs, names in os.walk(root, topdown=True, followlinks=False):
+        current_path = Path(current)
+        dirs[:] = sorted(
+            name for name in dirs
+            if name not in SKIP_DIRS
+            and not (current_path / name).is_symlink()
+        )
+        for name in sorted(names):
+            path = current_path / name
+            try:
+                if path.is_symlink() or not path.is_file():
+                    continue
+                if path.suffix.lower() not in TEXT_SUFFIXES and path.name not in {"Dockerfile", "Makefile"}:
+                    continue
+                if path.stat().st_size > MAX_FILE_BYTES:
+                    continue
+            except OSError:
                 continue
-            if any(part in SKIP_DIRS for part in path.relative_to(root).parts):
-                continue
-            if path.suffix.lower() not in TEXT_SUFFIXES and path.name not in {"Dockerfile", "Makefile"}:
-                continue
-            if path.stat().st_size > MAX_FILE_BYTES:
-                continue
-        except OSError:
-            continue
-        yield path
+            yield path
 
 def audit(root):
     findings, unreadable, scanned = [], [], 0
