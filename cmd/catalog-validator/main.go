@@ -4,6 +4,7 @@ import (
 	"encoding/csv"
 	"fmt"
 	"io"
+	"net"
 	"net/url"
 	"os"
 	"strings"
@@ -15,7 +16,7 @@ var required = []string{"id", "name", "domain", "url", "category", "layer", "off
 // Internationalized names must be supplied in their IDNA ASCII form (punycode).
 func validDNSDomain(raw string) bool {
 	domain := strings.TrimSuffix(strings.ToLower(strings.TrimSpace(raw)), ".")
-	if domain == "" || len(domain) > 253 {
+	if domain == "" || len(domain) > 253 || net.ParseIP(domain) != nil {
 		return false
 	}
 	for _, label := range strings.Split(domain, ".") {
