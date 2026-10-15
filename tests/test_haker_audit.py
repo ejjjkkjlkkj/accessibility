@@ -54,7 +54,7 @@ class HakerAuditTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
             (root / "oversized.py").write_bytes(b"x" * (2 * 1024 * 1024 + 1))
-            (root / "clean.py").write_text("value = 42\\n", encoding="utf-8")
+            (root / "clean.py").write_text("value = 42\n", encoding="utf-8")
             result = self.run_scanner(root)
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
             self.assertIn("scanned 1 text files", result.stdout)
@@ -63,7 +63,7 @@ class HakerAuditTests(unittest.TestCase):
     def test_invalid_utf8_is_listed_as_unreadable(self):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
-            (root / "broken.py").write_bytes(b"\\xff\\xfe")
+            (root / "broken.py").write_bytes(b"\xff\xfe")
             report = root / "report.json"
             result = subprocess.run(
                 [sys.executable, str(SCANNER), "--root", str(root), "--json-out", str(report)],
@@ -80,7 +80,7 @@ class HakerAuditTests(unittest.TestCase):
             outside = Path(temp) / "outside.py"
             root.mkdir()
             marker = "-----BEGIN RSA " + "PRIVATE KEY-----"
-            outside.write_text("PRIVATE = " + repr(marker) + "\\n", encoding="utf-8")
+            outside.write_text("PRIVATE = " + repr(marker) + "\n", encoding="utf-8")
             try:
                 (root / "linked.py").symlink_to(outside)
             except (OSError, NotImplementedError):
