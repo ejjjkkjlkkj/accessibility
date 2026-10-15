@@ -105,6 +105,14 @@ class HakerReportValidatorTests(unittest.TestCase):
         self.assertEqual(result.returncode, 1)
         self.assertIn("invalid severity", result.stderr)
 
+    def test_rejects_unhashable_severity_without_crashing(self):
+        data = report()
+        data["findings"][0]["severity"] = ["HIGH"]
+        result = self.run_validator(data)
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("invalid severity", result.stderr)
+        self.assertNotIn("Traceback", result.stderr)
+
     def test_rejects_empty_finding_path(self):
         data = report()
         data["findings"][0]["path"] = ""
