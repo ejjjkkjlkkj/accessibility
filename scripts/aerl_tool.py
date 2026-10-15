@@ -210,7 +210,7 @@ def collect(root: Path, ledger: Path, actor: str = "AERL-COLLECTOR") -> dict:
                 append_event(ledger, actor, kind, status, payload)
                 seen.add((relative, digest))
                 appended += 1
-            except (AerlError, OSError, ValueError) as exc:
+            except (AerlError, OSError, ValueError, ET.ParseError) as exc:
                 refused += 1
                 errors.append({"source_path": relative, "reason": str(exc)[:240]})
     return {"schema": "AERL-REPORT/1", "status": "PARTIAL" if refused else "PASS",
