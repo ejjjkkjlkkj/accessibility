@@ -125,6 +125,8 @@ def validate(report: object) -> list[str]:
 
 def load_report(path: Path) -> object:
     """Read a bounded regular file without following a final-component symlink."""
+    if path.is_symlink():
+        raise ValueError("report input must not be a symbolic link")
     flags = os.O_RDONLY | getattr(os, "O_BINARY", 0)
     if hasattr(os, "O_NOFOLLOW"):
         flags |= os.O_NOFOLLOW
