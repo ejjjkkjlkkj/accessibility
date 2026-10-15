@@ -9,6 +9,7 @@ import sys
 from pathlib import Path, PureWindowsPath
 
 SEVERITIES = {"CRITICAL", "HIGH", "MEDIUM", "LOW", "INFO"}
+FINDING_FIELDS = {"id", "severity", "title", "path", "line", "evidence", "status"}
 MAX_REPORT_BYTES = 8 * 1024 * 1024
 REQUIRED = {
     "schema_version", "audit_type", "root", "files_scanned", "unreadable_files",
@@ -54,6 +55,9 @@ def validate(report: object) -> list[str]:
     missing = sorted(REQUIRED - report.keys())
     if missing:
         return ["missing fields: " + ", ".join(missing)]
+    unexpected = sorted(report.keys() - REQUIRED)
+    if unexpected:
+        errors.append("unexpected fields: " + ", ".join(unexpected))
     if report["schema_version"] != "1.0" or report["audit_type"] != "OFFLINE_HEURISTIC_STATIC_REVIEW":
         errors.append("unsupported schema_version or audit_type")
     if report["root"] != ".":
@@ -94,9 +98,17 @@ def validate(report: object) -> list[str]:
         if not isinstance(finding, dict):
             errors.append(f"finding {index} must be an object")
             continue
-        for key in ("id", "severity", "title", "path", "line", "evidence", "status"):
-            if key not in finding:
-                errors.append(f"finding {index} missing {key}")
+        missing_finding_fields = sorted(FINDING_FIELDS - finding.keys())
+        if missing_finding_fields:
+            errors.append(
+                f"finding {index} missing fields: " + ", ".join(missing_finding_fields)
+            )
+        unexpected_finding_fields = sorted(finding.keys() - FINDING_FIELDS)
+        if unexpected_finding_fields:
+            errors.append(
+                f"finding {index} has unexpected fields: "
+                + ", ".join(unexpected_finding_fields)
+            )
         severity = finding.get("severity")
         if not isinstance(severity, str) or severity not in SEVERITIES:
             errors.append(f"finding {index} has invalid severity")
