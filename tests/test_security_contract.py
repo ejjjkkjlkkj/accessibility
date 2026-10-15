@@ -75,6 +75,36 @@ class SecurityContractTests(unittest.TestCase):
         self.assertIn("non-standard JSON constant: NaN", result.stderr)
         self.assertNotIn("Traceback", result.stderr)
 
+    def test_rejects_oversized_manifest(self):
+        with tempfile.TemporaryDirectory() as temp:
+            manifest = Path(temp) / "manifest.json"
+            manifest.write_bytes(b" " * (1024 * 1024 + 1))
+            result = subprocess.run(
+                [sys.executable, str(VALIDATOR), "--manifest", str(manifest)],
+                text=True, capture_output=True, check=False, timeout=10,
+            )
+            self.assertEqual(result.returncode, 1)
+            self.assertIn("manifest exceeds 1048576 bytes", result.stderr)
+            self.assertNotIn("Traceback", result.stderr)
+
+    def test_rejects_manifest_symlink(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            target = root / "real.json"
+            target.write_text(MANIFEST.read_text(encoding="utf-8"), encoding="utf-8")
+            link = root / "linked.json"
+            try:
+                link.symlink_to(target)
+            except (OSError, NotImplementedError):
+                self.skipTest("file symlinks unavailable")
+            result = subprocess.run(
+                [sys.executable, str(VALIDATOR), "--manifest", str(link)],
+                text=True, capture_output=True, check=False, timeout=10,
+            )
+            self.assertEqual(result.returncode, 1)
+            self.assertIn("manifest must not be a symbolic link", result.stderr)
+            self.assertNotIn("Traceback", result.stderr)
+
     def test_rejects_non_object_manifest_without_traceback(self):
         result = self.run_validator_with_data([])
         self.assertEqual(result.returncode, 1)
