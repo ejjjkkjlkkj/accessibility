@@ -86,7 +86,7 @@ def audit(root, exclude_paths=()):
                 if stripped == "]":
                     in_rule_definitions = False
                 continue
-            if "SECURITY_SCANNER_TEST_FIXTURE" in line:
+            if is_scanner_source and "SECURITY_SCANNER_TEST_FIXTURE" in line:
                 continue
             for rule_id, severity, pattern, title in RULES:
                 if pattern.search(line):

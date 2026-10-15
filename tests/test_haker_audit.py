@@ -154,4 +154,18 @@ class HakerAuditTests(unittest.TestCase):
             self.assertIn("SEC002", result.stdout)
             self.assertIn("sample.py:2", result.stdout)
 
+
+    def test_fixture_marker_cannot_suppress_a_real_finding(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            candidate = root / "sample.py"
+            candidate.write_text(
+                'password = "supersecretpasswordvalue" # SECURITY_SCANNER_TEST_FIXTURE\\n',
+                encoding="utf-8",
+            )
+            result = self.run_scanner(root)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            self.assertIn("SEC002", result.stdout)
+            self.assertIn("sample.py:1", result.stdout)
+
 if __name__ == "__main__": unittest.main()
