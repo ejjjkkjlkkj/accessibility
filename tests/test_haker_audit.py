@@ -32,6 +32,16 @@ class HakerAuditTests(unittest.TestCase):
                 self.assertEqual(result.returncode,0,result.stdout+result.stderr)
                 data=json.loads(report.read_text(encoding="utf-8")); data.pop("root",None); reports.append(data)
             self.assertEqual(reports[0],reports[1])
+    def test_excluded_dependency_trees_are_pruned(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root=Path(temp); excluded=root/"node_modules"/"deep"; excluded.mkdir(parents=True)
+            (excluded/"fixture.py").write_text("PRIVATE = "+repr("-----BEGIN RSA "+"PRIVATE KEY-----")+"\\n",encoding="utf-8")
+            (root/"clean.py").write_text("value = 42\\n",encoding="utf-8")
+            result=self.run_scanner(root)
+            self.assertEqual(result.returncode,0,result.stdout+result.stderr)
+            self.assertIn("scanned 1 text files",result.stdout)
+            self.assertNotIn("SEC001",result.stdout)
+
     def test_symlink_is_not_scanned(self):
         with tempfile.TemporaryDirectory() as temp:
             root=Path(temp)/"root"; outside=Path(temp)/"outside"; root.mkdir(); outside.mkdir()
