@@ -20,6 +20,61 @@ int accessibility_event_set_state_flags(accessibility_event *event, uint64_t sta
     return 0;
 }
 
+static int accessibility_utf8_valid(const unsigned char *text, size_t length) {
+    size_t i = 0;
+    while (i < length) {
+        unsigned char first = text[i];
+        unsigned char second;
+        if (first <= 0x7Fu) {
+            ++i;
+            continue;
+        }
+        if (first >= 0xC2u && first <= 0xDFu) {
+            if (i + 1u >= length) return 0;
+            second = text[i + 1u];
+            if (second < 0x80u || second > 0xBFu) return 0;
+            i += 2u;
+            continue;
+        }
+        if (first >= 0xE0u && first <= 0xEFu) {
+            unsigned char third;
+            if (i + 2u >= length) return 0;
+            second = text[i + 1u];
+            third = text[i + 2u];
+            if (third < 0x80u || third > 0xBFu) return 0;
+            if (first == 0xE0u) {
+                if (second < 0xA0u || second > 0xBFu) return 0;
+            } else if (first == 0xEDu) {
+                if (second < 0x80u || second > 0x9Fu) return 0;
+            } else if (second < 0x80u || second > 0xBFu) {
+                return 0;
+            }
+            i += 3u;
+            continue;
+        }
+        if (first >= 0xF0u && first <= 0xF4u) {
+            unsigned char third, fourth;
+            if (i + 3u >= length) return 0;
+            second = text[i + 1u];
+            third = text[i + 2u];
+            fourth = text[i + 3u];
+            if (third < 0x80u || third > 0xBFu ||
+                fourth < 0x80u || fourth > 0xBFu) return 0;
+            if (first == 0xF0u) {
+                if (second < 0x90u || second > 0xBFu) return 0;
+            } else if (first == 0xF4u) {
+                if (second < 0x80u || second > 0x8Fu) return 0;
+            } else if (second < 0x80u || second > 0xBFu) {
+                return 0;
+            }
+            i += 4u;
+            continue;
+        }
+        return 0;
+    }
+    return 1;
+}
+
 int accessibility_event_init(accessibility_event *event,
                              accessibility_role role,
                              uint64_t source_id,
@@ -38,6 +93,9 @@ int accessibility_event_init(accessibility_event *event,
     }
     if (i >= ACCESSIBILITY_NAME_CAPACITY) {
         return -3;
+    }
+    if (!accessibility_utf8_valid((const unsigned char *)name, i)) {
+        return -4;
     }
 
     memset(event, 0, sizeof(*event));

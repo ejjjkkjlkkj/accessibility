@@ -48,5 +48,16 @@ int main(void) {
     assert(accessibility_event_init(&event, ACCESSIBILITY_ROLE_BUTTON, 9u, max_name) == 0);
     assert(strlen(event.name) == ACCESSIBILITY_NAME_CAPACITY - 1u);
     assert(event.name[ACCESSIBILITY_NAME_CAPACITY - 1u] == '\0');
+
+    assert(accessibility_event_init(&event, ACCESSIBILITY_ROLE_BUTTON, 10u, "caf\xC3\xA9") == 0);
+    const char *invalid_utf8[] = {
+        "\xC0\xAF",             /* overlong two-byte sequence */
+        "\xED\xA0\x80",       /* UTF-16 surrogate */
+        "\xF4\x90\x80\x80", /* above U+10FFFF */
+        "\xE2\x82"              /* truncated sequence */
+    };
+    for (size_t index = 0; index < sizeof(invalid_utf8) / sizeof(invalid_utf8[0]); ++index) {
+        assert(accessibility_event_init(&event, ACCESSIBILITY_ROLE_BUTTON, 11u, invalid_utf8[index]) == -4);
+    }
     return 0;
 }
