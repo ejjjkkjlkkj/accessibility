@@ -49,4 +49,45 @@ class HakerAuditTests(unittest.TestCase):
             try: (root/"linked").symlink_to(outside,target_is_directory=True)
             except (OSError,NotImplementedError): self.skipTest("directory symlinks unavailable")
             result=self.run_scanner(root); self.assertEqual(result.returncode,0,result.stdout+result.stderr); self.assertIn("scanned 0 text files",result.stdout)
+
+    def test_oversized_file_is_skipped(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            (root / "oversized.py").write_bytes(b"x" * (2 * 1024 * 1024 + 1))
+            (root / "clean.py").write_text("value = 42\\n", encoding="utf-8")
+            result = self.run_scanner(root)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            self.assertIn("scanned 1 text files", result.stdout)
+            self.assertNotIn("oversized.py", result.stdout)
+
+    def test_invalid_utf8_is_listed_as_unreadable(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            (root / "broken.py").write_bytes(b"\\xff\\xfe")
+            report = root / "report.json"
+            result = subprocess.run(
+                [sys.executable, str(SCANNER), "--root", str(root), "--json-out", str(report)],
+                text=True, capture_output=True, check=False, timeout=10,
+            )
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            data = json.loads(report.read_text(encoding="utf-8"))
+            self.assertEqual(data["files_scanned"], 0)
+            self.assertEqual(data["unreadable_files"], ["broken.py"])
+
+    def test_symlink_file_is_not_scanned(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp) / "root"
+            outside = Path(temp) / "outside.py"
+            root.mkdir()
+            marker = "-----BEGIN RSA " + "PRIVATE KEY-----"
+            outside.write_text("PRIVATE = " + repr(marker) + "\\n", encoding="utf-8")
+            try:
+                (root / "linked.py").symlink_to(outside)
+            except (OSError, NotImplementedError):
+                self.skipTest("file symlinks unavailable")
+            result = self.run_scanner(root)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            self.assertIn("scanned 0 text files", result.stdout)
+            self.assertNotIn("SEC001", result.stdout)
+
 if __name__ == "__main__": unittest.main()

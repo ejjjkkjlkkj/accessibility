@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Offline heuristic security review; findings are leads, not confirmed vulnerabilities."""
 from __future__ import annotations
-import argparse, json, os, re, sys
+import argparse, json, os, re, stat, sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -32,20 +32,42 @@ def iter_files(root):
                     continue
                 if path.suffix.lower() not in TEXT_SUFFIXES and path.name not in {"Dockerfile", "Makefile"}:
                     continue
-                if path.stat().st_size > MAX_FILE_BYTES:
-                    continue
             except OSError:
                 continue
             yield path
+
+
+def read_bounded_text(path):
+    """Read a regular file with a hard byte cap; refuse final-component symlinks where supported."""
+    flags = os.O_RDONLY | getattr(os, "O_BINARY", 0)
+    if hasattr(os, "O_NOFOLLOW"):
+        flags |= os.O_NOFOLLOW
+    descriptor = os.open(path, flags)
+    try:
+        with os.fdopen(descriptor, "rb") as stream:
+            descriptor = -1
+            metadata = os.fstat(stream.fileno())
+            if not stat.S_ISREG(metadata.st_mode) or metadata.st_size > MAX_FILE_BYTES:
+                return None
+            raw = stream.read(MAX_FILE_BYTES + 1)
+            if len(raw) > MAX_FILE_BYTES:
+                return None
+    finally:
+        if descriptor >= 0:
+            os.close(descriptor)
+    return raw.decode("utf-8")
+
 
 def audit(root):
     findings, unreadable, scanned = [], [], 0
     for path in iter_files(root):
         rel = path.relative_to(root).as_posix()
         try:
-            content = path.read_text(encoding="utf-8")
+            content = read_bounded_text(path)
         except (OSError, UnicodeDecodeError):
             unreadable.append(rel)
+            continue
+        if content is None:
             continue
         scanned += 1
         in_rule_definitions = False
