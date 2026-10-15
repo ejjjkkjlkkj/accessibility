@@ -26,7 +26,7 @@ class HakerAuditTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp:
             base=Path(temp); reports=[]
             for name in ("one","two"):
-                root=base/name; root.mkdir(); (root/"clean.py").write_text("value = 42\\n",encoding="utf-8")
+                root=base/name; root.mkdir(); (root/"clean.py").write_text("value = 42\n",encoding="utf-8")
                 report=root/"report.json"
                 result=subprocess.run([sys.executable,str(SCANNER),"--root",str(root),"--json-out",str(report)],text=True,capture_output=True,check=False,timeout=10)
                 self.assertEqual(result.returncode,0,result.stdout+result.stderr)
