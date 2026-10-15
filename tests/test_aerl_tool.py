@@ -128,5 +128,14 @@ class AerlToolTests(unittest.TestCase):
         self.assertEqual(len(aerl_tool.load_records(self.ledger)[0]), 3)
 
 
+    def test_collect_malformed_junit_is_reported_as_partial_not_crash(self):
+        report = self.root / "junit-broken.xml"
+        report.write_text("<testsuites><testsuite>", encoding="utf-8")
+        result = aerl_tool.collect(self.root, self.ledger)
+        self.assertEqual(result["status"], "PARTIAL")
+        self.assertEqual(result["sources_refused"], 1)
+        self.assertIn("invalid JUnit XML report", result["refusals"][0]["reason"])
+
+
 if __name__ == "__main__":
     unittest.main()
