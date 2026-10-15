@@ -84,6 +84,13 @@ class HakerReportValidatorTests(unittest.TestCase):
         self.assertEqual(result.returncode, 1)
         self.assertIn("unreadable_files[0]", result.stderr)
 
+    def test_rejects_nul_in_unreadable_path(self):
+        data = report()
+        data["unreadable_files"] = ["sample.py\\x00private"]
+        result = self.run_validator(data)
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("unreadable_files[0]", result.stderr)
+
     def test_rejects_absolute_root(self):
         data = report()
         data["root"] = "/private/runner/work"
@@ -114,7 +121,7 @@ class HakerReportValidatorTests(unittest.TestCase):
 
     def test_rejects_nul_in_finding_path(self):
         data = report()
-        data["findings"][0]["path"] = "sample.py\\x00private"
+        data["findings"][0]["path"] = "sample.py\x00private"
         result = self.run_validator(data)
         self.assertEqual(result.returncode, 1)
         self.assertIn("relative and confined", result.stderr)
