@@ -272,6 +272,71 @@ mod tests {
     }
 
     #[test]
+    fn binary_format_matches_published_golden_vector() {
+        let mut buffer = [0u8; 256];
+        let mut used = 0;
+        let checkpoint = append(
+            &mut buffer,
+            &mut used,
+            Event {
+                timestamp_utc_ms: 0,
+                actor: "QA",
+                kind: "test",
+                status: Status::Pass,
+                payload: b"{}",
+            },
+        )
+        .unwrap();
+
+        assert_eq!(used, 98);
+        assert_eq!(&buffer[..4], b"AERL");
+        assert_eq!(buffer[4], FORMAT_VERSION);
+        assert_eq!(checkpoint.sequence, 1);
+        assert_eq!(
+            checkpoint.head_hash,
+            [
+                0x38, 0x7c, 0xec, 0x86, 0xf9, 0xcd, 0x32, 0x9e,
+                0xf8, 0xc2, 0x0f, 0x7a, 0x9d, 0xdc, 0x0f, 0xda,
+                0x8e, 0xaf, 0xa4, 0x63, 0x9d, 0x9d, 0x14, 0x36,
+                0xe6, 0xab, 0xcf, 0xec, 0x84, 0x91, 0x64, 0x5f,
+            ]
+        );
+        assert_eq!(verify(&buffer[..used]), Ok(checkpoint));
+    }
+
+    #[test]
+    fn detects_every_single_bit_mutation_in_a_valid_frame() {
+        let mut buffer = [0u8; 256];
+        let mut used = 0;
+        append(
+            &mut buffer,
+            &mut used,
+            Event {
+                timestamp_utc_ms: 1_800_000_000_000,
+                actor: "QA",
+                kind: "test.unit",
+                status: Status::Pass,
+                payload: b"mutation-vector",
+            },
+        )
+        .unwrap();
+        let checkpoint = verify(&buffer[..used]).unwrap();
+
+        for index in 0..used {
+            for bit in 0..8 {
+                let mask = 1u8 << bit;
+                buffer[index] ^= mask;
+                assert!(
+                    verify(&buffer[..used]).is_err(),
+                    "single-bit mutation unexpectedly accepted at byte {index}, bit {bit}"
+                );
+                buffer[index] ^= mask;
+            }
+        }
+        assert_eq!(verify(&buffer[..used]), Ok(checkpoint));
+    }
+
+    #[test]
     fn appends_and_verifies_multiple_frames() {
         let mut buffer = [0u8; 1024];
         let mut used = 0;

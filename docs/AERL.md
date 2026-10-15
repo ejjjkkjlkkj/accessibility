@@ -86,3 +86,8 @@ Sans un checkpoint gardé séparément, une personne qui peut réécrire l'inté
     python -m py_compile scripts/aerl.py tests/test_aerl.py
 
 AERL n'accède pas au réseau et les tests n'attaquent que des fichiers temporaires locaux.
+
+
+## Format binaire AERL-BIN/1
+
+Le noyau Rust utilise un format binaire distinct du JSONL Python. Le contrat byte-à-byte, les offsets, l'ordre little-endian, la couverture SHA-256 et un vecteur connu sont décrits dans [AERL-BIN-FORMAT.md](AERL-BIN-FORMAT.md).
