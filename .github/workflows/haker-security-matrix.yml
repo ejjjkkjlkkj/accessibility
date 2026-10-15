@@ -49,9 +49,9 @@ jobs:
       - name: Initialize unified AERL ledger
         run: python scripts/aerl_tool.py init --file .aerl-ci.events
       - name: Validate agent contract JSON
-        run: python -m json.tool agents/manifest.json
+        run: python scripts/aerl_run.py --file .aerl-ci.events --kind contract.agent_manifest -- python -m json.tool agents/manifest.json
       - name: Validate security contract
-        run: python scripts/validate_security_contract.py
+        run: python scripts/aerl_run.py --file .aerl-ci.events --kind contract.security_contract -- python scripts/validate_security_contract.py
       - name: Run security contract tests
         run: python scripts/aerl_run.py --file .aerl-ci.events --kind test.security_contract -- python -m unittest discover -s tests -p "test_security_contract.py" -v
       - name: Run HAKER scanner tests
@@ -68,6 +68,8 @@ jobs:
         run: python scripts/aerl_run.py --file .aerl-ci.events --kind security.haker_audit -- python scripts/haker_audit.py --json-out haker-audit-report.json
       - name: Validate generated HAKER report
         run: python scripts/aerl_run.py --file .aerl-ci.events --kind security.haker_report_validation -- python scripts/validate_haker_report.py haker-audit-report.json
+      - name: Compile Python security tools
+        run: python scripts/aerl_run.py --file .aerl-ci.events --kind validation.python_compile -- python -m py_compile scripts/validate_security_contract.py scripts/haker_audit.py scripts/validate_haker_report.py scripts/aerl.py scripts/aerl_checkpoint.py scripts/aerl_tool.py scripts/aerl_run.py tests/test_aerl.py tests/test_aerl_checkpoint.py tests/test_aerl_tool.py tests/test_aerl_run.py
       - name: Collect bounded reports into unified AERL ledger
         if: always()
         run: python scripts/aerl_tool.py collect --root . --file .aerl-ci.events
@@ -77,8 +79,6 @@ jobs:
       - name: Write final AERL summary
         if: always()
         run: python scripts/aerl_tool.py summary --file .aerl-ci.events --out aerl-summary.json
-      - name: Compile Python security tools
-        run: python -m py_compile scripts/validate_security_contract.py scripts/haker_audit.py scripts/validate_haker_report.py scripts/aerl.py scripts/aerl_checkpoint.py scripts/aerl_tool.py scripts/aerl_run.py tests/test_aerl.py tests/test_aerl_checkpoint.py tests/test_aerl_tool.py tests/test_aerl_run.py
       - name: Upload audit report
         if: always()
         uses: actions/upload-artifact@v4
