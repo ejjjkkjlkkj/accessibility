@@ -6,6 +6,7 @@ import argparse
 import hashlib
 import json
 import os
+import stat
 import sys
 import xml.etree.ElementTree as ET
 from collections import Counter
@@ -70,18 +71,48 @@ def _report_candidate(path: Path) -> bool:
 
 
 def _safe_source(root: Path, path: Path) -> tuple[bytes, str]:
-    if path.is_symlink() or not path.is_file():
-        raise AerlError("report source must be a regular non-symlink file")
+    if path.is_symlink():
+        raise AerlError("report source must not be a symbolic link")
     resolved_root = root.resolve()
     resolved = path.resolve()
     if resolved_root not in resolved.parents:
         raise AerlError("report source escaped scan root")
-    size = path.stat().st_size
-    if size > MAX_SOURCE_BYTES:
-        raise AerlError("report source exceeds 2 MiB limit")
-    raw = path.read_bytes()
-    if len(raw) != size:
-        raise AerlError("report source changed while being read")
+    flags = os.O_RDONLY | getattr(os, "O_BINARY", 0) | getattr(os, "O_NONBLOCK", 0)
+    if hasattr(os, "O_NOFOLLOW"):
+        flags |= os.O_NOFOLLOW
+    fd = os.open(path, flags)
+    try:
+        before = os.fstat(fd)
+        current = path.lstat()
+        if not stat.S_ISREG(before.st_mode) or not stat.S_ISREG(current.st_mode):
+            raise AerlError("report source must be a regular file")
+        if (before.st_dev, before.st_ino) != (current.st_dev, current.st_ino):
+            raise AerlError("report source path changed while opening")
+        if before.st_size > MAX_SOURCE_BYTES:
+            raise AerlError("report source exceeds 2 MiB limit")
+        chunks = []
+        remaining = MAX_SOURCE_BYTES + 1
+        while remaining:
+            chunk = os.read(fd, min(65536, remaining))
+            if not chunk:
+                break
+            chunks.append(chunk)
+            remaining -= len(chunk)
+        raw = b"".join(chunks)
+        after = os.fstat(fd)
+        current_after = path.lstat()
+        if len(raw) > MAX_SOURCE_BYTES:
+            raise AerlError("report source exceeds 2 MiB limit")
+        if (before.st_dev, before.st_ino, before.st_size, before.st_mtime_ns) != (
+            after.st_dev, after.st_ino, after.st_size, after.st_mtime_ns
+        ):
+            raise AerlError("report source changed while being read")
+        if (after.st_dev, after.st_ino) != (current_after.st_dev, current_after.st_ino):
+            raise AerlError("report source path was replaced while being read")
+        if len(raw) != after.st_size:
+            raise AerlError("report source size changed while being read")
+    finally:
+        os.close(fd)
     return raw, hashlib.sha256(raw).hexdigest()
 
 
@@ -117,6 +148,25 @@ def _extract_report(path: Path, raw: bytes) -> tuple[str, str, dict]:
         raise AerlError(f"invalid JSON report: {exc}") from exc
     if not isinstance(value, dict):
         raise AerlError("JSON report root must be an object")
+    # HAKER's offline heuristic report intentionally remains UNPROVEN: its findings
+    # require independent reproduction. Copy only aggregate counters, never evidence text.
+    if value.get("audit_type") == "OFFLINE_HEURISTIC_STATIC_REVIEW" and value.get("schema_version") == "1.0":
+        counts = {}
+        for key in ("files_scanned", "unreadable_count", "finding_count"):
+            item = value.get(key)
+            if isinstance(item, int) and not isinstance(item, bool) and 0 <= item <= 10_000_000:
+                counts[key] = item
+        unreadable = value.get("unreadable_files")
+        if isinstance(unreadable, list):
+            counts["unreadable_count"] = len(unreadable)
+        severity = value.get("severity_counts")
+        if isinstance(severity, dict):
+            for key in ("CRITICAL", "HIGH", "MEDIUM", "LOW", "INFO"):
+                item = severity.get(key)
+                if isinstance(item, int) and not isinstance(item, bool) and 0 <= item <= 10_000_000:
+                    counts["severity_" + key.lower()] = item
+        return "report.haker.audit", "UNPROVEN", {"format": "haker-audit-json",
+                "reported_status": "UNPROVEN_REQUIRES_REVIEW", "counts": counts}
     raw_status = value.get("status", value.get("result", value.get("conclusion", "UNPROVEN")))
     if not isinstance(raw_status, str):
         raw_status = "UNPROVEN"
@@ -253,8 +303,9 @@ def main(argv: list[str] | None = None) -> int:
                   "sequence": seq, "head_hash": head, "external_anchor": "NOT_PROVIDED"})
             return 0
         if args.command == "collect":
-            emit(collect(args.root, args.file, args.actor))
-            return 0
+            report = collect(args.root, args.file, args.actor)
+            emit(report)
+            return 1 if report["status"] == "PARTIAL" else 0
         if args.command == "checkpoint-create":
             value = aerl_checkpoint.create_checkpoint(args.file, args.out)
             emit({"schema": "AERL-REPORT/1", "status": "PASS", "operation": "checkpoint-created", **value})
