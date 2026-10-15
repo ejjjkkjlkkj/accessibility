@@ -342,7 +342,7 @@ class HakerAuditTests(unittest.TestCase):
             )
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
             rendered = report.read_text(encoding="utf-8")
-            self.assertIn("[REDACTED]", rendered)
+            self.assertIn("[REDACTED:", rendered)
             self.assertNotIn(secret, rendered)
 
     def test_private_key_marker_is_redacted_from_json_report(self):
