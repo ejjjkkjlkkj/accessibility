@@ -38,3 +38,7 @@ The accessibility boundary for the experimental NEXORA language is documented in
 ## OS complet et chaîne accessible
 
 Le plan [OS complet, chaîne logicielle accessible et validation HAKER](docs/OS-COMPLETE-ACCESSIBLE-CHAIN.md) couvre du matériel/UEFI jusqu'au noyau, pilotes, services, accessibilité, interface, applications, SDK, IA locale, installation et mises à jour. Il définit les portes de validation HAKER et sépare explicitement simulation, preuves logicielles, tests humains et validation matérielle. C'est une architecture cible, pas une affirmation que l'OS ou HAKER est déjà complet.
+
+## Audit des éléments manquants
+
+Le document [Audit des manques de l'OS complet accessible et de HAKER](docs/OS-COMPLETE-GAP-AUDIT.md) recense les écarts de couverture, les priorités P0/P1/P2, les critères d'acceptation et les références primaires (NIST, UEFI/ACPI, noyau Linux, W3C). C'est un audit documentaire : il ne certifie pas l'implémentation ni l'exhaustivité du projet.
