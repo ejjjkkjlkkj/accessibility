@@ -62,3 +62,34 @@ func TestValidateRejectsHTTPURLWithoutHostname(t *testing.T) {
 		}
 	}
 }
+
+func TestValidateRejectsEmptyCatalog(t *testing.T) {
+	if err := validate(strings.NewReader(validHeader)); err == nil {
+		t.Fatal("expected catalog without resource rows to fail")
+	}
+}
+
+func TestValidateRejectsEmptyRequiredFields(t *testing.T) {
+	rows := []string{
+		",Example,example.org,https://example.org/,docs,web,candidate,test\n",
+		"a,,example.org,https://example.org/,docs,web,candidate,test\n",
+		"a,Example,,https://example.org/,docs,web,candidate,test\n",
+		"a,Example,example.org,https://example.org/,,web,candidate,test\n",
+		"a,Example,example.org,https://example.org/,docs,,candidate,test\n",
+		"a,Example,example.org,https://example.org/,docs,web,,test\n",
+	}
+	for _, row := range rows {
+		if err := validate(strings.NewReader(validHeader + row)); err == nil {
+			t.Errorf("expected empty required field to fail: %q", row)
+		}
+	}
+}
+
+func TestValidateRejectsMalformedURL(t *testing.T) {
+	for _, rawURL := range []string{"https://%", "http://[::1", "https://?query=missing-host"} {
+		row := "a,Example,example.org," + rawURL + ",docs,web,candidate,test\n"
+		if err := validate(strings.NewReader(validHeader + row)); err == nil {
+			t.Errorf("expected malformed URL to fail: %q", rawURL)
+		}
+	}
+}
