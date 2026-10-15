@@ -123,6 +123,22 @@ func TestValidateAcceptsSubdomainOfDeclaredDomain(t *testing.T) {
 	}
 }
 
+func TestValidateRejectsMalformedDeclaredDomain(t *testing.T) {
+	for _, domain := range []string{"example..org", "-example.org", "example-.org", "exa_mple.org", "example.org/path", strings.Repeat("a", 64) + ".org"} {
+		row := "a,Example," + domain + ",https://example.org/,docs,web,candidate,test\\n"
+		if err := validate(strings.NewReader(validHeader + row)); err == nil {
+			t.Errorf("expected malformed declared domain to fail: %q", domain)
+		}
+	}
+}
+
+func TestValidateAcceptsCaseInsensitiveFullyQualifiedDomain(t *testing.T) {
+	row := "a,Example,Example.ORG.,https://docs.example.org./,docs,web,candidate,test\\n"
+	if err := validate(strings.NewReader(validHeader + row)); err != nil {
+		t.Fatalf("expected normalized DNS domain to pass, got %v", err)
+	}
+}
+
 func TestValidateRejectsMalformedURL(t *testing.T) {
 	for _, rawURL := range []string{"https://%", "http://[::1", "https://?query=missing-host"} {
 		row := "a,Example,example.org," + rawURL + ",docs,web,candidate,test\n"
