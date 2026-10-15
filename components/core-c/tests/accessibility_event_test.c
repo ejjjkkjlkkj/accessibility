@@ -30,5 +30,12 @@ int main(void) {
     memset(long_name, 'x', sizeof(long_name));
     long_name[sizeof(long_name) - 1u] = '\0';
     assert(accessibility_event_init(&event, ACCESSIBILITY_ROLE_BUTTON, 1u, long_name) == -3);
+
+    char max_name[ACCESSIBILITY_NAME_CAPACITY];
+    memset(max_name, 'a', sizeof(max_name));
+    max_name[sizeof(max_name) - 1u] = '\0';
+    assert(accessibility_event_init(&event, ACCESSIBILITY_ROLE_BUTTON, 9u, max_name) == 0);
+    assert(strlen(event.name) == ACCESSIBILITY_NAME_CAPACITY - 1u);
+    assert(event.name[ACCESSIBILITY_NAME_CAPACITY - 1u] == '\0');
     return 0;
 }

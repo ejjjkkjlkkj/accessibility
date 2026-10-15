@@ -25,7 +25,11 @@ int accessibility_event_init(accessibility_event *event,
     if ((int)role < ACCESSIBILITY_ROLE_UNKNOWN || (int)role > ACCESSIBILITY_ROLE_MENU_ITEM) {
         return -2;
     }
-    if (strlen(name) >= ACCESSIBILITY_NAME_CAPACITY) {
+    /* Bound the scan before copying; do not call unbounded strlen on external input. */
+    while (i < ACCESSIBILITY_NAME_CAPACITY && name[i] != '\0') {
+        ++i;
+    }
+    if (i >= ACCESSIBILITY_NAME_CAPACITY) {
         return -3;
     }
 
@@ -33,11 +37,7 @@ int accessibility_event_init(accessibility_event *event,
     event->abi_version = ACCESSIBILITY_EVENT_ABI_VERSION;
     event->role = (uint32_t)role;
     event->source_id = source_id;
-
-    while (i < ACCESSIBILITY_NAME_CAPACITY - 1u && name[i] != '\0') {
-        event->name[i] = name[i];
-        ++i;
-    }
+    memcpy(event->name, name, i);
     event->name[i] = '\0';
     return 0;
 }

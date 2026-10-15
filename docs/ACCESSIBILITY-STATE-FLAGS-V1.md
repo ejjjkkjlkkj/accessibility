@@ -25,6 +25,7 @@ The machine-readable source for these assignments is [`data/accessibility-state-
 - A focus target must be focusable, enabled, and not disabled.
 - Navigation is bounded by the supplied node slice and does not wrap around.
 - Rust tree validation rejects duplicate IDs, missing parents, multiple roots, cycles, names exceeding 4096 UTF-8 bytes, and invalid state combinations.
+- Rust tree validation rejects more than 1024 nodes to bound the current allocation-free quadratic checks.
 
 ## Safety and implementation boundary
 

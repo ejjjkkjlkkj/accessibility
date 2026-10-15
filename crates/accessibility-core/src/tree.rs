@@ -11,6 +11,8 @@ pub const STATE_DISABLED: u64 = 1 << 3;
 /// Bit mask of state flags defined by this ABI revision.
 pub const KNOWN_STATE_FLAGS: u64 = STATE_FOCUSED | STATE_FOCUSABLE | STATE_ENABLED | STATE_DISABLED;
 pub const MAX_NODE_NAME_UTF8_BYTES: usize = 4096;
+/// Hard bound to limit quadratic validation work on untrusted node slices.
+pub const MAX_ACCESSIBLE_NODES: usize = 1024;
 
 /// Reject undefined or contradictory state combinations in a single semantic event.
 pub const fn state_flags_are_valid(state_flags: u64) -> bool {
@@ -60,7 +62,7 @@ impl<'a> AccessibleNode<'a> {
 /// Validate unique IDs, exactly one root, parent references, acyclic ancestry,
 /// and the shared UTF-8 name limit. An empty slice is not a valid tree.
 pub fn validate_tree(nodes: &[AccessibleNode<'_>]) -> bool {
-    if nodes.is_empty() {
+    if nodes.is_empty() || nodes.len() > MAX_ACCESSIBLE_NODES {
         return false;
     }
 
@@ -179,6 +181,27 @@ mod tests {
         let long_name = "x".repeat(MAX_NODE_NAME_UTF8_BYTES + 1);
         let oversized = [AccessibleNode::new(1, None, Role::Window, 0, &long_name)];
         assert!(!validate_tree(&oversized));
+    }
+
+    #[test]
+    fn rejects_trees_over_the_node_limit() {
+        let nodes: Vec<_> = (0..=MAX_ACCESSIBLE_NODES)
+            .map(|index| {
+                if index == 0 {
+                    AccessibleNode::new(1, None, Role::Window, 0, "Main")
+                } else {
+                    AccessibleNode::new(
+                        (index as u64) + 1,
+                        Some(1),
+                        Role::Group,
+                        0,
+                        "Node",
+                    )
+                }
+            })
+            .collect();
+        assert_eq!(nodes.len(), MAX_ACCESSIBLE_NODES + 1);
+        assert!(!validate_tree(&nodes));
     }
 
     #[test]
