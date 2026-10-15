@@ -86,7 +86,7 @@ class HakerReportValidatorTests(unittest.TestCase):
 
     def test_rejects_nul_in_unreadable_path(self):
         data = report()
-        data["unreadable_files"] = ["sample.py\\x00private"]
+        data["unreadable_files"] = ["sample.py\x00private"]
         result = self.run_validator(data)
         self.assertEqual(result.returncode, 1)
         self.assertIn("unreadable_files[0]", result.stderr)
