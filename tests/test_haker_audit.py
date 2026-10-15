@@ -230,6 +230,35 @@ class HakerAuditTests(unittest.TestCase):
             self.assertEqual(report.read_text(encoding="utf-8"), original)
             self.assertNotIn("Traceback", result.stderr)
 
+    def test_refuses_to_overwrite_report_with_inconsistent_severity_counts(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            (root / "clean.py").write_text("value = 42\n", encoding="utf-8")
+            report = root / "report.json"
+            data = {
+                "schema_version": "1.0",
+                "audit_type": "OFFLINE_HEURISTIC_STATIC_REVIEW",
+                "root": ".",
+                "files_scanned": 0,
+                "unreadable_files": [],
+                "finding_count": 0,
+                "severity_counts": {
+                    "CRITICAL": 1, "HIGH": 0, "MEDIUM": 0, "LOW": 0, "INFO": 0,
+                },
+                "findings": [],
+                "limitations": ["This is a test fixture, not a security certification."],
+            }
+            original = json.dumps(data, sort_keys=True)
+            report.write_text(original, encoding="utf-8")
+            result = subprocess.run(
+                [sys.executable, str(SCANNER), "--root", str(root), "--json-out", str(report)],
+                text=True, capture_output=True, check=False, timeout=10,
+            )
+            self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
+            self.assertIn("refusing to overwrite", result.stderr)
+            self.assertEqual(report.read_text(encoding="utf-8"), original)
+            self.assertNotIn("Traceback", result.stderr)
+
     def test_refuses_to_overwrite_report_with_nonstandard_json_constant(self):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
