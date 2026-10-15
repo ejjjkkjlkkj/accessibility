@@ -8,6 +8,8 @@ pub const STATE_FOCUSED: u64 = 1 << 0;
 pub const STATE_FOCUSABLE: u64 = 1 << 1;
 pub const STATE_ENABLED: u64 = 1 << 2;
 pub const STATE_DISABLED: u64 = 1 << 3;
+/// Bit mask of state flags defined by this ABI revision.
+pub const KNOWN_STATE_FLAGS: u64 = STATE_FOCUSED | STATE_FOCUSABLE | STATE_ENABLED | STATE_DISABLED;
 pub const MAX_NODE_NAME_UTF8_BYTES: usize = 4096;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -45,9 +47,24 @@ pub fn validate_tree(nodes: &[AccessibleNode<'_>]) -> bool {
     }
 
     let mut roots = 0usize;
+    let mut focused_nodes = 0usize;
     for (index, node) in nodes.iter().enumerate() {
         if node.name.len() > MAX_NODE_NAME_UTF8_BYTES {
             return false;
+        }
+        if node.state_flags & !KNOWN_STATE_FLAGS != 0 {
+            return false;
+        }
+        if (node.state_flags & STATE_ENABLED) != 0
+            && (node.state_flags & STATE_DISABLED) != 0
+        {
+            return false;
+        }
+        if (node.state_flags & STATE_FOCUSED) != 0 {
+            focused_nodes += 1;
+            if !node.is_focus_target() {
+                return false;
+            }
         }
         for other in nodes.iter().skip(index + 1) {
             if node.id == other.id {
@@ -60,7 +77,7 @@ pub fn validate_tree(nodes: &[AccessibleNode<'_>]) -> bool {
             return false;
         }
     }
-    if roots != 1 {
+    if roots != 1 || focused_nodes > 1 {
         return false;
     }
 
@@ -152,5 +169,59 @@ mod tests {
         let long_name = "x".repeat(MAX_NODE_NAME_UTF8_BYTES + 1);
         let oversized = [AccessibleNode::new(1, None, Role::Window, 0, &long_name)];
         assert!(!validate_tree(&oversized));
+    }
+
+    #[test]
+    fn accepts_one_valid_focused_target() {
+        let nodes = [
+            AccessibleNode::new(1, None, Role::Window, 0, "Main"),
+            AccessibleNode::new(
+                2,
+                Some(1),
+                Role::Button,
+                STATE_FOCUSABLE | STATE_ENABLED | STATE_FOCUSED,
+                "Continue",
+            ),
+        ];
+        assert!(validate_tree(&nodes));
+    }
+
+    #[test]
+    fn rejects_contradictory_unknown_and_multiple_focus_states() {
+        let enabled_and_disabled = [
+            AccessibleNode::new(1, None, Role::Window, 0, "Main"),
+            AccessibleNode::new(2, Some(1), Role::Button, TARGET | STATE_DISABLED, "Bad"),
+        ];
+        assert!(!validate_tree(&enabled_and_disabled));
+
+        let focused_but_not_focusable = [
+            AccessibleNode::new(1, None, Role::Window, 0, "Main"),
+            AccessibleNode::new(2, Some(1), Role::Button, STATE_FOCUSED, "Bad"),
+        ];
+        assert!(!validate_tree(&focused_but_not_focusable));
+
+        let multiple_focused = [
+            AccessibleNode::new(1, None, Role::Window, 0, "Main"),
+            AccessibleNode::new(
+                2,
+                Some(1),
+                Role::Button,
+                TARGET | STATE_FOCUSED,
+                "First",
+            ),
+            AccessibleNode::new(
+                3,
+                Some(1),
+                Role::Button,
+                TARGET | STATE_FOCUSED,
+                "Second",
+            ),
+        ];
+        assert!(!validate_tree(&multiple_focused));
+
+        let unknown_bits = [
+            AccessibleNode::new(1, None, Role::Window, 1 << 63, "Main"),
+        ];
+        assert!(!validate_tree(&unknown_bits));
     }
 }
