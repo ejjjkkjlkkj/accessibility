@@ -1,0 +1,65 @@
+name: HAKER Offline Security Matrix
+
+on:
+  push:
+    paths:
+      - "agents/**"
+      - "security/**"
+      - "scripts/**"
+      - "tests/**"
+      - "docs/SECURITY-RED-TEAM.md"
+      - ".github/workflows/haker-security-matrix.yml"
+  pull_request:
+    paths:
+      - "agents/**"
+      - "security/**"
+      - "scripts/**"
+      - "tests/**"
+      - "docs/SECURITY-RED-TEAM.md"
+      - ".github/workflows/haker-security-matrix.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: haker-security-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  contract-and-tests:
+    name: Contract / Python ${{ matrix.python }} / ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python: ["3.11", "3.12", "3.13"]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Validate agent contract JSON
+        run: python -m json.tool agents/manifest.json
+      - name: Validate security contract
+        run: python scripts/validate_security_contract.py
+      - name: Run security contract tests
+        run: python -m unittest discover -s tests -p "test_security_contract.py" -v
+      - name: Run HAKER scanner tests
+        run: python -m unittest discover -s tests -p "test_haker_audit.py" -v
+      - name: Run bounded offline audit
+        run: python scripts/haker_audit.py --json-out haker-audit-report.json
+      - name: Compile Python security tools
+        run: python -m py_compile scripts/validate_security_contract.py scripts/haker_audit.py
+      - name: Upload audit report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: haker-audit-${{ matrix.os }}-py${{ matrix.python }}
+          path: haker-audit-report.json
+          if-no-files-found: ignore
+          retention-days: 14
