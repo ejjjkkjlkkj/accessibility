@@ -51,6 +51,8 @@ int accessibility_event_init(accessibility_event *event,
                              uint64_t source_id,
                              const char *name);
 int accessibility_state_flags_valid(uint64_t state_flags);
+/* Set flags only after validation; failure leaves the event unchanged. */
+int accessibility_event_set_state_flags(accessibility_event *event, uint64_t state_flags);
 
 #ifdef __cplusplus
 }

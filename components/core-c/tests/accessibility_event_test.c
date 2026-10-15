@@ -22,6 +22,17 @@ int main(void) {
                                             ACCESSIBILITY_STATE_DISABLED));
     assert(!accessibility_state_flags_valid(ACCESSIBILITY_STATE_FOCUSED));
     assert(!accessibility_state_flags_valid(UINT64_C(1) << 63));
+    assert(accessibility_event_set_state_flags(&event,
+        ACCESSIBILITY_STATE_FOCUSABLE | ACCESSIBILITY_STATE_ENABLED |
+        ACCESSIBILITY_STATE_FOCUSED) == 0);
+    assert(event.state_flags == (ACCESSIBILITY_STATE_FOCUSABLE |
+                                 ACCESSIBILITY_STATE_ENABLED |
+                                 ACCESSIBILITY_STATE_FOCUSED));
+    uint64_t valid_before_failure = event.state_flags;
+    assert(accessibility_event_set_state_flags(&event,
+        ACCESSIBILITY_STATE_ENABLED | ACCESSIBILITY_STATE_DISABLED) == -2);
+    assert(event.state_flags == valid_before_failure);
+    assert(accessibility_event_set_state_flags(NULL, 0u) == -1);
 
     assert(accessibility_event_init(NULL, ACCESSIBILITY_ROLE_BUTTON, 1u, "x") != 0);
     assert(accessibility_event_init(&event, ACCESSIBILITY_ROLE_BUTTON, 1u, NULL) != 0);

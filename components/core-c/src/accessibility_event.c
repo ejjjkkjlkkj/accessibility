@@ -13,6 +13,13 @@ int accessibility_state_flags_valid(uint64_t state_flags) {
     return 1;
 }
 
+int accessibility_event_set_state_flags(accessibility_event *event, uint64_t state_flags) {
+    if (event == NULL) return -1;
+    if (!accessibility_state_flags_valid(state_flags)) return -2;
+    event->state_flags = state_flags;
+    return 0;
+}
+
 int accessibility_event_init(accessibility_event *event,
                              accessibility_role role,
                              uint64_t source_id,

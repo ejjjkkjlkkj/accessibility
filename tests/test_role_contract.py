@@ -142,7 +142,7 @@ class AccessibilityRoleContractTests(unittest.TestCase):
 
     def test_semantic_state_flag_contract_is_implemented_across_languages(self):
         implementations = {
-            "C": ("components/core-c/include/accessibility_event.h", "ACCESSIBILITY_STATE_FOCUSED", "accessibility_state_flags_valid"),
+            "C": ("components/core-c/include/accessibility_event.h", "ACCESSIBILITY_STATE_FOCUSED", "accessibility_event_set_state_flags"),
             "Rust": ("crates/accessibility-core/src/tree.rs", "STATE_FOCUSED", "state_flags_are_valid"),
             "Go": ("internal/accessibility/role.go", "StateFocused", "func (s StateFlags) Valid()"),
             "D": ("components/core-d/src/accessibility_event.d", "STATE_FOCUSED", "isValidStateFlags"),
