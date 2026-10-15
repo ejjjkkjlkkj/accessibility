@@ -133,6 +133,25 @@ mod tests {
     }
 
     #[test]
+    fn rejects_forward_parent_references() {
+        let nodes = [
+            AccessibleNode::new(1, None, Role::Window, 0, "Main"),
+            AccessibleNode::new(2, Some(3), Role::Button, TARGET, "Child"),
+            AccessibleNode::new(3, Some(1), Role::Group, 0, "Parent"),
+        ];
+        assert!(!validate_tree(&nodes));
+    }
+
+    #[test]
+    fn rejects_tree_larger_than_fixed_bound() {
+        let nodes = std::vec![
+            AccessibleNode::new(1, None, Role::Window, 0, "Main");
+            MAX_TREE_NODES + 1
+        ];
+        assert!(!validate_tree(&nodes));
+    }
+
+    #[test]
     fn rejects_cycles_and_oversize_names() {
         let cycle = [
             AccessibleNode::new(1, None, Role::Window, 0, ""),
