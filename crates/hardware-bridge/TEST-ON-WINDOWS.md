@@ -4,7 +4,7 @@
 
 This is a first runnable host-side adapter for the accessibility hardware bridge. It queries Windows Plug and Play metadata through CIM in read-only mode. It does **not** directly enumerate PCI configuration space, map ECAM/MMIO, access I/O ports, perform DMA, change firmware, or reboot the PC.
 
-**Evidence label:** `OS_REPORTED_NOT_PHYSICALALLY_VERIFIED`. Windows-reported devices are useful for testing the inventory pipeline, but are not proof that each device was independently observed on the physical bus. Virtual and software-defined devices may appear in the OS inventory.
+**Evidence label:** `OS_REPORTED_NOT_PHYSICALLY_VERIFIED`. Windows-reported devices are useful for testing the inventory pipeline, but are not proof that each device was independently observed on the physical bus. Virtual and software-defined devices may appear in the OS inventory.
 
 ## Run
 
