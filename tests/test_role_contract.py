@@ -77,6 +77,17 @@ class AccessibilityRoleContractTests(unittest.TestCase):
         expected = {item["name"]: item["mask"] for item in state_contract["flags"]}
         self.assertEqual(state_contract["schema_version"], 1)
         self.assertEqual(state_contract["known_mask"], sum(expected.values()))
+        self.assertEqual(
+            state_contract["name_validation_rules"],
+            {
+                "encoding": "UTF-8",
+                "maximum_bytes": state_contract["maximum_name_utf8_bytes"],
+                "reject_embedded_nul": True,
+                "reject_invalid_utf8": True,
+                "reject_oversize": True,
+                "reject_truncated_multibyte_sequences": True,
+            },
+        )
         self.assertEqual(expected, {"focused": 1, "focusable": 2, "enabled": 4, "disabled": 8})
 
         def shifted_map(path, pattern, normalize=str.lower):
