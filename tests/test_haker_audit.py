@@ -90,4 +90,52 @@ class HakerAuditTests(unittest.TestCase):
             self.assertIn("scanned 0 text files", result.stdout)
             self.assertNotIn("SEC001", result.stdout)
 
+
+    def test_existing_report_output_is_excluded_on_repeat_run(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            (root / "clean.py").write_text("value = 42\n", encoding="utf-8")
+            report = root / "report.json"
+            command = [sys.executable, str(SCANNER), "--root", str(root), "--json-out", str(report)]
+            first = subprocess.run(command, text=True, capture_output=True, check=False, timeout=10)
+            self.assertEqual(first.returncode, 0, first.stdout + first.stderr)
+            first_data = json.loads(report.read_text(encoding="utf-8"))
+            second = subprocess.run(command, text=True, capture_output=True, check=False, timeout=10)
+            self.assertEqual(second.returncode, 0, second.stdout + second.stderr)
+            second_data = json.loads(report.read_text(encoding="utf-8"))
+            self.assertEqual(first_data, second_data)
+            self.assertEqual(second_data["files_scanned"], 1)
+
+    def test_refuses_to_overwrite_existing_source_file(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            source = root / "source.py"
+            original = "value = 42\n"
+            source.write_text(original, encoding="utf-8")
+            result = subprocess.run(
+                [sys.executable, str(SCANNER), "--root", str(root), "--json-out", str(source)],
+                text=True, capture_output=True, check=False, timeout=10,
+            )
+            self.assertEqual(result.returncode, 2)
+            self.assertIn("refusing to overwrite", result.stderr)
+            self.assertEqual(source.read_text(encoding="utf-8"), original)
+
+    def test_refuses_symlink_report_output(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp) / "root"
+            root.mkdir()
+            target = Path(temp) / "target.json"
+            target.write_text('{"keep": true}', encoding="utf-8")
+            output = root / "report.json"
+            try:
+                output.symlink_to(target)
+            except (OSError, NotImplementedError):
+                self.skipTest("file symlinks unavailable")
+            result = subprocess.run(
+                [sys.executable, str(SCANNER), "--root", str(root), "--json-out", str(output)],
+                text=True, capture_output=True, check=False, timeout=10,
+            )
+            self.assertEqual(result.returncode, 2)
+            self.assertIn("must not be a symbolic link", result.stderr)
+            self.assertEqual(target.read_text(encoding="utf-8"), '{"keep": true}')
 if __name__ == "__main__": unittest.main()
