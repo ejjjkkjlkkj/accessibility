@@ -39,6 +39,17 @@ Contrôle de compilation croisée, sans démarrage firmware :
 
 Ce contrôle ne valide pas le fonctionnement sur un PC physique. Le stockage, la sérialisation du payload, l'accès concurrent au tampon et l'ancrage externe du checkpoint restent du ressort des adaptateurs.
 
+## Console unifiée pour les journaux du dépôt
+
+`scripts/aerl_tool.py` fournit une interface unique pour vérifier, résumer et rechercher dans le journal, en validant toute la chaîne avant de retourner les événements. Il ne collecte pas automatiquement tous les fichiers du dépôt et ne prétend pas que les événements enregistrés sont vrais : les producteurs doivent émettre des événements structurés explicites.
+
+    python scripts/aerl_tool.py verify --file $ledger
+    python scripts/aerl_tool.py summary --file $ledger --out summary.json
+    python scripts/aerl_tool.py search --file $ledger --status FAIL --limit 100
+    python -m unittest discover -s tests -p "test_aerl_tool.py" -v
+
+Les rapports utilisent le schéma `AERL-REPORT/1`. Les sorties de rapport refusent l’écrasement de fichiers existants.
+
 ## Exemple Windows PowerShell
 
     New-Item -ItemType Directory -Force "$env:LOCALAPPDATA\Accessibility\logs" | Out-Null
@@ -70,6 +81,7 @@ Sans un checkpoint gardé séparément, une personne qui peut réécrire l'inté
 
     python -m unittest discover -s tests -p "test_aerl.py" -v
     python -m unittest discover -s tests -p "test_aerl_checkpoint.py" -v
+    python -m unittest discover -s tests -p "test_aerl_tool.py" -v
     python -m py_compile scripts/aerl.py scripts/aerl_checkpoint.py tests/test_aerl.py tests/test_aerl_checkpoint.py
     python -m py_compile scripts/aerl.py tests/test_aerl.py
 
