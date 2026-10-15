@@ -7,6 +7,7 @@
 //! Passing these data-model tests is not evidence of operation on physical hardware.
 
 pub mod acpi;
+pub mod event;
 pub mod provenance;
 pub mod uefi;
 
