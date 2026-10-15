@@ -47,7 +47,7 @@ typedef struct accessibility_event {
 
 /* Initializes a deterministic, versioned event structure.
  * Returns 0 on success; -1 invalid pointers, -2 invalid role,
- * -3 unterminated/oversized name, -4 invalid UTF-8.
+ * -3 unterminated/oversized name, -4 embedded NUL or invalid UTF-8.
  */
 int accessibility_event_init(accessibility_event *event,
                              accessibility_role role,

@@ -157,6 +157,36 @@ class AccessibilityRoleContractTests(unittest.TestCase):
                 self.assertIn(state_marker, text)
                 self.assertIn(validator_marker, text)
 
+    def test_shared_name_validation_hooks_exist_across_bindings(self):
+        requirements = {
+            "C": ("components/core-c/src/accessibility_event.c", [
+                "accessibility_utf8_valid", "memchr(name, '\\0', name_length)",
+            ]),
+            "Rust": ("crates/accessibility-core/src/lib.rs", [
+                "self.name.contains('\\0')",
+            ]),
+            "Go": ("internal/accessibility/role.go", [
+                "utf8.ValidString(e.Name)", "strings.ContainsRune(e.Name, 0)",
+            ]),
+            "D": ("components/core-d/src/accessibility_event.d", [
+                "bool isValidName(string name)", "validate(name)", "byteValue == '\\0'",
+            ]),
+            "Nim": ("components/core-nim/src/accessibility_event.nim", [
+                "proc isValidName*", "validateUtf8(name) == -1", "name.find('\\0')",
+            ]),
+            "Swift": ("components/core-swift/Sources/AccessibilityCore/AccessibilityEvent.swift", [
+                'name.contains("\\0")',
+            ]),
+            "Zig": ("components/core-zig/src/accessibility_event.zig", [
+                "utf8ValidateSlice(name)", "byte == 0",
+            ]),
+        }
+        for language, (path, markers) in requirements.items():
+            source = (ROOT / path).read_text(encoding="utf-8")
+            with self.subTest(language=language):
+                for marker in markers:
+                    self.assertIn(marker, source, f"{path}: missing {marker}")
+
     def test_shared_name_limit_is_enforced(self):
         c_header = (ROOT / "components/core-c/include/accessibility_event.h").read_text(encoding="utf-8")
         self.assertIn("ACCESSIBILITY_NAME_CAPACITY 4097u", c_header)
