@@ -49,6 +49,13 @@ class HakerReportValidatorTests(unittest.TestCase):
         self.assertEqual(result.returncode, 1)
         self.assertIn("severity count mismatch", result.stderr)
 
+    def test_rejects_boolean_severity_count(self):
+        data = report()
+        data["severity_counts"]["HIGH"] = True
+        result = self.run_validator(data)
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("non-negative integer", result.stderr)
+
     def test_rejects_path_traversal(self):
         data = report()
         data["findings"][0]["path"] = "../private.txt"
@@ -63,12 +70,33 @@ class HakerReportValidatorTests(unittest.TestCase):
         self.assertEqual(result.returncode, 1)
         self.assertIn("relative and confined", result.stderr)
 
+    def test_rejects_windows_drive_relative_path(self):
+        data = report()
+        data["findings"][0]["path"] = r"C:private.txt"
+        result = self.run_validator(data)
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("relative and confined", result.stderr)
+
+    def test_rejects_unreadable_path_traversal(self):
+        data = report()
+        data["unreadable_files"] = ["../../outside.txt"]
+        result = self.run_validator(data)
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("unreadable_files[0]", result.stderr)
+
     def test_rejects_absolute_root(self):
         data = report()
         data["root"] = "/private/runner/work"
         result = self.run_validator(data)
         self.assertEqual(result.returncode, 1)
         self.assertIn("stable relative marker", result.stderr)
+
+    def test_rejects_empty_finding_evidence(self):
+        data = report()
+        data["findings"][0]["evidence"] = " "
+        result = self.run_validator(data)
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("evidence must be a non-empty string", result.stderr)
 
 
 if __name__ == "__main__":
