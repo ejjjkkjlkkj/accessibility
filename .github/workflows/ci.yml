@@ -76,15 +76,20 @@ jobs:
           else
             echo "PARTIAL: no root Cargo.toml; no Rust workspace test was inferred"
           fi
-          if [ -f pyproject.toml ] || [ -d tests ]; then
+          if find . -path './.git' -prune -o -name '*.py' -print -quit | grep -q .; then
             python -m compileall -q .
+            echo "PASS: Python syntax compilation"
+          else
+            echo "PARTIAL: no Python source files found"
+          fi
+          if [ -d tests ]; then
             if python -c "import pytest" >/dev/null 2>&1; then
               python -m pytest -q
             else
-              echo "PARTIAL: Python sources compiled; pytest is not installed"
+              python -m unittest discover -s tests
             fi
           else
-            echo "PARTIAL: no root Python project/tests detected"
+            echo "PARTIAL: no root tests/ directory; inspect Rust manifests separately"
           fi
 
   security-baseline:
