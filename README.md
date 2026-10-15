@@ -34,3 +34,40 @@ The accessibility boundary for the experimental NEXORA language is documented in
 ## Architecture rules
 
 - [Independent implementation tracks for every language and the separate NEXORA universal language](docs/ARCHITECTURE-INDEPENDENT-LANGUAGE-TRACKS-AND-NEXORA.md)
+
+## OS complet et chaîne accessible
+
+Le plan [OS complet, chaîne logicielle accessible et validation HAKER](docs/OS-COMPLETE-ACCESSIBLE-CHAIN.md) couvre du matériel/UEFI jusqu'au noyau, pilotes, services, accessibilité, interface, applications, SDK, IA locale, installation et mises à jour. Il définit les portes de validation HAKER et sépare explicitement simulation, preuves logicielles, tests humains et validation matérielle. C'est une architecture cible, pas une affirmation que l'OS ou HAKER est déjà complet.
+
+## Audit des éléments manquants
+
+Le document [Audit des manques de l'OS complet accessible et de HAKER](docs/OS-COMPLETE-GAP-AUDIT.md) recense les écarts de couverture, les priorités P0/P1/P2, les critères d'acceptation et les références primaires (NIST, UEFI/ACPI, noyau Linux, W3C). C'est un audit documentaire : il ne certifie pas l'implémentation ni l'exhaustivité du projet.
+
+## Réduction des ports réseau exposés
+
+La politique [Réduction de la surface réseau](docs/NETWORK-PORT-MINIMIZATION.md) exige un refus par défaut, des exceptions minimales déclarées, un inventaire des sockets TCP/UDP IPv4/IPv6 et une comparaison entre ports attendus et réellement en écoute. Le document est une spécification : l'application automatique des règles et les validations natives restent **NOT_IMPLEMENTED / NOT_VALIDATED** jusqu'à preuve reproductible.
+
+## Réseau discret et modèle de menace
+
+[Conception réseau discrète et modèle de menace](docs/NETWORK-STEALTH-THREAT-MODEL.md) précise ce que « réseau invisible » peut réellement signifier, les surfaces d'attaque à examiner, les défenses en couches, les tests HAKER autorisés et les portes de validation. L'invisibilité absolue n'est pas garantie ; l'objectif est de réduire l'exposition, les communications non déclarées et les surprises, avec preuves par environnement.
+
+
+## Objectif zéro faille connue et réduction du temps perdu
+
+Les [portes de validation sécurité et fiabilité](docs/ZERO-KNOWN-VULNERABILITIES-AND-RELEASE-GATES.md) définissent les contrôles attendus pour le réseau, les logiciels/dépendances, les pilotes, le noyau, la récupération et l'accessibilité, ainsi que les critères qui bloquent une livraison. Il s'agit d'un objectif de **zéro vulnérabilité critique/haute connue non résolue**, pas d'une promesse impossible de zéro faille absolue. À ce stade, le document est une spécification : les mécanismes doivent encore être implémentés et validés.
+
+## HAKER AI spécialisé en cybersécurité défensive
+
+L’architecture [HAKER AI — moteur spécialisé de sécurité défensive et preuves reproductibles](ZERO/HAKER-AI-ARCHITECTURE-AND-EVIDENCE.md) définit l’objectif : combiner analyseurs déterministes, agents IA spécialisés, tests isolés, validation indépendante et correction avec tests de régression. Les tests réseau sont désactivés par défaut et le périmètre est limité aux dépôts/bancs autorisés. La supériorité sur les spécialistes humains n’est pas revendiquée : elle nécessitera un benchmark reproductible et une évaluation indépendante. Statut : **CONCEPTION / NOT_IMPLEMENTED / NOT_VALIDATED**.
+
+## Mises à jour sans casser le système ou le matériel
+
+La politique [Mise à jour sûre et compatibilité matérielle](docs/SAFE-UPDATE-AND-HARDWARE-COMPATIBILITY.md) impose des portes séparées pour intégrité/signature, compatibilité, tests de non-régression, déploiement progressif, installation atomique, retour arrière, récupération accessible et essais sur le matériel exact. Les mises à jour firmware/UEFI/microcode sont séparées et bloquées par défaut. Statut actuel du mécanisme : **SPECIFICATION / NOT_IMPLEMENTED / NOT_VALIDATED** ; QEMU ne valide pas le matériel physique.
+
+## Deuxième passe — audit de complétude
+
+L’[audit de deuxième passe de complétude, sécurité, chaîne d’approvisionnement, matériel et accessibilité](docs/OS-COMPLETENESS-SECOND-PASS-AUDIT.md) recense les lacunes encore à traiter et leur priorité. Verdict documentaire : **PARTIAL** ; HAKER et ZERO ne sont pas déclarés fonctionnels, et la validation matérielle reste séparée.
+
+## Troisième passe — angles morts critiques
+
+L’[audit critique des risques de deuxième ordre](docs/CRITICAL-SECOND-ORDER-RISKS-AUDIT.md) ajoute les contrôles à examiner sur la chaîne CI, la disponibilité, la racine de confiance matérielle, les agents IA, la confidentialité, les incidents et le cycle de vie. Statut : **PARTIAL / NOT_CERTIFIED** ; cette liste n'est pas une preuve d'exhaustivité.
