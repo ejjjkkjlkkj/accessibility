@@ -14,3 +14,7 @@ python .\tools\local_agent_loop.py
 ```
 
 The loop has a finite budget and sleeps between runs; it is not a guaranteed 24/7 Windows service. The PC must stay awake, Ollama must remain available, and a human must configure Task Scheduler/service restart policy. Review local commits and test logs before pushing. Contract and runner presence do not prove runtime operation, release readiness, or physical UEFI/audio behavior.
+
+## Register automatic start at logon
+
+After checking out this branch in a dedicated clone, ensure the worktree is clean and the configured local model is installed. In PowerShell from the repository root, run `powershell -NoProfile -ExecutionPolicy Bypass -File .\\tools\\install_agent_task.ps1`. This registers a per-user Scheduled Task that starts the supervisor at logon; start it immediately with `Start-ScheduledTask -TaskName 'LocalCodingAgent-accessibility'`. The supervisor restarts the bounded loop after it exits. This has not been installed or started on the target PC by this GitHub change. Review logs and local commits before pushing. Keep the machine awake and signed in; the task does not wake a sleeping PC or prove 24/7 uptime.
