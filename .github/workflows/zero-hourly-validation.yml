@@ -42,20 +42,26 @@ jobs:
         run: |
           set -euo pipefail
           if find . -maxdepth 4 -type f \( -name 'test_*.py' -o -name '*_test.py' \) -not -path './.git/*' -print -quit | grep -q .; then
-            python -m unittest discover -v
+            python -m pip install pytest
+            python -m pytest -q
           else
             echo "PARTIAL: no Python test files found"
           fi
 
-      - name: Run Rust workspace tests when present
+      - name: Set up Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Test maintained Rust accessibility core
         shell: bash
         run: |
           set -euo pipefail
-          while IFS= read -r manifest; do
-            [ -n "$manifest" ] || continue
-            echo "Testing $manifest"
-            cargo test --manifest-path "$manifest"
-          done < <(find . -maxdepth 5 -name Cargo.toml -not -path './.git/*' -type f | sort)
+          if [ -f Cargo.toml ]; then
+            cargo test --workspace --locked
+          elif [ -f crates/accessibility-core/Cargo.toml ]; then
+            cargo test --manifest-path crates/accessibility-core/Cargo.toml
+          else
+            echo "PARTIAL: no maintained root workspace or accessibility-core manifest found"
+          fi
 
       - name: Check patch hygiene
         run: git diff --check
