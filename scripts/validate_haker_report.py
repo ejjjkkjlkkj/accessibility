@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 import sys
-from pathlib import Path
+from pathlib import Path, PureWindowsPath
 
 SEVERITIES = {"CRITICAL", "HIGH", "MEDIUM", "LOW", "INFO"}
 REQUIRED = {
@@ -54,7 +54,7 @@ def validate(report: object) -> list[str]:
         if finding.get("severity") not in SEVERITIES:
             errors.append(f"finding {index} has invalid severity")
         path = finding.get("path")
-        if isinstance(path, str) and (Path(path).is_absolute() or ".." in Path(path).parts):
+        if isinstance(path, str) and (Path(path).is_absolute() or PureWindowsPath(path).is_absolute() or ".." in Path(path).parts or ".." in PureWindowsPath(path).parts):
             errors.append(f"finding {index} path must be relative and confined")
         if not isinstance(finding.get("line"), int) or isinstance(finding.get("line"), bool) or finding.get("line", 0) < 1:
             errors.append(f"finding {index} line must be a positive integer")
