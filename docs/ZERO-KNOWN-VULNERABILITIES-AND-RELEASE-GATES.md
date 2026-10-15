@@ -101,3 +101,37 @@ Une porte non applicable doit être marquée NOT_APPLICABLE avec justification. 
 - W3C WCAG 2.2 et WAI-ARIA 1.2
 
 Ces références orientent la conception ; leur citation ne constitue pas une certification de conformité.
+
+
+## 8. Matériel physique réel — dernière porte obligatoire
+
+La VM et QEMU ne prouvent pas le comportement électrique, firmware ou physique du PC. La validation finale doit donc inclure une matrice de matériel réel, sans jamais présenter un résultat simulé comme une preuve physique.
+
+### Menaces matérielles à traiter
+- Firmware UEFI/BIOS vulnérable, configuration faible, chaîne de démarrage modifiable et récupération insuffisamment protégée.
+- DMA et périphériques PCIe/Thunderbolt/USB, périphériques malveillants, contrôleurs compromis et absence ou mauvaise configuration de l'IOMMU.
+- Microcode CPU, SMM/SMI, contrôleurs embarqués, composants réseau, Wi-Fi/Bluetooth, audio, stockage et mises à jour firmware.
+- Attaques physiques selon le modèle de menace : accès non autorisé, extraction ou modification de stockage, démarrage depuis un média externe, réinitialisation de configuration et altération de périphériques.
+- Défauts physiques et opérationnels : surchauffe, alimentation instable, déconnexion, panne de stockage, mémoire défectueuse et dégradation des périphériques.
+- Canaux auxiliaires (temps, consommation, émissions) : documenter s'ils sont hors périmètre ou nécessitent une analyse spécialisée ; ne pas prétendre qu'ils sont éliminés.
+
+### Tests physiques exigés avant une revendication de compatibilité
+1. Enregistrer le modèle exact du PC, révision de carte mère, version du firmware, CPU, RAM, contrôleurs, périphériques, paramètres de démarrage et versions des pilotes.
+2. Vérifier la provenance et les signatures des images, pilotes et mises à jour ; vérifier les protections disponibles sans modifier le firmware automatiquement.
+3. Tester le démarrage, clavier, affichage, audio, stockage, réseau, veille/reprise et récupération sur le matériel ciblé.
+4. Vérifier les protections DMA/IOMMU et les chemins de périphériques pris en charge, en utilisant des procédures contrôlées et non destructives.
+5. Déconnecter/reconnecter les périphériques autorisés et tester les erreurs, timeouts, reprise et journaux accessibles.
+6. Tester l'accessibilité pré-OS et de secours : l'utilisateur doit pouvoir comprendre les erreurs et atteindre une procédure de récupération sans dépendre de la souris.
+7. Répéter les scénarios critiques après mise à jour de firmware, noyau, pilote ou chaîne de démarrage ; comparer les résultats et rechercher les régressions.
+8. Archiver les commandes, versions, logs, résultats, limites et empreintes d'artefacts. Les données sensibles doivent être expurgées des rapports.
+
+### Sécurité de ces tests
+- Commencer en lecture seule et sans redémarrage automatique, flash firmware, modification NVRAM ou écriture sur média.
+- Toute étape nécessitant redémarrage, changement UEFI/BIOS, branchement de matériel spécialisé ou modification persistante exige une procédure distincte, une sauvegarde et un consentement explicite.
+- Les essais destructifs, électriques, d'ouverture du boîtier ou d'injection de défauts ne sont pas des tests automatiques ordinaires : ils exigent un laboratoire compétent et une analyse de risques.
+- Si un matériel ou une protection n'a pas été testé, marquer le résultat **NOT_TESTED** ou **NOT_SUPPORTED**, jamais PASS.
+
+### Porte finale G8 — preuve physique
+La revendication de compatibilité physique n'est autorisée que si les tests logiciels requis sont réussis, les vulnérabilités bloquantes sont traitées, et les preuves sur le matériel précis sont archivées. Une preuve sur un modèle de PC ne se généralise pas à tous les PC. Les tests physiques réduisent l'incertitude ; ils ne démontrent pas l'absence absolue de toute vulnérabilité.
+
+**État actuel de cette porte : NOT_VALIDATED** — aucun essai physique n'est attesté par cette spécification.
