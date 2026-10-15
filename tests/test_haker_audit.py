@@ -36,7 +36,7 @@ class HakerAuditTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp:
             root=Path(temp); excluded=root/"node_modules"/"deep"; excluded.mkdir(parents=True)
             (excluded/"fixture.py").write_text("PRIVATE = "+repr("-----BEGIN RSA "+"PRIVATE KEY-----")+"\n",encoding="utf-8")
-            (root/"clean.py").write_text("value = 42\\n",encoding="utf-8")
+            (root/"clean.py").write_text("value = 42\n",encoding="utf-8")
             result=self.run_scanner(root)
             self.assertEqual(result.returncode,0,result.stdout+result.stderr)
             self.assertIn("scanned 1 text files",result.stdout)
