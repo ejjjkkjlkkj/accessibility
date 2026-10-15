@@ -72,6 +72,11 @@ impl ResourceWindow {
     }
 
     pub fn overlaps(&self, other: &Self) -> bool {
+        // MMIO, port-I/O, interrupt, DMA and shared-memory coordinates belong
+        // to different resource domains and must not be compared across kinds.
+        if self.kind != other.kind {
+            return false;
+        }
         match (self.end_exclusive(), other.end_exclusive()) {
             (Some(a_end), Some(b_end)) => self.base < b_end && other.base < a_end,
             _ => false,
@@ -218,6 +223,8 @@ mod tests {
         let adjacent = ResourceWindow::new(ResourceKind::Mmio, 0x1100, 0x100);
         assert!(first.overlaps(&overlap));
         assert!(!first.overlaps(&adjacent));
+        let same_address_other_domain = ResourceWindow::new(ResourceKind::IoPort, 0x1080, 0x100);
+        assert!(!first.overlaps(&same_address_other_domain));
     }
 
     #[test]
