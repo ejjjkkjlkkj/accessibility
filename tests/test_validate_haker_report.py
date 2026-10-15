@@ -37,6 +37,15 @@ class HakerReportValidatorTests(unittest.TestCase):
                 text=True, capture_output=True, check=False, timeout=10
             )
 
+    def run_validator_raw(self, raw):
+        with tempfile.TemporaryDirectory() as temp:
+            path = Path(temp) / "report.json"
+            path.write_text(raw, encoding="utf-8")
+            return subprocess.run(
+                [sys.executable, str(VALIDATOR), str(path)],
+                text=True, capture_output=True, check=False, timeout=10
+            )
+
     def test_accepts_valid_report(self):
         result = self.run_validator(report())
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
@@ -162,6 +171,25 @@ class HakerReportValidatorTests(unittest.TestCase):
         result = self.run_validator(data)
         self.assertEqual(result.returncode, 1)
         self.assertIn("evidence must be a non-empty string", result.stderr)
+
+    def test_rejects_duplicate_json_object_keys(self):
+        raw = json.dumps(report())
+        raw = raw.replace(
+            '"schema_version": "1.0",',
+            '"schema_version": "1.0", "schema_version": "1.0",',
+            1,
+        )
+        result = self.run_validator_raw(raw)
+        self.assertEqual(result.returncode, 2)
+        self.assertIn("duplicate JSON object key: schema_version", result.stderr)
+        self.assertNotIn("Traceback", result.stderr)
+
+    def test_rejects_nonstandard_nan_json_constant(self):
+        raw = json.dumps(report()).replace('"files_scanned": 1', '"files_scanned": NaN', 1)
+        result = self.run_validator_raw(raw)
+        self.assertEqual(result.returncode, 2)
+        self.assertIn("non-standard JSON constant: NaN", result.stderr)
+        self.assertNotIn("Traceback", result.stderr)
 
 
 if __name__ == "__main__":
