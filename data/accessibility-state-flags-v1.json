@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "contract": "ACCESSIBILITY_SEMANTIC_STATE_FLAGS_V1",
+  "flags": [
+    {
+      "name": "focused",
+      "bit": 0,
+      "mask": 1
+    },
+    {
+      "name": "focusable",
+      "bit": 1,
+      "mask": 2
+    },
+    {
+      "name": "enabled",
+      "bit": 2,
+      "mask": 4
+    },
+    {
+      "name": "disabled",
+      "bit": 3,
+      "mask": 8
+    }
+  ],
+  "known_mask": 15,
+  "maximum_name_utf8_bytes": 4096,
+  "constraints": {
+    "enabled_and_disabled_mutually_exclusive": true,
+    "focused_requires_focusable_and_enabled": true,
+    "focused_forbids_disabled": true,
+    "reserved_bits_rejected": true,
+    "maximum_focused_nodes_per_tree": 1
+  },
+  "name_validation_rules": {
+    "encoding": "UTF-8",
+    "maximum_bytes": 4096,
+    "reject_embedded_nul": true,
+    "reject_invalid_utf8": true,
+    "reject_oversize": true,
+    "reject_truncated_multibyte_sequences": true
+  }
+}

@@ -15,6 +15,15 @@ proc previous*(c: var ScreenReaderCursor): int64 =
  dec c.current; return int64(c.current)
 when isMainModule:
  var c = initCursor(2)
- doAssert c.first() == 0; doAssert c.next() == 1; doAssert c.next() == -1
+ doAssert c.next() == -1; doAssert not c.hasItem and c.current == 0
+ doAssert c.previous() == -1; doAssert not c.hasItem and c.current == 0
+ doAssert c.first() == 0; doAssert c.first() == 0
+ doAssert c.next() == 1; doAssert c.next() == -1
+ doAssert c.hasItem and c.current == 1
  doAssert c.previous() == 0; doAssert c.previous() == -1
- var empty = initCursor(0); doAssert empty.first() == -1
+ doAssert c.hasItem and c.current == 0
+ var empty = initCursor(0)
+ doAssert empty.first() == -1
+ doAssert empty.next() == -1
+ doAssert empty.previous() == -1
+ doAssert not empty.hasItem

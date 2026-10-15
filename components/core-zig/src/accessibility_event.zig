@@ -21,14 +21,40 @@ pub const Role = enum(u8) {
     menu_item = 17,
 };
 
+pub const STATE_FOCUSED: u64 = 1 << 0;
+pub const STATE_FOCUSABLE: u64 = 1 << 1;
+pub const STATE_ENABLED: u64 = 1 << 2;
+pub const STATE_DISABLED: u64 = 1 << 3;
+pub const STATE_KNOWN_MASK: u64 = 0x0F;
+
+pub fn stateFlagsAreValid(flags: u64) bool {
+    if ((flags & ~STATE_KNOWN_MASK) != 0) return false;
+    if ((flags & STATE_ENABLED) != 0 and (flags & STATE_DISABLED) != 0) return false;
+    if ((flags & STATE_FOCUSED) != 0 and
+        ((flags & STATE_FOCUSABLE) == 0 or
+         (flags & STATE_ENABLED) == 0 or
+         (flags & STATE_DISABLED) != 0)) return false;
+    return true;
+}
+
+pub fn isValidName(name: []const u8) bool {
+    if (name.len > 4096 or !std.unicode.utf8ValidateSlice(name)) return false;
+    for (name) |byte| {
+        if (byte == 0) return false;
+    }
+    return true;
+}
+
 pub const AccessibilityEvent = struct {
     abi_version: u32 = 1,
     role: Role = .unknown,
     name: []const u8 = "",
+    state_flags: u64 = 0,
 
     pub fn isValid(self: AccessibilityEvent) bool {
         return self.abi_version == 1 and
-            self.name.len <= 4096;
+            isValidName(self.name) and
+            stateFlagsAreValid(self.state_flags);
     }
 };
 
@@ -40,6 +66,20 @@ test "canonical role codes are stable" {
 test "valid event accepted" {
     const event = AccessibilityEvent{ .role = .button, .name = "Save" };
     try std.testing.expect(event.isValid());
+}
+
+test "semantic state flags reject contradictions and reserved bits" {
+    try std.testing.expect(stateFlagsAreValid(STATE_FOCUSABLE | STATE_ENABLED | STATE_FOCUSED));
+    try std.testing.expect(!stateFlagsAreValid(STATE_FOCUSED));
+    try std.testing.expect(!stateFlagsAreValid(STATE_ENABLED | STATE_DISABLED));
+    try std.testing.expect(!stateFlagsAreValid(@as(u64, 1) << 63));
+}
+
+test "name validator rejects invalid UTF-8 and embedded NUL" {
+    try std.testing.expect(isValidName("café"));
+    try std.testing.expect(!isValidName("bad\x00name"));
+    try std.testing.expect(!isValidName("\xc0\xaf"));
+    try std.testing.expect(!isValidName("\xf4\x90\x80\x80"));
 }
 
 test "invalid ABI and oversized names rejected" {

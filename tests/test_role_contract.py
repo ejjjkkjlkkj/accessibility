@@ -70,6 +70,170 @@ class AccessibilityRoleContractTests(unittest.TestCase):
             r"([A-Za-z_]+)_Role\s*=>\s*(\d+)", normalizer=lambda value: value.lower())
         self.assertEqual(found, self.expected)
 
+
+    def test_semantic_state_flag_masks_match_canonical_contract(self):
+        contract_path = ROOT / "data" / "accessibility-state-flags-v1.json"
+        state_contract = json.loads(contract_path.read_text(encoding="utf-8"))
+        expected = {item["name"]: item["mask"] for item in state_contract["flags"]}
+        self.assertEqual(state_contract["schema_version"], 1)
+        self.assertEqual(state_contract["known_mask"], sum(expected.values()))
+        self.assertEqual(
+            state_contract["name_validation_rules"],
+            {
+                "encoding": "UTF-8",
+                "maximum_bytes": state_contract["maximum_name_utf8_bytes"],
+                "reject_embedded_nul": True,
+                "reject_invalid_utf8": True,
+                "reject_oversize": True,
+                "reject_truncated_multibyte_sequences": True,
+            },
+        )
+        self.assertEqual(expected, {"focused": 1, "focusable": 2, "enabled": 4, "disabled": 8})
+
+        def shifted_map(path, pattern, normalize=str.lower):
+            source = (ROOT / path).read_text(encoding="utf-8")
+            result = {}
+            for name, bit in re.findall(pattern, source, re.MULTILINE):
+                key = normalize(name)
+                if key in result:
+                    self.fail(f"{path}: duplicate state flag {key}")
+                result[key] = 1 << int(bit)
+            return result
+
+        shift_patterns = {
+            "C": ("components/core-c/include/accessibility_event.h",
+                  r"#define ACCESSIBILITY_STATE_([A-Z]+) \(UINT64_C\(1\) << (\d+)\)"),
+            "Rust": ("crates/accessibility-core/src/tree.rs",
+                     r"pub const STATE_([A-Z]+): u64 = 1 << (\d+);"),
+            "D": ("components/core-d/src/accessibility_event.d",
+                  r"enum ulong STATE_([A-Z]+) = 1UL << (\d+);"),
+            "Nim": ("components/core-nim/src/accessibility_event.nim",
+                    r"STATE_([A-Z]+)\* = 1'u64 shl (\d+)"),
+            "Swift": ("components/core-swift/Sources/AccessibilityCore/AccessibilityEvent.swift",
+                      r"public static let ([a-z]+): UInt64 = 1 << (\d+)"),
+            "Zig": ("components/core-zig/src/accessibility_event.zig",
+                    r"pub const STATE_([A-Z]+): u64 = 1 << (\d+);"),
+        }
+        for language, (path, pattern) in shift_patterns.items():
+            with self.subTest(language=language):
+                self.assertEqual(shifted_map(path, pattern), expected, path)
+
+        go_source = (ROOT / "internal/accessibility/role.go").read_text(encoding="utf-8")
+        go_block = re.search(
+            r"const\s*\(\s*StateFocused StateFlags = 1 << iota(.*?)\)",
+            go_source,
+            re.DOTALL,
+        )
+        self.assertIsNotNone(go_block, "Go state flag iota block missing")
+        self.assertEqual(
+            re.findall(r"^\s*(StateFocusable|StateEnabled|StateDisabled)\s*$", go_block.group(1), re.MULTILINE),
+            ["StateFocusable", "StateEnabled", "StateDisabled"],
+        )
+        self.assertEqual(
+            {"focused": 1, "focusable": 2, "enabled": 4, "disabled": 8},
+            expected,
+        )
+
+        ada_source = (ROOT / "components/core-ada/accessibility_event.ads").read_text(encoding="utf-8")
+        ada_map = {
+            name.lower(): int(mask)
+            for name, mask in re.findall(
+                r"State_(Focused|Focusable|Enabled|Disabled)\s*:\s*constant Interfaces.Unsigned_64 := (\d+);",
+                ada_source,
+            )
+        }
+        self.assertEqual(ada_map, expected)
+        for path, marker in [
+            ("components/core-ada/accessibility_event.ads", "State_Known_Mask : constant Interfaces.Unsigned_64 := 15"),
+            ("components/core-nim/src/accessibility_event.nim", "STATE_KNOWN_MASK* = 0x0F'u64"),
+            ("components/core-zig/src/accessibility_event.zig", "STATE_KNOWN_MASK: u64 = 0x0F"),
+            ("components/core-c/include/accessibility_event.h", "ACCESSIBILITY_STATE_KNOWN_MASK UINT64_C(0x0F)"),
+        ]:
+            self.assertIn(marker, (ROOT / path).read_text(encoding="utf-8"), path)
+
+    def test_semantic_state_flag_contract_is_implemented_across_languages(self):
+        implementations = {
+            "C": ("components/core-c/include/accessibility_event.h", "ACCESSIBILITY_STATE_FOCUSED", "accessibility_event_init_n"),
+            "Rust": ("crates/accessibility-core/src/tree.rs", "STATE_FOCUSED", "state_flags_are_valid"),
+            "Go": ("internal/accessibility/role.go", "type Event struct", "func (e Event) Valid()"),
+            "D": ("components/core-d/src/accessibility_event.d", "STATE_FOCUSED", "isValidStateFlags"),
+            "Ada": ("components/core-ada/accessibility_event.ads", "State_Focused", "State_Flags_Valid"),
+            "Ada UTF-8": ("components/core-ada/accessibility_event.adb", "Is_Valid_Name", "Byte_At"),
+            "Nim": ("components/core-nim/src/accessibility_event.nim", "STATE_FOCUSED", "isValidStateFlags"),
+            "Swift": ("components/core-swift/Sources/AccessibilityCore/AccessibilityEvent.swift", "AccessibilityState", "stateFlags"),
+            "Zig": ("components/core-zig/src/accessibility_event.zig", "STATE_FOCUSED", "stateFlagsAreValid"),
+        }
+        for language, (path, state_marker, validator_marker) in implementations.items():
+            text = (ROOT / path).read_text(encoding="utf-8")
+            with self.subTest(language=language):
+                self.assertIn(state_marker, text)
+                self.assertIn(validator_marker, text)
+
+    def test_shared_name_validation_hooks_exist_across_bindings(self):
+        requirements = {
+            "C": ("components/core-c/src/accessibility_event.c", [
+                "accessibility_utf8_valid", "memchr(name, '\\0', name_length)",
+            ]),
+            "Rust": ("crates/accessibility-core/src/lib.rs", [
+                "self.name.contains('\\0')",
+            ]),
+            "Go": ("internal/accessibility/role.go", [
+                "utf8.ValidString(e.Name)", "strings.ContainsRune(e.Name, 0)",
+            ]),
+            "D": ("components/core-d/src/accessibility_event.d", [
+                "bool isValidName(string name)", "validate(name)", "byteValue == '\\0'",
+            ]),
+            "Nim": ("components/core-nim/src/accessibility_event.nim", [
+                "proc isValidName*", "validateUtf8(name) == -1", "name.find('\\0')",
+            ]),
+            "Swift": ("components/core-swift/Sources/AccessibilityCore/AccessibilityEvent.swift", [
+                'name.contains("\\0")',
+            ]),
+            "Zig": ("components/core-zig/src/accessibility_event.zig", [
+                "utf8ValidateSlice(name)", "byte == 0",
+            ]),
+            "Ada": ("components/core-ada/accessibility_event.adb", [
+                "function Is_Valid_Name", "16#C2#", "16#F4#", "B1 = 0",
+            ]),
+        }
+        for language, (path, markers) in requirements.items():
+            source = (ROOT / path).read_text(encoding="utf-8")
+            with self.subTest(language=language):
+                for marker in markers:
+                    self.assertIn(marker, source, f"{path}: missing {marker}")
+
+    def test_screenreader_cursor_contract_and_bindings(self):
+        contract_path = ROOT / "data" / "screenreader-cursor-contract-v1.json"
+        contract = json.loads(contract_path.read_text(encoding="utf-8"))
+        self.assertEqual(contract, {
+            "schema_version": 1,
+            "contract": "SCREENREADER_CURSOR_V1",
+            "index_base": 0,
+            "no_implicit_wrap": True,
+            "empty_count_has_no_current_item": True,
+            "empty_count_next_previous_fail": True,
+            "first_selects_index_zero": True,
+            "repeated_first_resets_to_zero": True,
+            "failed_next_preserves_current": True,
+            "failed_previous_preserves_current": True,
+            "failed_navigation_does_not_create_focus": True,
+        })
+        implementations = {
+            "Rust": ("crates/accessibility-core/src/screenreader.rs", ["pub fn first", "pub fn next", "pub fn previous", "pub fn current"]),
+            "C": ("components/core-c/src/screenreader_cursor.c", ["screenreader_cursor_first", "screenreader_cursor_next", "screenreader_cursor_previous"]),
+            "Go": ("internal/screenreader/cursor.go", ["func (c *Cursor) First", "func (c *Cursor) Next", "func (c *Cursor) Previous"]),
+            "D": ("components/core-d/src/screenreader_cursor.d", ["bool first", "bool next", "bool previous"]),
+            "Ada": ("components/core-ada/screenreader_cursor.ads", ["function First", "function Next", "function Previous"]),
+            "Nim": ("components/core-nim/src/screenreader_cursor.nim", ["proc first", "proc next", "proc previous"]),
+            "Zig": ("components/core-zig/src/screenreader_cursor.zig", ["pub fn first", "pub fn next", "pub fn previous"]),
+            "Swift": ("components/core-swift/Sources/AccessibilityCore/ScreenReaderCursor.swift", ["mutating func first", "mutating func next", "mutating func previous"]),
+        }
+        for language, (relative_path, required) in implementations.items():
+            source = (ROOT / relative_path).read_text(encoding="utf-8")
+            with self.subTest(language=language):
+                for marker in required:
+                    self.assertIn(marker, source, relative_path)
+
     def test_shared_name_limit_is_enforced(self):
         c_header = (ROOT / "components/core-c/include/accessibility_event.h").read_text(encoding="utf-8")
         self.assertIn("ACCESSIBILITY_NAME_CAPACITY 4097u", c_header)
@@ -78,7 +242,7 @@ class AccessibilityRoleContractTests(unittest.TestCase):
             "components/core-nim/src/accessibility_event.nim",
             "components/core-swift/Sources/AccessibilityCore/AccessibilityEvent.swift",
             "components/core-zig/src/accessibility_event.zig",
-            "crates/accessibility-core/src/lib.rs",
+            "crates/accessibility-core/src/tree.rs",
             "components/core-ada/accessibility_event.adb",
         ]:
             self.assertIn("4096", (ROOT / path).read_text(encoding="utf-8"), path)

@@ -5,10 +5,16 @@ on:
     branches: [main, "**"]
     paths:
       - "crates/accessibility-core/**"
+      - "crates/aerl-core/**"
+      - "docs/AERL-BIN-FORMAT.md"
+      - "docs/AERL.md"
       - ".github/workflows/rust-semantic-core.yml"
   pull_request:
     paths:
       - "crates/accessibility-core/**"
+      - "crates/aerl-core/**"
+      - "docs/AERL-BIN-FORMAT.md"
+      - "docs/AERL.md"
       - ".github/workflows/rust-semantic-core.yml"
   workflow_dispatch:
 
@@ -34,6 +40,14 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
       - name: Run unit tests
         run: cargo test --manifest-path crates/accessibility-core/Cargo.toml
+      - name: Test AERL no_std evidence core
+        run: cargo test --manifest-path crates/aerl-core/Cargo.toml
+      - name: Add UEFI target
+        if: runner.os == 'Linux'
+        run: rustup target add x86_64-unknown-uefi
+      - name: Compile AERL core for UEFI
+        if: runner.os == 'Linux'
+        run: cargo check --target x86_64-unknown-uefi --manifest-path crates/aerl-core/Cargo.toml
       - name: Run interactive semantic demo
         run: cargo run --manifest-path crates/accessibility-core/Cargo.toml --example semantic_tree_demo
       - name: Build Windows test executable
