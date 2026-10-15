@@ -19,7 +19,8 @@ impl<'a> AccessibleEvent<'a> {
     /// Validate the shared logical event contract; this is not a platform adapter.
     pub fn is_valid(&self) -> bool {
         self.abi_version == ABI_VERSION
-            && self.name.len() <= 4096
+            && self.name.len() <= tree::MAX_NODE_NAME_UTF8_BYTES
+            && tree::state_flags_are_valid(self.state_flags)
     }
 }
 #[cfg(test)]
@@ -34,5 +35,13 @@ mod tests {
         assert!(event.is_valid());
         assert!(!AccessibleEvent::new(Role::Button, 7, &"x".repeat(4097)).is_valid());
         assert!(AccessibleEvent::new(Role::Unknown, 7, "unknown").is_valid());
+
+        let mut event = AccessibleEvent::new(Role::Button, 8, "Continue");
+        event.state_flags = tree::STATE_FOCUSED;
+        assert!(!event.is_valid());
+        event.state_flags = tree::STATE_FOCUSABLE | tree::STATE_ENABLED | tree::STATE_FOCUSED;
+        assert!(event.is_valid());
+        event.state_flags = 1 << 63;
+        assert!(!event.is_valid());
     }
 }

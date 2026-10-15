@@ -12,6 +12,24 @@ pub const STATE_DISABLED: u64 = 1 << 3;
 pub const KNOWN_STATE_FLAGS: u64 = STATE_FOCUSED | STATE_FOCUSABLE | STATE_ENABLED | STATE_DISABLED;
 pub const MAX_NODE_NAME_UTF8_BYTES: usize = 4096;
 
+/// Reject undefined or contradictory state combinations in a single semantic event.
+pub const fn state_flags_are_valid(state_flags: u64) -> bool {
+    if state_flags & !KNOWN_STATE_FLAGS != 0 {
+        return false;
+    }
+    let enabled = state_flags & STATE_ENABLED != 0;
+    let disabled = state_flags & STATE_DISABLED != 0;
+    if enabled && disabled {
+        return false;
+    }
+    let focused = state_flags & STATE_FOCUSED != 0;
+    !focused || (
+        state_flags & STATE_FOCUSABLE != 0
+            && enabled
+            && !disabled
+    )
+}
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct AccessibleNode<'a> {
     pub id: u64,
@@ -52,19 +70,11 @@ pub fn validate_tree(nodes: &[AccessibleNode<'_>]) -> bool {
         if node.name.len() > MAX_NODE_NAME_UTF8_BYTES {
             return false;
         }
-        if node.state_flags & !KNOWN_STATE_FLAGS != 0 {
-            return false;
-        }
-        if (node.state_flags & STATE_ENABLED) != 0
-            && (node.state_flags & STATE_DISABLED) != 0
-        {
+        if !state_flags_are_valid(node.state_flags) {
             return false;
         }
         if (node.state_flags & STATE_FOCUSED) != 0 {
             focused_nodes += 1;
-            if !node.is_focus_target() {
-                return false;
-            }
         }
         for other in nodes.iter().skip(index + 1) {
             if node.id == other.id {
