@@ -28,8 +28,9 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - name: Validate agent team manifest and safety invariants
-        shell: python
+        shell: bash
         run: |
+          python3 - <<'PY'
           import json
           from pathlib import Path
 
@@ -70,3 +71,4 @@ jobs:
           assert policy["human_approval_required_for_high_risk_actions"] is True
           assert len(all_ids) >= 10, "Expected multiple specialized agents"
           print(f"PASS: {len(teams)} teams, {len(all_ids)} agent definitions; safety invariants hold")
+          PY
