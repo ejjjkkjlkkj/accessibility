@@ -134,6 +134,7 @@ pub fn previous_focusable(nodes: &[AccessibleNode<'_>], before_id: Option<u64>) 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::vec::Vec;
 
     const TARGET: u64 = STATE_FOCUSABLE | STATE_ENABLED;
 

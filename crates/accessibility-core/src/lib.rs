@@ -1,5 +1,5 @@
 #![no_std]
-#![forbid(unsafe_code)]
+#[forbid(unsafe_code)]
 
 pub mod screenreader;
 pub mod tree;
