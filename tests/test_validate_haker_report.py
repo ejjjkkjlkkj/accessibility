@@ -256,5 +256,22 @@ class HakerReportValidatorTests(unittest.TestCase):
         self.assertNotIn("Traceback", result.stderr)
 
 
+
+    def test_rejects_unexpected_top_level_field(self):
+        data = report()
+        data["nested_extension"] = {"deep": [1, 2, 3]}
+        result = self.run_validator(data)
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("unexpected fields: nested_extension", result.stderr)
+        self.assertNotIn("Traceback", result.stderr)
+
+    def test_rejects_unexpected_finding_field(self):
+        data = report()
+        data["findings"][0]["unreviewed_extension"] = "ignored-by-old-validator"
+        result = self.run_validator(data)
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("finding 0 has unexpected fields: unreviewed_extension", result.stderr)
+        self.assertNotIn("Traceback", result.stderr)
+
 if __name__ == "__main__":
     unittest.main()
