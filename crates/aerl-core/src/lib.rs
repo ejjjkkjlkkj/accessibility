@@ -5,9 +5,13 @@
 //! Storage, timekeeping, signatures, encryption, and I/O belong to the caller.
 
 use sha2::{Digest, Sha256};
+use accessibility_core::AccessibleEvent;
 
 pub const FORMAT_MAGIC: [u8; 4] = *b"AERL";
 pub const FORMAT_VERSION: u8 = 1;
+pub const ACCESSIBILITY_PAYLOAD_MAGIC: [u8; 4] = *b"ACCE";
+pub const ACCESSIBILITY_PAYLOAD_VERSION: u8 = 1;
+pub const ACCESSIBILITY_PAYLOAD_BYTES: usize = 25;
 pub const MAX_LEDGER_BYTES: usize = 64 * 1024 * 1024;
 pub const MAX_ACTOR_BYTES: usize = 63;
 pub const MAX_KIND_BYTES: usize = 80;
@@ -62,6 +66,7 @@ pub enum Error {
     PreviousHashMismatch,
     HashMismatch,
     CheckpointMismatch,
+    InvalidAccessibleEvent,
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -244,6 +249,41 @@ pub fn verify(bytes: &[u8]) -> Result<Checkpoint, Error> {
     Ok(checkpoint)
 }
 
+/// Append a semantic accessibility event without recording its accessible name.
+///
+/// The payload is fixed: magic, version, numeric role, state flags, and source ID.
+/// Source IDs should be ephemeral and session-scoped.
+pub fn append_accessible_event(
+    buffer: &mut [u8],
+    used: &mut usize,
+    timestamp_utc_ms: u64,
+    actor: &str,
+    status: Status,
+    event: &AccessibleEvent<'_>,
+) -> Result<Checkpoint, Error> {
+    if !event.is_valid() {
+        return Err(Error::InvalidAccessibleEvent);
+    }
+    let mut payload = [0u8; ACCESSIBILITY_PAYLOAD_BYTES];
+    payload[0..4].copy_from_slice(&ACCESSIBILITY_PAYLOAD_MAGIC);
+    payload[4] = ACCESSIBILITY_PAYLOAD_VERSION;
+    payload[5..9].copy_from_slice(&(event.role as u32).to_le_bytes());
+    payload[9..17].copy_from_slice(&event.state_flags.to_le_bytes());
+    payload[17..25].copy_from_slice(&event.source_id.to_le_bytes());
+
+    append(
+        buffer,
+        used,
+        Event {
+            timestamp_utc_ms,
+            actor,
+            kind: "accessibility.semantic",
+            status,
+            payload: &payload,
+        },
+    )
+}
+
 /// Verify the current ledger against a checkpoint saved independently.
 pub fn verify_checkpoint(bytes: &[u8], expected: &Checkpoint) -> Result<Checkpoint, Error> {
     let actual = verify(bytes)?;
@@ -334,6 +374,70 @@ mod tests {
             }
         }
         assert_eq!(verify(&buffer[..used]), Ok(checkpoint));
+    }
+
+    #[test]
+    fn semantic_accessibility_event_omits_accessible_name() {
+        use accessibility_core::{tree, Role};
+
+        let name = "Private account name";
+        let mut accessible = AccessibleEvent::new(Role::Button, 42, name);
+        accessible.state_flags = tree::STATE_FOCUSABLE | tree::STATE_ENABLED | tree::STATE_FOCUSED;
+        assert!(accessible.is_valid());
+
+        let mut buffer = [0u8; 512];
+        let mut used = 0;
+        let checkpoint = append_accessible_event(
+            &mut buffer,
+            &mut used,
+            1_800_000_000_000,
+            "screenreader",
+            Status::Info,
+            &accessible,
+        )
+        .unwrap();
+
+        assert_eq!(verify(&buffer[..used]), Ok(checkpoint));
+        assert!(!buffer[..used].windows(name.len()).any(|slice| slice == name.as_bytes()));
+
+        let payload_offset = PREFIX_BYTES + "screenreader".len() + "accessibility.semantic".len();
+        assert_eq!(&buffer[payload_offset..payload_offset + 4], &ACCESSIBILITY_PAYLOAD_MAGIC);
+        assert_eq!(buffer[payload_offset + 4], ACCESSIBILITY_PAYLOAD_VERSION);
+        assert_eq!(
+            u32::from_le_bytes(buffer[payload_offset + 5..payload_offset + 9].try_into().unwrap()),
+            Role::Button as u32
+        );
+        assert_eq!(
+            u64::from_le_bytes(buffer[payload_offset + 9..payload_offset + 17].try_into().unwrap()),
+            accessible.state_flags
+        );
+        assert_eq!(
+            u64::from_le_bytes(buffer[payload_offset + 17..payload_offset + 25].try_into().unwrap()),
+            42
+        );
+    }
+
+    #[test]
+    fn rejects_invalid_accessibility_event_before_mutating_buffer() {
+        use accessibility_core::Role;
+
+        let long_name = "x".repeat(4097);
+        let accessible = AccessibleEvent::new(Role::Button, 42, &long_name);
+        let mut buffer = [0u8; 512];
+        let mut used = 0;
+        assert_eq!(
+            append_accessible_event(
+                &mut buffer,
+                &mut used,
+                1,
+                "screenreader",
+                Status::Info,
+                &accessible,
+            ),
+            Err(Error::InvalidAccessibleEvent)
+        );
+        assert_eq!(used, 0);
+        assert_eq!(verify(&buffer[..used]), Ok(Checkpoint::genesis()));
     }
 
     #[test]
