@@ -146,6 +146,25 @@ func TestValidateEnforcesDNSDomainLengthBoundary(t *testing.T) {
 	}
 }
 
+
+func TestValidateRequiresIDNAASCIIForInternationalizedDomains(t *testing.T) {
+	t.Run("punycode is accepted", func(t *testing.T) {
+		domain := "xn--bcher-kva.example"
+		row := "a,Example," + domain + ",https://" + domain + "/,docs,web,candidate,test\n"
+		if err := validate(strings.NewReader(validHeader + row)); err != nil {
+			t.Fatalf("expected IDNA ASCII form to pass, got %v", err)
+		}
+	})
+
+	t.Run("raw Unicode is rejected", func(t *testing.T) {
+		domain := "bücher.example"
+		row := "a,Example," + domain + ",https://" + domain + "/,docs,web,candidate,test\n"
+		if err := validate(strings.NewReader(validHeader + row)); err == nil {
+			t.Fatal("expected non-ASCII domain to be rejected; catalog requires IDNA ASCII form")
+		}
+	})
+}
+
 func TestValidateRejectsMalformedDeclaredDomain(t *testing.T) {
 	for _, domain := range []string{"example..org", "-example.org", "example-.org", "exa_mple.org", "example.org/path", strings.Repeat("a", 64) + ".org"} {
 		row := "a,Example," + domain + ",https://example.org/,docs,web,candidate,test\n"
