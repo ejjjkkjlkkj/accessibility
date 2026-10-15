@@ -2,6 +2,22 @@ package accessibility
 
 import "testing"
 
+func TestSemanticStateFlagsV1(t *testing.T) {
+	valid := StateFocusable | StateEnabled | StateFocused
+	if !valid.Valid() {
+		t.Fatal("valid focused target rejected")
+	}
+	for _, flags := range []StateFlags{
+		StateFocused,
+		StateEnabled | StateDisabled,
+		StateFlags(1 << 63),
+	} {
+		if flags.Valid() {
+			t.Fatalf("invalid flags accepted: %#x", flags)
+		}
+	}
+}
+
 func TestCanonicalRoleCodesV1(t *testing.T) {
 	roles := []Role{RoleUnknown, RoleApplication, RoleWindow, RoleGroup, RoleText, RoleButton, RoleCheckbox, RoleRadio, RoleTextbox, RoleLink, RoleHeading, RoleList, RoleListItem, RoleTable, RoleRow, RoleCell, RoleMenu, RoleMenuItem}
 	for want, got := range roles {

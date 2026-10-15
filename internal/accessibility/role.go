@@ -27,3 +27,30 @@ const (
 
 // Valid reports whether code is assigned by role contract v1.
 func (r Role) Valid() bool { return r <= RoleMenuItem }
+
+// StateFlags defines the shared semantic state bitset prototype v1.
+type StateFlags uint64
+
+const (
+	StateFocused StateFlags = 1 << iota
+	StateFocusable
+	StateEnabled
+	StateDisabled
+)
+
+const stateKnownMask StateFlags = StateFocused | StateFocusable | StateEnabled | StateDisabled
+
+// Valid reports whether flags have known bits and a non-contradictory combination.
+func (s StateFlags) Valid() bool {
+	if s & ^stateKnownMask != 0 {
+		return false
+	}
+	if s&StateEnabled != 0 && s&StateDisabled != 0 {
+		return false
+	}
+	if s&StateFocused != 0 &&
+		(s&StateFocusable == 0 || s&StateEnabled == 0 || s&StateDisabled != 0) {
+		return false
+	}
+	return true
+}
