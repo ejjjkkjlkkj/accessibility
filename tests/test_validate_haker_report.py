@@ -56,6 +56,13 @@ class HakerReportValidatorTests(unittest.TestCase):
         self.assertEqual(result.returncode, 1)
         self.assertIn("relative and confined", result.stderr)
 
+    def test_rejects_windows_absolute_finding_path(self):
+        data = report()
+        data["findings"][0]["path"] = "C:\runner\private.txt"
+        result = self.run_validator(data)
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("relative and confined", result.stderr)
+
     def test_rejects_absolute_root(self):
         data = report()
         data["root"] = "/private/runner/work"
