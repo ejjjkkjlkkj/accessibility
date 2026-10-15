@@ -1,6 +1,7 @@
 module accessibility_event;
 
 import std.array : replicate;
+import std.utf : validate, UTFException;
 
 enum Role : ubyte {
     unknown = 0,
@@ -39,6 +40,19 @@ bool isValidStateFlags(ulong flags) {
     return true;
 }
 
+bool isValidName(string name) {
+    if (name.length > 4096) return false;
+    foreach (char byteValue; name) {
+        if (byteValue == '\0') return false;
+    }
+    try {
+        validate(name);
+    } catch (UTFException) {
+        return false;
+    }
+    return true;
+}
+
 struct AccessibilityEvent {
     uint abiVersion = 1;
     Role role = Role.unknown;
@@ -49,7 +63,7 @@ struct AccessibilityEvent {
 bool isValid(const ref AccessibilityEvent event) {
     return event.abiVersion == 1 &&
         event.role <= Role.menuItem &&
-        event.name.length <= 4096 &&
+        isValidName(event.name) &&
         isValidStateFlags(event.stateFlags);
 }
 
@@ -67,4 +81,8 @@ unittest {
     auto badFlags = AccessibilityEvent(1, Role.button, "Save", STATE_ENABLED | STATE_DISABLED);
     assert(!isValid(badFlags));
     assert(!isValidStateFlags(1UL << 63));
+    auto nulName = AccessibilityEvent(1, Role.button, "bad\\0name");
+    assert(!isValid(nulName));
+    auto invalidUtf8 = AccessibilityEvent(1, Role.button, "\\xC0\\xAF");
+    assert(!isValid(invalidUtf8));
 }

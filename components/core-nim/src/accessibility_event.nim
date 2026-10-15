@@ -1,4 +1,5 @@
 import strutils
+import unicode
 
 const
   STATE_FOCUSED* = 1'u64 shl 0
@@ -19,6 +20,11 @@ proc isValidStateFlags*(flags: uint64): bool =
     return false
   true
 
+proc isValidName*(name: string): bool =
+  name.len <= 4096 and
+    name.find('\0') < 0 and
+    validateUtf8(name) == -1
+
 type
   EventRole* = enum
     erUnknown = 0, erApplication = 1, erWindow = 2, erGroup = 3, erText = 4,
@@ -33,7 +39,7 @@ type
 
 proc isValid*(event: AccessibilityEvent): bool =
   event.abiVersion == 1'u32 and
-    event.name.len <= 4096 and
+    isValidName(event.name) and
     isValidStateFlags(event.stateFlags)
 
 when isMainModule:
@@ -44,3 +50,6 @@ when isMainModule:
   doAssert not isValidStateFlags(STATE_FOCUSED)
   doAssert not isValidStateFlags(STATE_ENABLED or STATE_DISABLED)
   doAssert not isValidStateFlags(1'u64 shl 63)
+  doAssert not isValidName("bad\\0name")
+  doAssert not isValidName("\\xC0\\xAF")
+  doAssert isValidName("café")

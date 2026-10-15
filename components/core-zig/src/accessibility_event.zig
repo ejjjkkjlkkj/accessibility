@@ -37,6 +37,14 @@ pub fn stateFlagsAreValid(flags: u64) bool {
     return true;
 }
 
+pub fn isValidName(name: []const u8) bool {
+    if (name.len > 4096 or !std.unicode.utf8ValidateSlice(name)) return false;
+    for (name) |byte| {
+        if (byte == 0) return false;
+    }
+    return true;
+}
+
 pub const AccessibilityEvent = struct {
     abi_version: u32 = 1,
     role: Role = .unknown,
@@ -45,7 +53,7 @@ pub const AccessibilityEvent = struct {
 
     pub fn isValid(self: AccessibilityEvent) bool {
         return self.abi_version == 1 and
-            self.name.len <= 4096 and
+            isValidName(self.name) and
             stateFlagsAreValid(self.state_flags);
     }
 };
@@ -65,6 +73,13 @@ test "semantic state flags reject contradictions and reserved bits" {
     try std.testing.expect(!stateFlagsAreValid(STATE_FOCUSED));
     try std.testing.expect(!stateFlagsAreValid(STATE_ENABLED | STATE_DISABLED));
     try std.testing.expect(!stateFlagsAreValid(@as(u64, 1) << 63));
+}
+
+test "name validator rejects invalid UTF-8 and embedded NUL" {
+    try std.testing.expect(isValidName("café"));
+    try std.testing.expect(!isValidName("bad\x00name"));
+    try std.testing.expect(!isValidName("\xc0\xaf"));
+    try std.testing.expect(!isValidName("\xf4\x90\x80\x80"));
 }
 
 test "invalid ABI and oversized names rejected" {
