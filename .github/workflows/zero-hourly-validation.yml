@@ -1,0 +1,67 @@
+name: ZERO hourly offline accessibility validation
+
+on:
+  schedule:
+    - cron: "37 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: zero-hourly-offline-${{ github.repository }}
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Check mandatory project contracts
+        shell: bash
+        run: |
+          set -euo pipefail
+          for f in README.md ACCESSIBILITY-SCOPE.md ZERO/README.md ZERO/LANGUAGE-AUDIT.md ZERO/REQUIREMENTS.md docs/AI-ACCESSIBILITY-INTEGRATION-CONTRACT-V1.md; do
+            test -s "$f" || { echo "FAIL: required contract missing: $f"; exit 1; }
+            echo "PASS: $f"
+          done
+
+      - name: Compile Python sources
+        run: python -m compileall -q .
+
+      - name: Run available Python tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          if find . -maxdepth 4 -type f \( -name 'test_*.py' -o -name '*_test.py' \) -not -path './.git/*' -print -quit | grep -q .; then
+            python -m unittest discover -v
+          else
+            echo "PARTIAL: no Python test files found"
+          fi
+
+      - name: Run Rust workspace tests when present
+        shell: bash
+        run: |
+          set -euo pipefail
+          while IFS= read -r manifest; do
+            [ -n "$manifest" ] || continue
+            echo "Testing $manifest"
+            cargo test --manifest-path "$manifest"
+          done < <(find . -maxdepth 5 -name Cargo.toml -not -path './.git/*' -type f | sort)
+
+      - name: Check patch hygiene
+        run: git diff --check
+
+      - name: State evidence boundary
+        run: |
+          echo "PASS: scheduled hosted checks completed."
+          echo "NOT_VALIDATED: physical hardware, UEFI audio output, and autonomous own-model code generation."
+          echo "No firmware, NVRAM, reboot, cloud model, or API key is used."
