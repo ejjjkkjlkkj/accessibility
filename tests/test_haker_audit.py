@@ -21,7 +21,17 @@ class HakerAuditTests(unittest.TestCase):
             root=Path(temp); (root/"clean.py").write_text("value = 42\n",encoding="utf-8"); report=root/"out"/"report.json"
             result=subprocess.run([sys.executable,str(SCANNER),"--root",str(root),"--json-out",str(report)],text=True,capture_output=True,check=False,timeout=10)
             self.assertEqual(result.returncode,0,result.stdout+result.stderr); data=json.loads(report.read_text(encoding="utf-8"))
-            self.assertEqual(data["audit_type"],"OFFLINE_HEURISTIC_STATIC_REVIEW"); self.assertEqual(data["severity_counts"]["HIGH"],0)
+            self.assertEqual(data["audit_type"],"OFFLINE_HEURISTIC_STATIC_REVIEW"); self.assertEqual(data["root"],"."); self.assertEqual(data["severity_counts"]["HIGH"],0)
+    def test_report_is_reproducible_across_absolute_roots(self):
+        with tempfile.TemporaryDirectory() as temp:
+            base=Path(temp); reports=[]
+            for name in ("one","two"):
+                root=base/name; root.mkdir(); (root/"clean.py").write_text("value = 42\\n",encoding="utf-8")
+                report=root/"report.json"
+                result=subprocess.run([sys.executable,str(SCANNER),"--root",str(root),"--json-out",str(report)],text=True,capture_output=True,check=False,timeout=10)
+                self.assertEqual(result.returncode,0,result.stdout+result.stderr)
+                data=json.loads(report.read_text(encoding="utf-8")); data.pop("root",None); reports.append(data)
+            self.assertEqual(reports[0],reports[1])
     def test_symlink_is_not_scanned(self):
         with tempfile.TemporaryDirectory() as temp:
             root=Path(temp)/"root"; outside=Path(temp)/"outside"; root.mkdir(); outside.mkdir()
