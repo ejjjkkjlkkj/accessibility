@@ -22,5 +22,8 @@ when isMainModule:
  doAssert c.hasItem and c.current == 1
  doAssert c.previous() == 0; doAssert c.previous() == -1
  doAssert c.hasItem and c.current == 0
- var empty = initCursor(0); doAssert empty.first() == -1
+ var empty = initCursor(0)
+ doAssert empty.first() == -1
+ doAssert empty.next() == -1
+ doAssert empty.previous() == -1
  doAssert not empty.hasItem

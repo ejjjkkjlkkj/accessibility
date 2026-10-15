@@ -28,3 +28,10 @@ test "navigation is bounded and failure preserves state" {
  try std.testing.expectEqual(@as(?u32, null), c.previous());
  try std.testing.expect(c.has_item and c.current == 0);
 }
+test "empty cursor never creates an item" {
+ var empty = Cursor{ .count = 0 };
+ try std.testing.expectEqual(@as(?u32, null), empty.first());
+ try std.testing.expectEqual(@as(?u32, null), empty.next());
+ try std.testing.expectEqual(@as(?u32, null), empty.previous());
+ try std.testing.expect(!empty.has_item);
+}

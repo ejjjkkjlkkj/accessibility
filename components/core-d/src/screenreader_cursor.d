@@ -25,6 +25,7 @@ unittest {
  assert(!c.next(i)); assert(c.hasItem && c.current == 1);
  assert(c.previous(i) && i == 0);
  assert(!c.previous(i)); assert(c.hasItem && c.current == 0);
- auto empty = ScreenReaderCursor(0); assert(!empty.first(i));
+ auto empty = ScreenReaderCursor(0);
+ assert(!empty.first(i)); assert(!empty.next(i)); assert(!empty.previous(i));
  assert(!empty.hasItem);
 }

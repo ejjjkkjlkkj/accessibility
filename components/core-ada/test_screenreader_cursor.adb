@@ -20,5 +20,7 @@ begin
    Assert (State.Has_Item and State.Current = 0, "failed previous changed state");
    Initialize (Empty, 0);
    Assert (not First (Empty, Index), "empty list must have no item");
+   Assert (not Next (Empty, Index), "Next on empty list must fail");
+   Assert (not Previous (Empty, Index), "Previous on empty list must fail");
    Assert (not Empty.Has_Item, "empty list acquired focus");
 end Test_Screenreader_Cursor;
