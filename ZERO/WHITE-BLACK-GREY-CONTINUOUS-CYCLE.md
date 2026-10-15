@@ -9,6 +9,46 @@
 - **GREY CODE — réparation et vérification** : transforme les constats BLACK en correctifs minimaux, ajoute un test de non-régression, vérifie que le défaut est corrigé et que les fonctions existantes n'ont pas régressé.
 - **Vérificateur indépendant** : recalcule les résultats à partir des commandes exécutées, codes retour, journaux expurgés, empreintes et tests. Il ne fait confiance ni aux affirmations de WHITE, ni aux conclusions de BLACK, ni à celles de GREY.
 
+## Modèle à trois variables : B, N et G
+
+Les trois variables sont actives dans le même système :
+
+- `B` = **code blanc** : construit une proposition ou une version du code.
+- `N` = **code noir** : cherche les failles et tente de réfuter les hypothèses avec des tests autorisés.
+- `G` = **code gris** : propose les corrections et ajoute les tests de non-régression.
+
+Les lettres identifient les rôles de référence, pas des étapes qui ne pourraient agir qu'une seule fois. Chaque module peut lire les résultats des autres, les critiquer et demander une nouvelle passe. En revanche, la validation finale doit rester indépendante : aucun module ne peut s'attribuer lui-même un statut global `PASS`.
+
+### Interactions dans tous les sens
+
+Le moteur doit couvrir les six ordres possibles d'une passe à trois rôles :
+
+1. `B → N → G`
+2. `B → G → N`
+3. `N → B → G`
+4. `N → G → B`
+5. `G → B → N`
+6. `G → N → B`
+
+Il doit également tester les interactions dirigées par paires : `B→N`, `N→B`, `B→G`, `G→B`, `N→G` et `G→N`. Les résultats d'une passe doivent pouvoir rouvrir une étape antérieure : par exemple, si `N` trouve une faille après une correction `G`, le cycle retourne à `B` pour produire une nouvelle version, puis recommence les tests.
+
+L'ordre de rôle ne change jamais les permissions de sécurité : `N` ne peut tester que les cibles autorisées, et `G` ne peut appliquer automatiquement un correctif qu'à une branche de travail ou à un espace de travail jetable. Pas de fusion, publication ou installation sans validation humaine.
+
+### Aléatoire contrôlé et reproductible
+
+Le moteur doit combiner :
+- une passe complète couvrant les six permutations, afin que le hasard ne masque aucune combinaison ;
+- des permutations supplémentaires choisies pseudo-aléatoirement ;
+- des tests de propriétés/fuzzing avec des entrées aléatoires bornées ;
+- une graine enregistrée pour pouvoir rejouer exactement le même ordre et les mêmes entrées ;
+- des limites explicites de temps, de mémoire, de nombre d'essais et de taille d'entrée.
+
+Chaque exécution aléatoire enregistre `seed`, permutation, version/commit testé, cas, limites, résultats et empreintes. Sans graine ou preuve exploitable, le résultat est `UNPROVEN`. L'aléatoire complète la couverture exhaustive des six ordres ; il ne la remplace pas. Si le budget est épuisé, déclarer `PARTIAL/BLOCKED`, jamais `PASS` par défaut.
+
+### Règle de convergence
+
+Après chaque passe, comparer les défauts ouverts, les régressions et les tests obligatoires. Si un défaut est confirmé, le maintenir ouvert jusqu'à ce qu'un correctif et son test de non-régression passent. Si les résultats oscillent ou qu'une correction casse un autre test, enregistrer le cycle comme non convergé et relancer avec une nouvelle révision. Un jalon est stable uniquement quand les critères de sortie du contrat sont satisfaits ; il est impossible de prouver l'absence absolue de toute faille.
+
 ## Boucle obligatoire
 
 1. **WHITE / BUILD** : produire un changement isolé et compiler les composants concernés.
