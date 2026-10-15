@@ -376,4 +376,25 @@ class HakerAuditTests(unittest.TestCase):
             self.assertIn("SEC009", result.stdout)
 
 
+    def test_secret_is_redacted_for_every_finding_on_same_line(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            secret = "do-not-leak-this-value-987654"
+            (root / "sample.py").write_text(
+                'password = "' + secret + '"; eval(user_input)\\n',
+                encoding="utf-8",
+            )
+            report = root / "report.json"
+            result = subprocess.run(
+                [sys.executable, str(SCANNER), "--root", str(root), "--json-out", str(report)],
+                text=True, capture_output=True, check=False, timeout=10,
+            )
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            data = json.loads(report.read_text(encoding="utf-8"))
+            self.assertIn("SEC002", [item["id"] for item in data["findings"]])
+            self.assertIn("SEC004", [item["id"] for item in data["findings"]])
+            self.assertNotIn(secret, json.dumps(data))
+            self.assertTrue(all("[REDACTED" in item["evidence"] for item in data["findings"]))
+
+
 if __name__ == "__main__": unittest.main()
