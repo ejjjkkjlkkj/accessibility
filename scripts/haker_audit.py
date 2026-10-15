@@ -43,7 +43,7 @@ def iter_files(root, exclude_paths=()):
 
 def read_bounded_text(path):
     """Read a regular file with a hard byte cap; refuse final-component symlinks where supported."""
-    flags = os.O_RDONLY | getattr(os, "O_BINARY", 0)
+    flags = os.O_RDONLY | getattr(os, "O_BINARY", 0) | getattr(os, "O_NONBLOCK", 0)
     if hasattr(os, "O_NOFOLLOW"):
         flags |= os.O_NOFOLLOW
     descriptor = os.open(path, flags)
