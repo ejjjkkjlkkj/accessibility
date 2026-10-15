@@ -11,6 +11,26 @@ import (
 
 var required = []string{"id", "name", "domain", "url", "category", "layer", "official_status", "notes"}
 
+// validDNSDomain accepts an ASCII DNS name (including a fully-qualified trailing dot).
+// Internationalized names must be supplied in their IDNA ASCII form (punycode).
+func validDNSDomain(raw string) bool {
+	domain := strings.TrimSuffix(strings.ToLower(strings.TrimSpace(raw)), ".")
+	if domain == "" || len(domain) > 253 {
+		return false
+	}
+	for _, label := range strings.Split(domain, ".") {
+		if len(label) == 0 || len(label) > 63 || label[0] == '-' || label[len(label)-1] == '-' {
+			return false
+		}
+		for _, ch := range label {
+			if !((ch >= 'a' && ch <= 'z') || (ch >= '0' && ch <= '9') || ch == '-') {
+				return false
+			}
+		}
+	}
+	return true
+}
+
 func validate(r io.Reader) error {
 	reader := csv.NewReader(r)
 	reader.FieldsPerRecord = -1
@@ -70,6 +90,12 @@ func validate(r io.Reader) error {
 		}
 		domain := strings.TrimSuffix(strings.ToLower(value("domain")), ".")
 		hostname := strings.TrimSuffix(strings.ToLower(parsedURL.Hostname()), ".")
+		if !validDNSDomain(domain) {
+			return fmt.Errorf("CSV line %d: declared domain %q is not a valid DNS name", line, value("domain"))
+		}
+		if !validDNSDomain(hostname) {
+			return fmt.Errorf("CSV line %d: URL hostname %q is not a valid DNS name", line, hostname)
+		}
 		if hostname != domain && !strings.HasSuffix(hostname, "."+domain) {
 			return fmt.Errorf("CSV line %d: URL hostname %q does not match domain %q", line, hostname, domain)
 		}
