@@ -1,3 +1,5 @@
+with Interfaces;
+
 package body Accessibility_Event is
    use type Interfaces.Unsigned_64;
 
