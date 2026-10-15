@@ -46,3 +46,7 @@ Le document [Audit des manques de l'OS complet accessible et de HAKER](docs/OS-C
 ## Réduction des ports réseau exposés
 
 La politique [Réduction de la surface réseau](docs/NETWORK-PORT-MINIMIZATION.md) exige un refus par défaut, des exceptions minimales déclarées, un inventaire des sockets TCP/UDP IPv4/IPv6 et une comparaison entre ports attendus et réellement en écoute. Le document est une spécification : l'application automatique des règles et les validations natives restent **NOT_IMPLEMENTED / NOT_VALIDATED** jusqu'à preuve reproductible.
+
+## Réseau discret et modèle de menace
+
+[Conception réseau discrète et modèle de menace](docs/NETWORK-STEALTH-THREAT-MODEL.md) précise ce que « réseau invisible » peut réellement signifier, les surfaces d'attaque à examiner, les défenses en couches, les tests HAKER autorisés et les portes de validation. L'invisibilité absolue n'est pas garantie ; l'objectif est de réduire l'exposition, les communications non déclarées et les surprises, avec preuves par environnement.
