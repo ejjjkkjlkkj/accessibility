@@ -15,6 +15,8 @@ This document records the shared semantics under test. It does not claim a compl
 
 Language-specific constant naming follows each language's conventions. Bits 4–63 are reserved and rejected, not silently ignored.
 
+The machine-readable source for these assignments is [`data/accessibility-state-flags-v1.json`](../data/accessibility-state-flags-v1.json); automated tests compare implementation constants against that contract.
+
 ## Validation rules
 
 - `STATE_ENABLED` and `STATE_DISABLED` may not be set together.
