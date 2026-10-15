@@ -123,6 +123,29 @@ func TestValidateAcceptsSubdomainOfDeclaredDomain(t *testing.T) {
 	}
 }
 
+func TestValidateEnforcesDNSDomainLengthBoundary(t *testing.T) {
+	makeDomain := func(lastLabelLength int) string {
+		return strings.Join([]string{
+			strings.Repeat("a", 63),
+			strings.Repeat("b", 63),
+			strings.Repeat("c", 63),
+			strings.Repeat("d", lastLabelLength),
+		}, ".")
+	}
+
+	maximum := makeDomain(61) // 253 octets including separators
+	row := "a,Example," + maximum + ",https://" + maximum + "/,docs,web,candidate,test\\n"
+	if err := validate(strings.NewReader(validHeader + row)); err != nil {
+		t.Fatalf("expected 253-character DNS name to pass, got %v", err)
+	}
+
+	tooLong := makeDomain(62) // 254 octets including separators
+	row = "a,Example," + tooLong + ",https://" + tooLong + "/,docs,web,candidate,test\\n"
+	if err := validate(strings.NewReader(validHeader + row)); err == nil {
+		t.Fatal("expected 254-character DNS name to fail")
+	}
+}
+
 func TestValidateRejectsMalformedDeclaredDomain(t *testing.T) {
 	for _, domain := range []string{"example..org", "-example.org", "example-.org", "exa_mple.org", "example.org/path", strings.Repeat("a", 64) + ".org"} {
 		row := "a,Example," + domain + ",https://example.org/,docs,web,candidate,test\n"
