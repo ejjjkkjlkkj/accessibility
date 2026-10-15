@@ -85,6 +85,22 @@ func TestValidateRejectsEmptyRequiredFields(t *testing.T) {
 	}
 }
 
+func TestValidateRejectsMissingRequiredHeader(t *testing.T) {
+	header := "id,name,domain,url,category,layer,official_status\\n"
+	row := "a,Example,example.org,https://example.org/,docs,web,candidate\\n"
+	if err := validate(strings.NewReader(header + row)); err == nil {
+		t.Fatal("expected missing required header to fail")
+	}
+}
+
+func TestValidateRejectsDuplicateHeadersAfterTrimming(t *testing.T) {
+	header := "id,name, name ,domain,url,category,layer,official_status,notes\\n"
+	row := "a,Example,Shadow,example.org,https://example.org/,docs,web,candidate,test\\n"
+	if err := validate(strings.NewReader(header + row)); err == nil {
+		t.Fatal("expected whitespace-normalized duplicate header to fail")
+	}
+}
+
 func TestValidateRejectsMalformedURL(t *testing.T) {
 	for _, rawURL := range []string{"https://%", "http://[::1", "https://?query=missing-host"} {
 		row := "a,Example,example.org," + rawURL + ",docs,web,candidate,test\n"
