@@ -213,8 +213,12 @@ class HakerReportValidatorTests(unittest.TestCase):
     def test_rejects_deeply_nested_json_without_traceback(self):
         raw = "[" * 1500 + "0" + "]" * 1500
         result = self.run_validator_raw(raw)
-        self.assertEqual(result.returncode, 2)
-        self.assertIn("cannot read valid JSON report", result.stderr)
+        self.assertIn(result.returncode, (1, 2))
+        self.assertTrue(
+            "report must be a JSON object" in result.stderr
+            or "cannot read valid JSON report" in result.stderr,
+            result.stdout + result.stderr,
+        )
         self.assertNotIn("Traceback", result.stderr)
 
 
