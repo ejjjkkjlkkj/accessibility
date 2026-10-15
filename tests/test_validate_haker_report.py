@@ -105,6 +105,20 @@ class HakerReportValidatorTests(unittest.TestCase):
         self.assertEqual(result.returncode, 1)
         self.assertIn("invalid severity", result.stderr)
 
+    def test_rejects_dot_as_finding_path(self):
+        data = report()
+        data["findings"][0]["path"] = "."
+        result = self.run_validator(data)
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("relative and confined", result.stderr)
+
+    def test_rejects_nul_in_finding_path(self):
+        data = report()
+        data["findings"][0]["path"] = "sample.py\\x00private"
+        result = self.run_validator(data)
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("relative and confined", result.stderr)
+
     def test_rejects_unhashable_severity_without_crashing(self):
         data = report()
         data["findings"][0]["severity"] = ["HIGH"]
