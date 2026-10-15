@@ -86,7 +86,7 @@ func validate(r io.Reader) error {
 			}
 		}
 		parsedURL, err := url.Parse(value("url"))
-		if err != nil || (parsedURL.Scheme != "https" && parsedURL.Scheme != "http") || parsedURL.Hostname() == "" || parsedURL.User != nil {
+		if err != nil || (strings.ToLower(parsedURL.Scheme) != "https" && strings.ToLower(parsedURL.Scheme) != "http") || parsedURL.Hostname() == "" || parsedURL.User != nil {
 			return fmt.Errorf("CSV line %d: URL must be absolute HTTP(S), include a hostname, and contain no userinfo", line)
 		}
 		domain := strings.TrimSuffix(strings.ToLower(value("domain")), ".")
