@@ -1,0 +1,38 @@
+name: Hardware bridge contract tests
+
+on:
+  push:
+    branches: ["**"]
+    paths:
+      - "crates/hardware-bridge/**"
+      - ".github/workflows/hardware-bridge.yml"
+  pull_request:
+    paths:
+      - "crates/hardware-bridge/**"
+      - ".github/workflows/hardware-bridge.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: hardware-bridge-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Rust contract / ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v6
+      - name: Install stable Rust
+        uses: dtolnay/rust-toolchain@stable
+      - name: Run hardware bridge unit tests
+        run: cargo test --manifest-path crates/hardware-bridge/Cargo.toml
+      - name: Build no_std library
+        run: cargo build --manifest-path crates/hardware-bridge/Cargo.toml --lib --release
