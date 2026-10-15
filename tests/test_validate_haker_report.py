@@ -91,6 +91,42 @@ class HakerReportValidatorTests(unittest.TestCase):
         self.assertEqual(result.returncode, 1)
         self.assertIn("stable relative marker", result.stderr)
 
+    def test_rejects_boolean_line_number(self):
+        data = report()
+        data["findings"][0]["line"] = True
+        result = self.run_validator(data)
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("line must be a positive integer", result.stderr)
+
+    def test_rejects_unknown_severity(self):
+        data = report()
+        data["findings"][0]["severity"] = "URGENT"
+        result = self.run_validator(data)
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("invalid severity", result.stderr)
+
+    def test_rejects_empty_finding_path(self):
+        data = report()
+        data["findings"][0]["path"] = ""
+        result = self.run_validator(data)
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("relative and confined", result.stderr)
+
+    def test_rejects_non_list_findings(self):
+        data = report()
+        data["findings"] = {}
+        data["finding_count"] = 0
+        result = self.run_validator(data)
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("findings must be a list", result.stderr)
+
+    def test_rejects_non_string_limitations(self):
+        data = report()
+        data["limitations"] = ["heuristic only", 7]
+        result = self.run_validator(data)
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("limitations must be a list of strings", result.stderr)
+
     def test_rejects_empty_finding_evidence(self):
         data = report()
         data["findings"][0]["evidence"] = " "
