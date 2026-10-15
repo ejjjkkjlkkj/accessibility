@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import json
+import os
+import stat
 import sys
 from pathlib import Path, PureWindowsPath
 
@@ -122,9 +124,23 @@ def validate(report: object) -> list[str]:
 
 
 def load_report(path: Path) -> object:
-    """Read a bounded UTF-8 report and reject ambiguous or non-standard JSON."""
-    with path.open("rb") as stream:
-        raw = stream.read(MAX_REPORT_BYTES + 1)
+    """Read a bounded regular file without following a final-component symlink."""
+    flags = os.O_RDONLY | getattr(os, "O_BINARY", 0)
+    if hasattr(os, "O_NOFOLLOW"):
+        flags |= os.O_NOFOLLOW
+    descriptor = os.open(path, flags)
+    try:
+        with os.fdopen(descriptor, "rb") as stream:
+            descriptor = -1
+            metadata = os.fstat(stream.fileno())
+            if not stat.S_ISREG(metadata.st_mode):
+                raise ValueError("report input must be a regular file")
+            if metadata.st_size > MAX_REPORT_BYTES:
+                raise ValueError(f"report exceeds {MAX_REPORT_BYTES} bytes")
+            raw = stream.read(MAX_REPORT_BYTES + 1)
+    finally:
+        if descriptor >= 0:
+            os.close(descriptor)
     if len(raw) > MAX_REPORT_BYTES:
         raise ValueError(f"report exceeds {MAX_REPORT_BYTES} bytes")
     return json.loads(
