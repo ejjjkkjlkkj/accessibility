@@ -6,6 +6,61 @@
 //! not authorization to access the address range.
 
 pub const SDT_HEADER_LEN: usize = 36;
+pub const RSDP_V1_LEN: usize = 20;
+pub const RSDP_V2_MIN_LEN: usize = 36;
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct Rsdp<'a> {
+    pub revision: u8,
+    pub rsdt_address: u32,
+    pub xsdt_address: Option<u64>,
+    pub length: usize,
+    pub bytes: &'a [u8],
+}
+
+/// Parse an ACPI Root System Description Pointer from caller-supplied bytes.
+/// The caller is responsible for obtaining the candidate from the UEFI
+/// configuration table or another trusted source; this function does not scan
+/// physical memory.
+pub fn parse_rsdp(bytes: &[u8]) -> Result<Rsdp<'_>, AcpiError> {
+    if bytes.len() < RSDP_V1_LEN {
+        return Err(AcpiError::Truncated);
+    }
+    if &bytes[0..8] != b"RSD PTR " {
+        return Err(AcpiError::BadSignature);
+    }
+    if bytes[..RSDP_V1_LEN].iter().fold(0u8, |sum, b| sum.wrapping_add(*b)) != 0 {
+        return Err(AcpiError::BadChecksum);
+    }
+    let revision = bytes[15];
+    let rsdt_address = u32::from_le_bytes([bytes[16], bytes[17], bytes[18], bytes[19]]);
+    if revision < 2 {
+        return Ok(Rsdp { revision, rsdt_address, xsdt_address: None, length: RSDP_V1_LEN, bytes: &bytes[..RSDP_V1_LEN] });
+    }
+    if bytes.len() < RSDP_V2_MIN_LEN {
+        return Err(AcpiError::Truncated);
+    }
+    let length = u32::from_le_bytes([bytes[20], bytes[21], bytes[22], bytes[23]]) as usize;
+    if length < RSDP_V2_MIN_LEN || length > bytes.len() {
+        return Err(AcpiError::InvalidLength);
+    }
+    let extended = &bytes[..length];
+    if extended.iter().fold(0u8, |sum, b| sum.wrapping_add(*b)) != 0 {
+        return Err(AcpiError::BadChecksum);
+    }
+    let xsdt_address = u64::from_le_bytes([
+        bytes[24], bytes[25], bytes[26], bytes[27],
+        bytes[28], bytes[29], bytes[30], bytes[31],
+    ]);
+    Ok(Rsdp {
+        revision,
+        rsdt_address,
+        xsdt_address: Some(xsdt_address),
+        length,
+        bytes: extended,
+    })
+}
+
 pub const MCFG_HEADER_LEN: usize = 44;
 pub const MCFG_ALLOCATION_LEN: usize = 16;
 
