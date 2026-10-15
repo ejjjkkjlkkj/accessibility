@@ -397,4 +397,16 @@ class HakerAuditTests(unittest.TestCase):
             self.assertTrue(all("[REDACTED" in item["evidence"] for item in data["findings"]))
 
 
+    def test_flags_fstring_sql_query_assembly(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            (root / "sample.py").write_text(
+                'cursor.execute(f"SELECT * FROM users WHERE name = {name}")\\n',
+                encoding="utf-8",
+            )
+            result = self.run_scanner(root)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            self.assertIn("SEC010", result.stdout)
+
+
 if __name__ == "__main__": unittest.main()
