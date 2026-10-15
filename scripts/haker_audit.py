@@ -8,6 +8,7 @@ ROOT = Path(__file__).resolve().parents[1]
 SKIP_DIRS = {".git", ".venv", "venv", "node_modules", "target", "dist", "build", "__pycache__", ".mypy_cache", ".pytest_cache"}
 TEXT_SUFFIXES = {".py", ".rs", ".c", ".h", ".cpp", ".hpp", ".cc", ".go", ".js", ".ts", ".json", ".toml", ".yaml", ".yml", ".md", ".ps1", ".sh", ".bat", ".cmd", ".ini", ".cfg", ".conf", ".xml", ".html", ".txt", ".lock"}
 MAX_FILE_BYTES = 2 * 1024 * 1024
+MAX_REPORT_BYTES = 8 * 1024 * 1024
 RULES = [
     ("SEC001", "HIGH", re.compile(r"-----BEGIN (?:RSA |EC |OPENSSH |DSA )?PRIVATE KEY-----"), "Private-key material marker"),
     ("SEC002", "HIGH", re.compile(r"""(?i)\b(?:api[_-]?key|access[_-]?token|client[_-]?secret|password)\s*[:=]\s*['"][^'"]{12,}['"]"""), "Possible hard-coded credential assignment"),
@@ -95,13 +96,40 @@ def audit(root, exclude_paths=()):
     return {"schema_version":"1.0", "audit_type":"OFFLINE_HEURISTIC_STATIC_REVIEW", "root":".", "files_scanned":scanned, "unreadable_files":unreadable, "finding_count":len(findings), "severity_counts":counts, "findings":findings, "limitations":["Heuristic false positives and false negatives are possible.", "Findings require human reproduction and validation.", "No AI agent is launched and inspected code is not executed.", "A clean report does not prove absence of vulnerabilities.", "Hardware, firmware, runtime, and physical-device behavior are not validated."]}
 
 def is_previous_report(path):
-    """Permit refreshing an existing output only when it is already a HAKER report."""
-    if path.suffix.lower() != ".json" or path.is_symlink() or not path.is_file():
+    """Recognize a bounded regular HAKER report without blocking on special files."""
+    if path.suffix.lower() != ".json" or path.is_symlink():
         return False
+
+    descriptor = -1
     try:
-        previous = json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, UnicodeDecodeError, json.JSONDecodeError):
+        flags = os.O_RDONLY | getattr(os, "O_BINARY", 0) | getattr(os, "O_NONBLOCK", 0)
+        if hasattr(os, "O_NOFOLLOW"):
+            flags |= os.O_NOFOLLOW
+        descriptor = os.open(path, flags)
+        with os.fdopen(descriptor, "rb") as stream:
+            descriptor = -1
+            metadata = os.fstat(stream.fileno())
+            if not stat.S_ISREG(metadata.st_mode) or metadata.st_size > MAX_REPORT_BYTES:
+                return False
+
+            # On platforms without O_NOFOLLOW, compare the opened object with
+            # the current path entry as a defense against symlink/replacement races.
+            current = path.lstat()
+            if not stat.S_ISREG(current.st_mode):
+                return False
+            if (metadata.st_dev, metadata.st_ino) != (current.st_dev, current.st_ino):
+                return False
+
+            raw = stream.read(MAX_REPORT_BYTES + 1)
+            if len(raw) > MAX_REPORT_BYTES:
+                return False
+        previous = json.loads(raw.decode("utf-8"))
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError, ValueError, RecursionError):
         return False
+    finally:
+        if descriptor >= 0:
+            os.close(descriptor)
+
     return (
         isinstance(previous, dict)
         and previous.get("schema_version") == "1.0"
