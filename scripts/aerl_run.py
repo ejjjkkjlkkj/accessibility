@@ -59,6 +59,19 @@ def main(argv: list[str] | None = None) -> int:
     elapsed_ms = min(2**31 - 1, max(0, int((time.monotonic() - started) * 1000)))
     payload = {"command_sha256": command_hash, "argument_count": len(command),
                "exit_code": exit_code, "elapsed_ms": elapsed_ms}
+    # Correlate CI evidence without copying the full environment (which may contain secrets).
+    ci = {}
+    for env_name, field_name in (
+        ("GITHUB_SHA", "commit_sha"), ("GITHUB_RUN_ID", "run_id"),
+        ("GITHUB_RUN_ATTEMPT", "run_attempt"), ("GITHUB_JOB", "job"),
+        ("GITHUB_WORKFLOW", "workflow"), ("RUNNER_OS", "runner_os"),
+        ("GITHUB_REPOSITORY", "repository"),
+    ):
+        value = os.environ.get(env_name)
+        if value and len(value) <= 160 and "\\x00" not in value:
+            ci[field_name] = value
+    if ci:
+        payload["ci"] = ci
     if launch_error:
         payload["launch_error_type"] = launch_error
     try:
