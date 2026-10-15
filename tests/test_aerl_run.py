@@ -1,4 +1,5 @@
 import json
+import os
 import subprocess
 import sys
 import tempfile
@@ -68,7 +69,7 @@ class AerlRunTests(unittest.TestCase):
         self.assertNotIn("missing-executable", json.dumps(records[0]))
 
     def test_ci_correlation_metadata_is_recorded_without_environment_dump(self):
-        env = dict(__import__("os").environ)
+        env = dict(os.environ)
         env.update({
             "GITHUB_SHA": "abc123",
             "GITHUB_RUN_ID": "98765",
