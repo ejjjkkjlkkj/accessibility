@@ -8,7 +8,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 import aerl
-import aerl_run
+import aerl_tool
 
 
 class AerlRunTests(unittest.TestCase):
@@ -27,12 +27,8 @@ class AerlRunTests(unittest.TestCase):
     def test_records_pass_without_recording_command_text(self):
         result = self.run_cli("--", sys.executable, "-c", "print('ok')")
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-        records, _ = aerl_run.load_records(self.ledger) if hasattr(aerl_run, "load_records") else ([], "")
-        if not records:
-            raw = self.ledger.read_bytes()
-            count, _ = aerl.verify_bytes(raw)
-            records = [aerl.strict_json(line) for line in raw[:-1].split(b"\\n")]
-            self.assertEqual(count, 1)
+        records, _ = aerl_tool.load_records(self.ledger)
+        self.assertEqual(len(records), 1)
         self.assertEqual(records[0]["status"], "PASS")
         self.assertEqual(records[0]["payload"]["exit_code"], 0)
         self.assertNotIn("print('ok')", json.dumps(records[0]))
