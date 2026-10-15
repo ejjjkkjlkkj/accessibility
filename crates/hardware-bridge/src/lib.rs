@@ -1,6 +1,8 @@
-pub mod acpi;
-
 #![no_std]
+
+pub mod acpi;
+pub mod provenance;
+pub mod uefi;
 //! Platform-neutral contracts for describing physical and software-defined devices.
 //!
 //! This crate deliberately performs no PCI configuration access, MMIO, port I/O,
