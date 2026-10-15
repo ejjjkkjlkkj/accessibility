@@ -32,7 +32,11 @@ Les documents canoniques maintenus dans docs/ sont la cartographie des langages 
 GitHub Actions vérifie les fichiers de documentation, la syntaxe JSON des manifestes présents et les liens Markdown locaux. Cette CI ne prétend pas prouver le fonctionnement d'un screen reader sur matériel réel.
 
 
-## Shared role identifiers\n\nThe numeric role mapping for C, Rust, Go, D, Ada, Nim, Swift and Zig is defined in [Accessibility role codes v1](docs/ACCESSIBILITY-ROLE-CODES-V1.md). This is a logical role-code contract, not a claim that all binary layouts or platform adapters are already interchangeable.\n\n## NEXORA integration
+## Shared role identifiers\n\nThe numeric role mapping for C, Rust, Go, D, Ada, Nim, Swift and Zig is defined in [Accessibility role codes v1](docs/ACCESSIBILITY-ROLE-CODES-V1.md). This is a logical role-code contract, not a claim that all binary layouts or platform adapters are already interchangeable.\n\n## IA ↔ ACCESSIBILITY integration
+
+The shared integration boundary is defined in [AI-ACCESSIBILITY-INTEGRATION-CONTRACT-V1.md](docs/AI-ACCESSIBILITY-INTEGRATION-CONTRACT-V1.md). This is a versioned coordination contract, not proof that model inference or physical screen-reader integration is complete.
+
+## NEXORA integration
 
 The accessibility boundary for the experimental NEXORA language is documented in [the NEXORA accessibility contract](docs/NEXORA-ACCESSIBILITY-CONTRACT.md) and its machine-readable contract at `projects/nexora/accessibility-contract.json`. This is a contract only: it does not claim a working NEXORA screen reader, OS backend, or UEFI runtime.
 
