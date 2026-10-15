@@ -28,7 +28,7 @@ This file is the canonical mapping for the logical role code shared by the C, Ru
 Rules:
 - Numeric values are explicit; never rely on compiler-assigned enum ordinals.
 - unknown (0) is a valid fallback for unrecognized platform roles, not proof that an element is accessible.
-- The logical role code is not, by itself, a complete binary ABI. String encoding, struct layout, ownership, state flags, event sequencing, and platform handles need their own explicit wire/FFI contracts.
+- The logical role code is not, by itself, a complete binary ABI. String encoding, struct layout, ownership, state flags, event sequencing, and platform handles need explicit wire/FFI contracts. The Rust-only state-flag prototype is documented in `ACCESSIBILITY-STATE-FLAGS-V1.md`; it is not yet implemented consistently across all language bindings and is not a completed shared ABI.
 - Cross-language validation must check every code above, including boundary values 0 and 17.
 - Names transported across a future wire boundary must be UTF-8 and no longer than 4096 bytes. Implementations must reject oversize input rather than silently truncate it.
 - Password values must not be announced. This role map does not authorize activation, editing, firmware access, network access, or other side effects.
