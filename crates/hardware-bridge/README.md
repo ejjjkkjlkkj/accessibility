@@ -8,6 +8,7 @@ A small `no_std` Rust foundation for a hardware-facing accessibility architectur
 - Resource-window validation using checked arithmetic and domain-aware overlap checks.
 - Bounded ACPI parsers for RSDP, SDT, RSDT/XSDT and MCFG structures, including length, checksum, reserved-byte, bus-range and ECAM-alignment checks.
 - A `PciConfigReader` contract for a future authorized UEFI PCI I/O Protocol adapter, plus bounded bus/device/function enumeration logic over that contract.
+- Deny-by-default resource policy evaluator: verifies resource kind, declared-window containment, range validity, per-kind read/write allowlists and maximum request size. A policy decision is metadata only, not an OS/firmware I/O capability.
 - Explicit provenance records that distinguish ACPI bytes, firmware-reported devices, OS-reported inventory, synthetic fixtures and manual observation. The provenance log is not a cryptographic attestation.
 - Fixed-capacity, allocation-free accessibility event FIFO with explicit backpressure. Producers cannot silently overwrite queued events.
 - Read-only Windows Plug and Play inventory probe at `tools/hardware-bridge-inventory.ps1`; JSON output defaults to the system temporary directory. It labels data as OS-reported, not physically verified.
