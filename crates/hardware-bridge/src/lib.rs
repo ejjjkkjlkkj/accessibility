@@ -1,3 +1,5 @@
+pub mod acpi;
+
 #![no_std]
 //! Platform-neutral contracts for describing physical and software-defined devices.
 //!
