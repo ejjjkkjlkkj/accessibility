@@ -103,7 +103,7 @@ pub fn enumerate<R, F>(
     mut visit: F,
 ) -> Result<(), PciReadError>
 where
-    R: PciConfigReader,
+    R: PciHeaderFlags,
     F: FnMut(PciFunction),
 {
     if start_bus > end_bus {
