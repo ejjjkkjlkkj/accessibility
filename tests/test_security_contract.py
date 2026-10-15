@@ -85,6 +85,41 @@ class SecurityContractTests(unittest.TestCase):
         self.assertEqual(result.returncode, 1)
         self.assertIn("max_runtime_seconds must be a positive integer", result.stderr)
 
+    def test_rejects_missing_required_agent_role(self):
+        data = json.loads(MANIFEST.read_text(encoding="utf-8"))
+        data["agents"] = [agent for agent in data["agents"] if agent["id"] != "DARK-FUZZ"]
+        result = self.run_validator_with_data(data)
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("missing required agent roles: DARK-FUZZ", result.stderr)
+
+    def test_rejects_removal_of_mandatory_release_blocker(self):
+        data = json.loads(MANIFEST.read_text(encoding="utf-8"))
+        data["release_gate"]["block_on"].remove("failed_ci")
+        result = self.run_validator_with_data(data)
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("missing mandatory blockers: failed_ci", result.stderr)
+
+    def test_rejects_removal_of_mandatory_pass_evidence(self):
+        data = json.loads(MANIFEST.read_text(encoding="utf-8"))
+        data["release_gate"]["pass_requires"].remove("recorded_exit_code")
+        result = self.run_validator_with_data(data)
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("missing mandatory evidence: recorded_exit_code", result.stderr)
+
+    def test_rejects_network_enabled_fuzz_role(self):
+        data = json.loads(MANIFEST.read_text(encoding="utf-8"))
+        data["agents"][3]["limits"]["network"] = True
+        result = self.run_validator_with_data(data)
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("DARK-FUZZ limits.network must be false", result.stderr)
+
+    def test_rejects_fuzz_runtime_over_limit(self):
+        data = json.loads(MANIFEST.read_text(encoding="utf-8"))
+        data["agents"][3]["limits"]["max_runtime_seconds"] = 121
+        result = self.run_validator_with_data(data)
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("must be between 1 and 120", result.stderr)
+
 
 if __name__ == "__main__":
     unittest.main()
