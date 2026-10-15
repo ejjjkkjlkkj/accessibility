@@ -41,13 +41,39 @@ class SecurityContractTests(unittest.TestCase):
         self.assertIn("not", data["operating_rules"]["no_false_claims"].lower())
 
     def run_validator_with_data(self, data):
+        return self.run_validator_with_raw(json.dumps(data))
+
+    def run_validator_with_raw(self, raw):
         with tempfile.TemporaryDirectory() as temp:
             manifest = Path(temp) / "manifest.json"
-            manifest.write_text(json.dumps(data), encoding="utf-8")
+            manifest.write_text(raw, encoding="utf-8")
             return subprocess.run(
                 [sys.executable, str(VALIDATOR), "--manifest", str(manifest)],
                 text=True, capture_output=True, check=False, timeout=10,
             )
+
+    def test_rejects_duplicate_json_object_keys(self):
+        raw = MANIFEST.read_text(encoding="utf-8")
+        raw = raw.replace(
+            '"schema_version": "1.0.0",',
+            '"schema_version": "1.0.0", "schema_version": "1.0.0",',
+            1,
+        )
+        result = self.run_validator_with_raw(raw)
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("duplicate JSON object key: schema_version", result.stderr)
+        self.assertNotIn("Traceback", result.stderr)
+
+    def test_rejects_nonstandard_json_constants(self):
+        raw = MANIFEST.read_text(encoding="utf-8").replace(
+            '"schema_version": "1.0.0"',
+            '"schema_version": NaN',
+            1,
+        )
+        result = self.run_validator_with_raw(raw)
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("non-standard JSON constant: NaN", result.stderr)
+        self.assertNotIn("Traceback", result.stderr)
 
     def test_rejects_non_object_manifest_without_traceback(self):
         result = self.run_validator_with_data([])
