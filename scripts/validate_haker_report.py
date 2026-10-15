@@ -13,22 +13,42 @@ REQUIRED = {
 }
 
 
+def confined_relative_path(value: str) -> bool:
+    """Accept relative paths only; reject POSIX and Windows traversal/absolute forms."""
+    posix = Path(value)
+    windows = PureWindowsPath(value)
+    return not (
+        not value
+        or posix.is_absolute()
+        or windows.is_absolute()
+        or windows.drive
+        or ".." in posix.parts
+        or ".." in windows.parts
+    )
+
+
 def validate(report: object) -> list[str]:
     errors: list[str] = []
     if not isinstance(report, dict):
         return ["report must be a JSON object"]
     missing = sorted(REQUIRED - report.keys())
     if missing:
-        errors.append("missing fields: " + ", ".join(missing))
-        return errors
+        return ["missing fields: " + ", ".join(missing)]
     if report["schema_version"] != "1.0" or report["audit_type"] != "OFFLINE_HEURISTIC_STATIC_REVIEW":
         errors.append("unsupported schema_version or audit_type")
     if report["root"] != ".":
         errors.append("root must be the stable relative marker '.'")
     if not isinstance(report["files_scanned"], int) or isinstance(report["files_scanned"], bool) or report["files_scanned"] < 0:
         errors.append("files_scanned must be a non-negative integer")
-    if not isinstance(report["unreadable_files"], list) or not all(isinstance(p, str) for p in report["unreadable_files"]):
+
+    unreadable = report["unreadable_files"]
+    if not isinstance(unreadable, list) or not all(isinstance(p, str) for p in unreadable):
         errors.append("unreadable_files must be a list of relative path strings")
+    else:
+        for index, path in enumerate(unreadable):
+            if not confined_relative_path(path):
+                errors.append(f"unreadable_files[{index}] path must be relative and confined")
+
     if not isinstance(report["findings"], list):
         errors.append("findings must be a list")
         findings = []
@@ -36,14 +56,20 @@ def validate(report: object) -> list[str]:
         findings = report["findings"]
     if not isinstance(report["finding_count"], int) or isinstance(report["finding_count"], bool) or report["finding_count"] != len(findings):
         errors.append("finding_count does not match findings length")
+
     counts = report["severity_counts"]
     if not isinstance(counts, dict) or set(counts) != SEVERITIES:
         errors.append("severity_counts must contain exactly " + ", ".join(sorted(SEVERITIES)))
     else:
         for severity in SEVERITIES:
+            value = counts[severity]
+            if not isinstance(value, int) or isinstance(value, bool) or value < 0:
+                errors.append(f"severity count for {severity} must be a non-negative integer")
+                continue
             expected = sum(1 for f in findings if isinstance(f, dict) and f.get("severity") == severity)
-            if counts[severity] != expected:
+            if value != expected:
                 errors.append(f"severity count mismatch for {severity}: expected {expected}")
+
     for index, finding in enumerate(findings):
         if not isinstance(finding, dict):
             errors.append(f"finding {index} must be an object")
@@ -54,12 +80,18 @@ def validate(report: object) -> list[str]:
         if finding.get("severity") not in SEVERITIES:
             errors.append(f"finding {index} has invalid severity")
         path = finding.get("path")
-        if isinstance(path, str) and (Path(path).is_absolute() or PureWindowsPath(path).is_absolute() or ".." in Path(path).parts or ".." in PureWindowsPath(path).parts):
+        if isinstance(path, str) and not confined_relative_path(path):
             errors.append(f"finding {index} path must be relative and confined")
+        if not isinstance(path, str):
+            errors.append(f"finding {index} path must be a relative path string")
         if not isinstance(finding.get("line"), int) or isinstance(finding.get("line"), bool) or finding.get("line", 0) < 1:
             errors.append(f"finding {index} line must be a positive integer")
         if finding.get("status") != "UNCONFIRMED_REVIEW_REQUIRED":
             errors.append(f"finding {index} has unexpected validation status")
+        for field in ("id", "title", "evidence"):
+            if not isinstance(finding.get(field), str) or not finding[field].strip():
+                errors.append(f"finding {index} {field} must be a non-empty string")
+
     if not isinstance(report["limitations"], list) or not all(isinstance(item, str) for item in report["limitations"]):
         errors.append("limitations must be a list of strings")
     return errors
