@@ -50,6 +50,6 @@ when isMainModule:
   doAssert not isValidStateFlags(STATE_FOCUSED)
   doAssert not isValidStateFlags(STATE_ENABLED or STATE_DISABLED)
   doAssert not isValidStateFlags(1'u64 shl 63)
-  doAssert not isValidName("bad\\0name")
-  doAssert not isValidName("\\xC0\\xAF")
+  doAssert not isValidName("bad\0name")
+  doAssert not isValidName("\xC0\xAF")
   doAssert isValidName("café")

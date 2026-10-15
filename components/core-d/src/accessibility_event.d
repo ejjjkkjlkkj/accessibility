@@ -81,8 +81,8 @@ unittest {
     auto badFlags = AccessibilityEvent(1, Role.button, "Save", STATE_ENABLED | STATE_DISABLED);
     assert(!isValid(badFlags));
     assert(!isValidStateFlags(1UL << 63));
-    auto nulName = AccessibilityEvent(1, Role.button, "bad\\0name");
+    auto nulName = AccessibilityEvent(1, Role.button, "bad\0name");
     assert(!isValid(nulName));
-    auto invalidUtf8 = AccessibilityEvent(1, Role.button, "\\xC0\\xAF");
+    auto invalidUtf8 = AccessibilityEvent(1, Role.button, "\xC0\xAF");
     assert(!isValid(invalidUtf8));
 }
