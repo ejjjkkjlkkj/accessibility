@@ -132,6 +132,15 @@ func TestValidateRejectsMalformedDeclaredDomain(t *testing.T) {
 	}
 }
 
+func TestValidateRejectsIPLiteralAsDomain(t *testing.T) {
+	for _, host := range []string{"127.0.0.1", "192.168.1.10"} {
+		row := "a,Example," + host + ",https://" + host + "/,docs,web,candidate,test\n"
+		if err := validate(strings.NewReader(validHeader + row)); err == nil {
+			t.Errorf("expected IP literal to be rejected as a DNS domain: %q", host)
+		}
+	}
+}
+
 func TestValidateAcceptsCaseInsensitiveFullyQualifiedDomain(t *testing.T) {
 	row := "a,Example,Example.ORG.,https://docs.example.org./,docs,web,candidate,test\\n"
 	if err := validate(strings.NewReader(validHeader + row)); err != nil {
