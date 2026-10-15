@@ -1,0 +1,112 @@
+name: Continuous engineering validation
+
+on:
+  schedule:
+    - cron: "43 */6 * * *"
+  workflow_dispatch:
+  push:
+    branches: [main, "automation/no-api-key-hourly-audit"]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: continuous-engineering-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: Validate available language tracks
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Validate JSON manifests
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          files = [p for p in Path(".").rglob("*.json") if not any(x in p.parts for x in (".git", ".venv", "node_modules"))]
+          errors = []
+          for p in files:
+              try:
+                  json.loads(p.read_text(encoding="utf-8"))
+              except Exception as e:
+                  errors.append(f"{p}: {e}")
+          print(f"JSON files checked: {len(files)}")
+          if errors:
+              print("\n".join(errors))
+              raise SystemExit(1)
+          PY
+
+      - name: Python syntax validation
+        shell: bash
+        run: |
+          python - <<'PY'
+          import ast
+          from pathlib import Path
+          files = [p for p in Path(".").rglob("*.py") if ".git" not in p.parts and ".venv" not in p.parts]
+          errors = []
+          for p in files:
+              try:
+                  ast.parse(p.read_text(encoding="utf-8"), filename=str(p))
+              except Exception as e:
+                  errors.append(f"{p}: {e}")
+          print(f"Python files checked: {len(files)}")
+          if errors:
+              print("\n".join(errors))
+              raise SystemExit(1)
+          PY
+
+      - name: Run Python tests when present
+        shell: bash
+        run: |
+          if find . -type f \( -name 'test_*.py' -o -name '*_test.py' \) -not -path './.git/*' | grep -q .; then
+            python -m pip install --disable-pip-version-check pytest
+            python -m pytest -q
+          else
+            echo "PARTIAL: no Python test files detected."
+          fi
+
+      - name: Run Rust workspace tests when present
+        shell: bash
+        run: |
+          if find . -name Cargo.toml -not -path './.git/*' | grep -q .; then
+            cargo test --workspace --all-targets
+          else
+            echo "SKIP: no Cargo.toml detected."
+          fi
+
+      - name: Run Go tests when present
+        shell: bash
+        run: |
+          if find . -name go.mod -not -path './.git/*' | grep -q .; then
+            while IFS= read -r mod; do
+              dir="$(dirname "$mod")"
+              echo "Testing Go module: $dir"
+              (cd "$dir" && go test ./...)
+            done < <(find . -name go.mod -not -path './.git/*')
+          else
+            echo "SKIP: no go.mod detected."
+          fi
+
+      - name: Publish validation summary
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo "## Continuous engineering validation"
+            echo "- Trigger: `${{ github.event_name }}`"
+            echo "- Commit: `${{ github.sha }}`"
+            echo "- This workflow validates repository code; it does not claim autonomous code generation."
+            echo "- QEMU/hosted CI cannot prove physical UEFI boot, hardware discovery, or real audio output."
+          } >> "$GITHUB_STEP_SUMMARY"
