@@ -20,6 +20,7 @@ RULES = [
     ("SEC007", "MEDIUM", re.compile(r"(?i)\b(?:pickle\.loads|marshal\.loads|yaml\.load)\s*\("), "Potential unsafe deserialization; verify input trust and loader configuration"),
     ("SEC008", "LOW", re.compile(r"(?i)\bhashlib\.(?:md5|sha1)\s*\("), "Legacy hash primitive; unsuitable for security-sensitive integrity or authentication"),
     ("SEC009", "MEDIUM", re.compile(r"(?i)\btempfile\.mktemp\s*\("), "Race-prone temporary path creation"),
+    ("SEC010", "MEDIUM", re.compile(r"""(?i)\bexecute\s*\(\s*f['"]"""), "SQL query assembled with an f-string; use parameterized queries"),
 ]
 def iter_files(root, exclude_paths=()):
     """Yield eligible files in stable order without descending into excluded trees."""
