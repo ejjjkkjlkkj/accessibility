@@ -1,6 +1,6 @@
 # Local continuous coding loop
 
-`tools/local_agent_loop.py` is a bounded local Ollama coding-loop prototype shared with the IA repository. It accepts a limited unified diff, rejects protected paths, runs detected Rust manifests and/or Python tests, and creates a local commit only when tests pass. It never pushes, merges, publishes releases, changes firmware, or runs model-generated shell commands.
+`tools/local_agent_loop.py` is a bounded local Ollama coding-loop prototype shared with the IA repository. It accepts a limited unified diff, rejects protected paths, runs detected Rust manifests, Python tests, and native checks for changed supported-language source files; it blocks commits when the required toolchain/build manifest is missing, and creates a local commit only when tests pass. It never pushes, merges, publishes releases, changes firmware, or runs model-generated shell commands.
 
 Run it only in a dedicated, clean feature-branch checkout on the target PC. Requirements: Python 3.11+, Git, Rust/Cargo for Rust tests, and a running local Ollama model. From PowerShell at the repository root:
 
