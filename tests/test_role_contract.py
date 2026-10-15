@@ -70,6 +70,23 @@ class AccessibilityRoleContractTests(unittest.TestCase):
             r"([A-Za-z_]+)_Role\s*=>\s*(\d+)", normalizer=lambda value: value.lower())
         self.assertEqual(found, self.expected)
 
+    def test_semantic_state_flag_contract_is_implemented_across_languages(self):
+        implementations = {
+            "C": ("components/core-c/include/accessibility_event.h", "ACCESSIBILITY_STATE_FOCUSED", "accessibility_state_flags_valid"),
+            "Rust": ("crates/accessibility-core/src/tree.rs", "STATE_FOCUSED", "state_flags_are_valid"),
+            "Go": ("internal/accessibility/role.go", "StateFocused", "func (s StateFlags) Valid()"),
+            "D": ("components/core-d/src/accessibility_event.d", "STATE_FOCUSED", "isValidStateFlags"),
+            "Ada": ("components/core-ada/accessibility_event.ads", "State_Focused", "State_Flags_Valid"),
+            "Nim": ("components/core-nim/src/accessibility_event.nim", "STATE_FOCUSED", "isValidStateFlags"),
+            "Swift": ("components/core-swift/Sources/AccessibilityCore/AccessibilityEvent.swift", "AccessibilityState", "stateFlags"),
+            "Zig": ("components/core-zig/src/accessibility_event.zig", "STATE_FOCUSED", "stateFlagsAreValid"),
+        }
+        for language, (path, state_marker, validator_marker) in implementations.items():
+            text = (ROOT / path).read_text(encoding="utf-8")
+            with self.subTest(language=language):
+                self.assertIn(state_marker, text)
+                self.assertIn(validator_marker, text)
+
     def test_shared_name_limit_is_enforced(self):
         c_header = (ROOT / "components/core-c/include/accessibility_event.h").read_text(encoding="utf-8")
         self.assertIn("ACCESSIBILITY_NAME_CAPACITY 4097u", c_header)

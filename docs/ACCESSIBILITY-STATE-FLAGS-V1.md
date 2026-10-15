@@ -1,8 +1,8 @@
 # Accessibility semantic state flags — prototype v1
 
-**Status:** implemented in the Rust `no_std` semantic core only; cross-language parity, native OS adapters, and physical-hardware behavior are **NOT VALIDATED**.
+**Implementation status:** validators and constants are now present in Rust, C, D, Ada, Go, Nim, Swift, and Zig source prototypes. Cross-language behavior is still **NOT VALIDATED** until native language jobs complete; physical-hardware behavior and native OS accessibility adapters are also **NOT VALIDATED**.
 
-This document records the state semantics currently enforced by `crates/accessibility-core`. It does not claim a complete C ABI, firmware interface, or cross-language state contract.
+This document records the shared semantics under test. It does not claim a complete binary ABI, firmware interface, or native OS accessibility adapter.
 
 ## Bit assignments
 
@@ -13,7 +13,7 @@ This document records the state semantics currently enforced by `crates/accessib
 | 2 | `STATE_ENABLED` | The node is enabled for interaction. |
 | 3 | `STATE_DISABLED` | The node is disabled for interaction. |
 
-Bits 4–63 are reserved in this prototype and are rejected, not silently ignored.
+Language-specific constant naming follows each language's conventions. Bits 4–63 are reserved and rejected, not silently ignored.
 
 ## Validation rules
 
@@ -22,14 +22,14 @@ Bits 4–63 are reserved in this prototype and are rejected, not silently ignore
 - A validated semantic tree may contain at most one focused node.
 - A focus target must be focusable, enabled, and not disabled.
 - Navigation is bounded by the supplied node slice and does not wrap around.
-- Tree validation rejects duplicate IDs, missing parents, multiple roots, cycles, names exceeding 4096 UTF-8 bytes, and invalid state combinations.
+- Rust tree validation rejects duplicate IDs, missing parents, multiple roots, cycles, names exceeding 4096 UTF-8 bytes, and invalid state combinations.
 
 ## Safety and implementation boundary
 
 These flags describe semantic state only. They do not authorize input injection, activation, text entry, network access, firmware changes, or speech output. Callers must validate externally supplied trees before navigation.
 
-The current Rust implementation uses no heap allocation in its semantic-tree validation and navigation routines, and the crate forbids `unsafe` code. This is source-level scope, not proof of timing behavior on every target. The remaining parent-chain verification cost is not yet certified for arbitrarily large trees.
+The Rust implementation uses no heap allocation in its semantic-tree validation and navigation routines, and the crate forbids `unsafe` code. This is source-level scope, not proof of timing behavior on every target. The remaining parent-chain verification cost is not yet certified for arbitrarily large trees.
 
 ## Required next validation
 
-Before treating these bits as a cross-language wire contract, each C, D, Ada, Go, Nim, Swift, and Zig binding must implement identical constants and invalid-state tests; the shared contract validator must check parity. Native accessibility adapters and physical-device behavior remain separate release gates.
+Run unit tests and native builds for every language binding on the supported host platforms. The role code remains separate from a complete binary ABI: struct layout, UTF-8 handling, ownership, event sequencing, and platform handles need explicit contracts. Native accessibility adapters and physical-device behavior remain separate release gates.
