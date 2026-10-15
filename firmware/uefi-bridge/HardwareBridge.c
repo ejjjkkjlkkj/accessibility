@@ -146,5 +146,5 @@ UefiMain (
 
   Print (L"Summary: %u PCI functions reported; %u read errors.\r\n", Found, ReadErrors);
   Print (L"No PCI writes, MMIO mappings, DMA, firmware-variable writes, or reboot requested.\r\n");
-  return (ReadErrors == 0) ? EFI_SUCCESS : EFI_WARN_UNKNOWN_GLYPH;
+  return (ReadErrors == 0) ? EFI_SUCCESS : EFI_DEVICE_ERROR;
 }
