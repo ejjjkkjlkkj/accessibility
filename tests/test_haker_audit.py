@@ -210,4 +210,93 @@ class HakerAuditTests(unittest.TestCase):
             self.assertEqual(result.stdout.strip(), "None")
             self.assertNotIn("Traceback", result.stderr)
 
+
+    def test_refuses_to_overwrite_report_with_duplicate_json_keys(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            (root / "clean.py").write_text("value = 42\\n", encoding="utf-8")
+            report = root / "report.json"
+            original = (
+                '{"schema_version":"0.9","schema_version":"1.0",'
+                '"audit_type":"OFFLINE_HEURISTIC_STATIC_REVIEW"}'
+            )
+            report.write_text(original, encoding="utf-8")
+            result = subprocess.run(
+                [sys.executable, str(SCANNER), "--root", str(root), "--json-out", str(report)],
+                text=True, capture_output=True, check=False, timeout=10,
+            )
+            self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
+            self.assertIn("refusing to overwrite", result.stderr)
+            self.assertEqual(report.read_text(encoding="utf-8"), original)
+            self.assertNotIn("Traceback", result.stderr)
+
+    def test_refuses_to_overwrite_report_with_nonstandard_json_constant(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            (root / "clean.py").write_text("value = 42\\n", encoding="utf-8")
+            report = root / "report.json"
+            original = (
+                '{"schema_version":"1.0",'
+                '"audit_type":"OFFLINE_HEURISTIC_STATIC_REVIEW","extra":NaN}'
+            )
+            report.write_text(original, encoding="utf-8")
+            result = subprocess.run(
+                [sys.executable, str(SCANNER), "--root", str(root), "--json-out", str(report)],
+                text=True, capture_output=True, check=False, timeout=10,
+            )
+            self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
+            self.assertIn("refusing to overwrite", result.stderr)
+            self.assertEqual(report.read_text(encoding="utf-8"), original)
+            self.assertNotIn("Traceback", result.stderr)
+
+    def test_refuses_to_overwrite_deeply_nested_report_without_traceback(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            (root / "clean.py").write_text("value = 42\\n", encoding="utf-8")
+            report = root / "report.json"
+            original = (
+                b'{"schema_version":"1.0",'
+                b'"audit_type":"OFFLINE_HEURISTIC_STATIC_REVIEW","nested":'
+                + b"[" * 1500 + b"0" + b"]" * 1500 + b"}"
+            )
+            report.write_bytes(original)
+            result = subprocess.run(
+                [sys.executable, str(SCANNER), "--root", str(root), "--json-out", str(report)],
+                text=True, capture_output=True, check=False, timeout=10,
+            )
+            self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
+            self.assertIn("refusing to overwrite", result.stderr)
+            self.assertEqual(report.read_bytes(), original)
+            self.assertNotIn("Traceback", result.stderr)
+
+    def test_bounded_reader_refuses_symlink_directly(self):
+        with tempfile.TemporaryDirectory() as temp:
+            base = Path(temp)
+            target = base / "target.py"
+            target.write_text("value = 42\\n", encoding="utf-8")
+            link = base / "linked.py"
+            try:
+                link.symlink_to(target)
+            except (OSError, NotImplementedError):
+                self.skipTest("file symlinks unavailable")
+            probe = (
+                "import sys\\n"
+                "from pathlib import Path\\n"
+                f"sys.path.insert(0, {str(SCANNER.parent)!r})\\n"
+                "import haker_audit\\n"
+                "try:\\n"
+                "    value = haker_audit.read_bounded_text(Path(sys.argv[1]))\\n"
+                "except OSError:\\n"
+                "    print('REFUSED')\\n"
+                "else:\\n"
+                "    print('READ' if value is not None else 'REFUSED')\\n"
+            )
+            result = subprocess.run(
+                [sys.executable, "-c", probe, str(link)],
+                text=True, capture_output=True, check=False, timeout=5,
+            )
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            self.assertEqual(result.stdout.strip(), "REFUSED")
+            self.assertNotIn("Traceback", result.stderr)
+
 if __name__ == "__main__": unittest.main()
