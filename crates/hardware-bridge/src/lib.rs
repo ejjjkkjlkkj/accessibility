@@ -8,6 +8,7 @@
 
 pub mod acpi;
 pub mod event;
+pub mod policy;
 pub mod provenance;
 pub mod uefi;
 
