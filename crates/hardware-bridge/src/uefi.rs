@@ -141,6 +141,10 @@ mod tests {
                 out[9] = 0x00;
                 out[10] = 0x06;
                 out[11] = 0x06;
+                out[14] = 0x80; // Multifunction device: scan functions 1..7.
+            } else if address.bus == 0 && address.device == 1 && address.function == 3 && offset == 0 {
+                out[0..2].copy_from_slice(&0x1234u16.to_le_bytes());
+                out[2..4].copy_from_slice(&0x5678u16.to_le_bytes());
             } else if offset == 0 {
                 out[0..2].copy_from_slice(&PCI_VENDOR_ABSENT.to_le_bytes());
             }
@@ -162,6 +166,22 @@ mod tests {
     fn absent_vendor_is_not_a_device() {
         let mut reader = MockReader;
         assert_eq!(PciFunction::read(&mut reader, PciAddress::new(0, 0, 2, 0)), Ok(None));
+    }
+
+    #[test]
+    fn bounded_enumerator_follows_multifunction_header() {
+        let mut reader = MockReader;
+        let mut functions = 0u8;
+        enumerate(&mut reader, 0, 0, 0, |function| {
+            functions |= 1u8 << function.address.function;
+        }).unwrap();
+        assert_eq!(functions, (1u8 << 0) | (1u8 << 3));
+    }
+
+    #[test]
+    fn rejects_reversed_bus_range_before_scanning() {
+        let mut reader = MockReader;
+        assert_eq!(enumerate(&mut reader, 0, 4, 3, |_| {}), Err(PciReadError::InvalidRange));
     }
 
     #[test]
