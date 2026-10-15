@@ -18,6 +18,11 @@ Dépôt de référence pour cartographier et développer les composants d'access
 - Aucune action firmware/NVRAM, aucun flash BIOS et aucun redémarrage automatique ne sont déclenchés par la CI.
 - Les workflows sont limités aux validations statiques et aux tests reproductibles en environnement hébergé; les preuves matérielles restent séparées.
 
+## AERL — journal d'audit vérifiable
+
+Le prototype local AERL ajoute des événements structurés avec séquence et chaîne SHA-256, validation stricte, limites d'entrée et vérification d'un checkpoint externe. Il complète syslog pour la conservation de preuves; il ne remplace pas les journaux système. Voir [la conception et les limites AERL](docs/AERL.md).
+
+
 ## Catalogue et feuille de route
 
 Les documents canoniques maintenus dans docs/ sont la cartographie des langages et les portes de release Screen Reader / UEFI / OS. Les IDs de langage doivent rester synchronisés avec ejjjkkjlkkj/ia; les statuts d'accessibilité et d'IA sont indépendants.

@@ -8,6 +8,8 @@ on:
       - "scripts/**"
       - "tests/**"
       - "docs/SECURITY-RED-TEAM.md"
+      - "docs/AERL.md"
+      - "README.md"
       - ".github/workflows/haker-security-matrix.yml"
   pull_request:
     paths:
@@ -51,6 +53,8 @@ jobs:
         run: python -m unittest discover -s tests -p "test_security_contract.py" -v
       - name: Run HAKER scanner tests
         run: python -m unittest discover -s tests -p "test_haker_audit.py" -v
+      - name: Run AERL evidence log tests
+        run: python -m unittest discover -s tests -p "test_aerl.py" -v
       - name: Validate HAKER report schema and evidence
         run: python -m unittest discover -s tests -p "test_validate_haker_report.py" -v
       - name: Run bounded offline audit
@@ -58,7 +62,7 @@ jobs:
       - name: Validate generated HAKER report
         run: python scripts/validate_haker_report.py haker-audit-report.json
       - name: Compile Python security tools
-        run: python -m py_compile scripts/validate_security_contract.py scripts/haker_audit.py scripts/validate_haker_report.py
+        run: python -m py_compile scripts/validate_security_contract.py scripts/haker_audit.py scripts/validate_haker_report.py scripts/aerl.py tests/test_aerl.py
       - name: Upload audit report
         if: always()
         uses: actions/upload-artifact@v4
