@@ -328,4 +328,52 @@ class HakerAuditTests(unittest.TestCase):
             self.assertEqual(result.stdout.strip(), "REFUSED")
             self.assertNotIn("Traceback", result.stderr)
 
+    def test_secret_evidence_is_redacted_from_json_report(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            secret = "never-print-this-secret-value-42"
+            (root / "sample.py").write_text(
+                'password = "' + secret + '"\\n', encoding="utf-8"
+            )
+            report = root / "report.json"
+            result = subprocess.run(
+                [sys.executable, str(SCANNER), "--root", str(root), "--json-out", str(report)],
+                text=True, capture_output=True, check=False, timeout=10,
+            )
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            rendered = report.read_text(encoding="utf-8")
+            self.assertIn("[REDACTED]", rendered)
+            self.assertNotIn(secret, rendered)
+
+    def test_private_key_marker_is_redacted_from_json_report(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            marker = "-----BEGIN RSA " + "PRIVATE KEY-----"
+            (root / "sample.py").write_text("key = " + repr(marker) + "\\n", encoding="utf-8")
+            report = root / "report.json"
+            result = subprocess.run(
+                [sys.executable, str(SCANNER), "--root", str(root), "--json-out", str(report)],
+                text=True, capture_output=True, check=False, timeout=10,
+            )
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            rendered = report.read_text(encoding="utf-8")
+            self.assertIn("[REDACTED: private-key marker]", rendered)
+            self.assertNotIn(marker, rendered)
+
+    def test_flags_unsafe_deserialization_and_legacy_hashes(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            (root / "sample.py").write_text(
+                "item = pickle.loads(blob)\\n"
+                "digest = hashlib.md5(payload)\\n"
+                "path = tempfile.mktemp()\\n",
+                encoding="utf-8",
+            )
+            result = self.run_scanner(root)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            self.assertIn("SEC007", result.stdout)
+            self.assertIn("SEC008", result.stdout)
+            self.assertIn("SEC009", result.stdout)
+
+
 if __name__ == "__main__": unittest.main()
