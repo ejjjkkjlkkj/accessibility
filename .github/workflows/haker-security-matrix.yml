@@ -45,32 +45,37 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python }}
+      - name: Initialize unified AERL ledger
+        run: python scripts/aerl_tool.py init --file .aerl-ci.events
       - name: Validate agent contract JSON
         run: python -m json.tool agents/manifest.json
       - name: Validate security contract
         run: python scripts/validate_security_contract.py
       - name: Run security contract tests
-        run: python -m unittest discover -s tests -p "test_security_contract.py" -v
+        run: python scripts/aerl_run.py --file .aerl-ci.events --kind test.security_contract -- python -m unittest discover -s tests -p "test_security_contract.py" -v
       - name: Run HAKER scanner tests
-        run: python -m unittest discover -s tests -p "test_haker_audit.py" -v
+        run: python scripts/aerl_run.py --file .aerl-ci.events --kind test.haker_audit -- python -m unittest discover -s tests -p "test_haker_audit.py" -v
       - name: Run AERL evidence log tests
-        run: python -m unittest discover -s tests -p "test_aerl.py" -v
+        run: python scripts/aerl_run.py --file .aerl-ci.events --kind test.aerl_core -- python -m unittest discover -s tests -p "test_aerl.py" -v
       - name: Run AERL checkpoint tests
-        run: python -m unittest discover -s tests -p "test_aerl_checkpoint.py" -v
+        run: python scripts/aerl_run.py --file .aerl-ci.events --kind test.aerl_checkpoint -- python -m unittest discover -s tests -p "test_aerl_checkpoint.py" -v
       - name: Run unified AERL tool tests
-        run: python -m unittest discover -s tests -p "test_aerl_tool.py" -v
+        run: python scripts/aerl_run.py --file .aerl-ci.events --kind test.aerl_tool -- python -m unittest discover -s tests -p "test_aerl_tool.py" -v
       - name: Validate HAKER report schema and evidence
-        run: python -m unittest discover -s tests -p "test_validate_haker_report.py" -v
+        run: python scripts/aerl_run.py --file .aerl-ci.events --kind test.haker_report_validator -- python -m unittest discover -s tests -p "test_validate_haker_report.py" -v
       - name: Run bounded offline audit
-        run: python scripts/haker_audit.py --json-out haker-audit-report.json
+        run: python scripts/aerl_run.py --file .aerl-ci.events --kind security.haker_audit -- python scripts/haker_audit.py --json-out haker-audit-report.json
       - name: Validate generated HAKER report
-        run: python scripts/validate_haker_report.py haker-audit-report.json
+        run: python scripts/aerl_run.py --file .aerl-ci.events --kind security.haker_report_validation -- python scripts/validate_haker_report.py haker-audit-report.json
       - name: Collect bounded reports into unified AERL ledger
-        run: |
-          python scripts/aerl_tool.py init --file .aerl-ci.events
-          python scripts/aerl_tool.py collect --root . --file .aerl-ci.events
-          python scripts/aerl_tool.py verify --file .aerl-ci.events
-          python scripts/aerl_tool.py summary --file .aerl-ci.events --out aerl-summary.json
+        if: always()
+        run: python scripts/aerl_tool.py collect --root . --file .aerl-ci.events
+      - name: Verify final AERL evidence ledger
+        if: always()
+        run: python scripts/aerl_tool.py verify --file .aerl-ci.events
+      - name: Write final AERL summary
+        if: always()
+        run: python scripts/aerl_tool.py summary --file .aerl-ci.events --out aerl-summary.json
       - name: Compile Python security tools
         run: python -m py_compile scripts/validate_security_contract.py scripts/haker_audit.py scripts/validate_haker_report.py scripts/aerl.py scripts/aerl_checkpoint.py scripts/aerl_tool.py tests/test_aerl.py tests/test_aerl_checkpoint.py tests/test_aerl_tool.py
       - name: Upload audit report
