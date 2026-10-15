@@ -4,6 +4,7 @@ import (
 	"encoding/csv"
 	"fmt"
 	"io"
+	"net/url"
 	"os"
 	"strings"
 )
@@ -44,12 +45,11 @@ func validate(r io.Reader) error {
 		if err != nil {
 			return fmt.Errorf("CSV line %d: %w", line, err)
 		}
+		if len(row) != len(header) {
+			return fmt.Errorf("CSV line %d: got %d fields, want %d", line, len(row), len(header))
+		}
 		value := func(key string) string {
-			i := index[key]
-			if i >= len(row) {
-				return ""
-			}
-			return strings.TrimSpace(row[i])
+			return strings.TrimSpace(row[index[key]])
 		}
 		id := value("id")
 		if id == "" {
@@ -64,9 +64,9 @@ func validate(r io.Reader) error {
 				return fmt.Errorf("CSV line %d: empty %s", line, key)
 			}
 		}
-		url := value("url")
-		if !strings.HasPrefix(url, "https://") && !strings.HasPrefix(url, "http://") {
-			return fmt.Errorf("CSV line %d: URL must use HTTP or HTTPS", line)
+		parsedURL, err := url.Parse(value("url"))
+		if err != nil || (parsedURL.Scheme != "https" && parsedURL.Scheme != "http") || parsedURL.Hostname() == "" || parsedURL.User != nil {
+			return fmt.Errorf("CSV line %d: URL must be absolute HTTP(S), include a hostname, and contain no userinfo", line)
 		}
 	}
 	if len(seen) == 0 {
