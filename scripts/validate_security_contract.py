@@ -4,11 +4,14 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
+import stat
 import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 MANIFEST = ROOT / "agents" / "manifest.json"
+MAX_MANIFEST_BYTES = 1024 * 1024
 REQUIRED_TEAMS = {"DARK", "WHITE", "GREY", "QA", "INDEPENDENT_AUDIT", "CONTROL"}
 REQUIRED_AGENT_IDS = {
     "DARK-LEAD", "DARK-UEFI", "DARK-BINARY", "DARK-FUZZ", "DARK-MEMORY",
@@ -63,8 +66,19 @@ def main() -> int:
     args = parser.parse_args()
 
     try:
+        if args.manifest.is_symlink():
+            fail("manifest must not be a symbolic link")
+        with args.manifest.open("rb") as stream:
+            metadata = os.fstat(stream.fileno())
+            if not stat.S_ISREG(metadata.st_mode):
+                fail("manifest must be a regular file")
+            if metadata.st_size > MAX_MANIFEST_BYTES:
+                fail(f"manifest exceeds {MAX_MANIFEST_BYTES} bytes")
+            raw = stream.read(MAX_MANIFEST_BYTES + 1)
+        if len(raw) > MAX_MANIFEST_BYTES:
+            fail(f"manifest exceeds {MAX_MANIFEST_BYTES} bytes")
         data = json.loads(
-            args.manifest.read_text(encoding="utf-8"),
+            raw.decode("utf-8"),
             object_pairs_hook=unique_object,
             parse_constant=reject_json_constant,
         )
@@ -74,7 +88,7 @@ def main() -> int:
         fail(f"manifest is not valid UTF-8: {exc}")
     except json.JSONDecodeError as exc:
         fail(f"invalid JSON at line {exc.lineno}, column {exc.colno}: {exc.msg}")
-    except ValueError as exc:
+    except (ValueError, RecursionError) as exc:
         fail(f"invalid JSON: {exc}")
 
     if not isinstance(data, dict):
