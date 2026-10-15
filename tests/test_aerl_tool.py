@@ -93,5 +93,40 @@ class AerlToolTests(unittest.TestCase):
         self.assertEqual(len(records), 1)
 
 
+    def test_haker_heuristic_report_is_never_promoted_to_pass_or_copy_evidence(self):
+        report = self.root / "haker-audit-report.json"
+        report.write_text(json.dumps({
+            "schema_version": "1.0",
+            "audit_type": "OFFLINE_HEURISTIC_STATIC_REVIEW",
+            "files_scanned": 23,
+            "unreadable_files": [],
+            "finding_count": 1,
+            "severity_counts": {"CRITICAL": 0, "HIGH": 1, "MEDIUM": 0, "LOW": 0, "INFO": 0},
+            "findings": [{"evidence": "SENSITIVE-RAW-LINE-MUST-NOT-BE-COPIED"}],
+        }), encoding="utf-8")
+        result = aerl_tool.collect(self.root, self.ledger)
+        self.assertEqual(result["events_appended"], 1)
+        records, _ = aerl_tool.load_records(self.ledger)
+        collected = records[-1]
+        self.assertEqual(collected["kind"], "report.haker.audit")
+        self.assertEqual(collected["status"], "UNPROVEN")
+        self.assertEqual(collected["payload"]["counts"]["finding_count"], 1)
+        self.assertEqual(collected["payload"]["counts"]["severity_high"], 1)
+        self.assertNotIn("SENSITIVE-RAW-LINE-MUST-NOT-BE-COPIED", json.dumps(collected))
+
+    def test_collect_refuses_symlinked_report(self):
+        target = self.root / "real.json"
+        target.write_text('{"status":"PASS"}', encoding="utf-8")
+        link = self.root / "junit-report.json"
+        try:
+            link.symlink_to(target)
+        except (OSError, NotImplementedError):
+            self.skipTest("file symlinks unavailable")
+        result = aerl_tool.collect(self.root, self.ledger)
+        self.assertEqual(result["status"], "PARTIAL")
+        self.assertEqual(result["sources_refused"], 1)
+        self.assertEqual(len(aerl_tool.load_records(self.ledger)[0]), 3)
+
+
 if __name__ == "__main__":
     unittest.main()
