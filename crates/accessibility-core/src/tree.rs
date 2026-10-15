@@ -113,7 +113,6 @@ pub fn previous_focusable(nodes: &[AccessibleNode<'_>], before_id: Option<u64>) 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::vec::Vec;
 
     const TARGET: u64 = STATE_FOCUSABLE | STATE_ENABLED;
 
@@ -165,10 +164,14 @@ mod tests {
 
     #[test]
     fn rejects_tree_above_node_limit() {
-        let mut nodes = Vec::with_capacity(MAX_ACCESSIBLE_TREE_NODES + 1);
-        nodes.push(AccessibleNode::new(0, None, Role::Window, 0, "root"));
-        for id in 1..=MAX_ACCESSIBLE_TREE_NODES as u64 {
-            nodes.push(AccessibleNode::new(id, Some(0), Role::Group, 0, ""));
+        let mut nodes = [AccessibleNode::new(0, None, Role::Window, 0, "root");
+            MAX_ACCESSIBLE_TREE_NODES + 1];
+        for (index, node) in nodes.iter_mut().enumerate() {
+            *node = if index == 0 {
+                AccessibleNode::new(0, None, Role::Window, 0, "root")
+            } else {
+                AccessibleNode::new(index as u64, Some(0), Role::Group, 0, "")
+            };
         }
         assert_eq!(nodes.len(), MAX_ACCESSIBLE_TREE_NODES + 1);
         assert!(!validate_tree(&nodes));
@@ -176,10 +179,14 @@ mod tests {
 
     #[test]
     fn rejects_tree_above_depth_limit() {
-        let mut nodes = Vec::with_capacity(MAX_ACCESSIBLE_TREE_DEPTH + 2);
-        nodes.push(AccessibleNode::new(0, None, Role::Window, 0, "root"));
-        for id in 1..=(MAX_ACCESSIBLE_TREE_DEPTH as u64 + 1) {
-            nodes.push(AccessibleNode::new(id, Some(id - 1), Role::Group, 0, ""));
+        let mut nodes = [AccessibleNode::new(0, None, Role::Window, 0, "root");
+            MAX_ACCESSIBLE_TREE_DEPTH + 2];
+        for (index, node) in nodes.iter_mut().enumerate() {
+            *node = if index == 0 {
+                AccessibleNode::new(0, None, Role::Window, 0, "root")
+            } else {
+                AccessibleNode::new(index as u64, Some(index as u64 - 1), Role::Group, 0, "")
+            };
         }
         assert!(!validate_tree(&nodes));
     }
