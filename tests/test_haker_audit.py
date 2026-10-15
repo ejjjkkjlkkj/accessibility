@@ -249,7 +249,7 @@ class HakerAuditTests(unittest.TestCase):
             self.assertEqual(report.read_text(encoding="utf-8"), original)
             self.assertNotIn("Traceback", result.stderr)
 
-    def test_refuses_to_overwrite_deeply_nested_report_without_traceback(self):
+    def test_refuses_to_overwrite_report_with_unknown_deeply_nested_field(self):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
             (root / "clean.py").write_text("value = 42\n", encoding="utf-8")
