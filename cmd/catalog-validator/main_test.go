@@ -101,6 +101,22 @@ func TestValidateRejectsDuplicateHeadersAfterTrimming(t *testing.T) {
 	}
 }
 
+func TestValidateRejectsOutOfRangeURLPorts(t *testing.T) {
+	for _, port := range []string{"0", "65536"} {
+		row := "a,Example,example.org,https://example.org:" + port + "/,docs,web,candidate,test\\n"
+		if err := validate(strings.NewReader(validHeader + row)); err == nil {
+			t.Errorf("expected invalid port %q to fail", port)
+		}
+	}
+}
+
+func TestValidateAcceptsValidURLPort(t *testing.T) {
+	row := "a,Example,example.org,https://example.org:443/,docs,web,candidate,test\\n"
+	if err := validate(strings.NewReader(validHeader + row)); err != nil {
+		t.Fatalf("expected valid HTTPS port to pass, got %v", err)
+	}
+}
+
 func TestValidateRejectsURLDomainMismatch(t *testing.T) {
 	for _, test := range []struct {
 		domain string
