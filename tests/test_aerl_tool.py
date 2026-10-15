@@ -137,5 +137,22 @@ class AerlToolTests(unittest.TestCase):
         self.assertIn("invalid JUnit XML report", result["refusals"][0]["reason"])
 
 
+    def test_search_filters_ci_correlation_metadata(self):
+        aerl.append_event(self.ledger, "CI", "test.completed", "PASS", {
+            "ci": {"commit_sha": "abc123", "run_id": "456", "job": "linux-py313"}
+        })
+        records, head = aerl_tool.load_records(self.ledger)
+        args = aerl_tool.parser().parse_args([
+            "search", "--file", str(self.ledger), "--commit-sha", "abc123",
+            "--run-id", "456", "--job", "linux-py313",
+        ])
+        selected = [r for r in records if
+                    r["payload"].get("ci", {}).get("commit_sha") == args.commit_sha and
+                    r["payload"].get("ci", {}).get("run_id") == args.run_id and
+                    r["payload"].get("ci", {}).get("job") == args.job]
+        self.assertEqual(len(selected), 1)
+        self.assertEqual(selected[0]["hash"], records[-1]["hash"])
+
+
 if __name__ == "__main__":
     unittest.main()
