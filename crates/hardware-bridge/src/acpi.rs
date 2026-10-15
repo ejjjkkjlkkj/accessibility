@@ -202,7 +202,7 @@ mod tests {
         assert_eq!(a.segment_group, 0);
         assert_eq!(a.ecam_end_exclusive(), Ok(0xE400_0000));
         assert_eq!(a.ecam_address(0, 0, 0, 0), Ok(0xE000_0000));
-        assert_eq!(a.ecam_address(1, 2, 3, 0x10), Ok(0xE001_3010));
+        assert_eq!(a.ecam_address(1, 2, 3, 0x10), Ok(0xE011_3010));
         assert_eq!(a.ecam_address(0x40, 0, 0, 0), Err(AcpiError::InvalidPciRange));
     }
 
