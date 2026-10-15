@@ -29,7 +29,12 @@ Les valeurs de statut possibles sont INFO, PASS, FAIL, PARTIAL, BLOCKED, NOT_VAL
     python scripts/aerl.py append --file $ledger --actor QA --kind ci.haker.completed --status PASS --payload '{"run":"local-001","tests":12}'
     python scripts/aerl.py verify --file $ledger
 
-La commande affiche la tête SHA-256. Conserver cette tête et le numéro de séquence dans un domaine de confiance distinct (par exemple un artefact de release signé, un stockage WORM ou un contrôleur de confiance indépendant). Vérifier ensuite avec :
+La commande affiche la tête SHA-256. Pour créer un checkpoint JSON portable sans écraser un checkpoint existant :
+
+    python scripts/aerl_checkpoint.py create --ledger $ledger --out checkpoint.json
+    python scripts/aerl_checkpoint.py verify --ledger $ledger --checkpoint checkpoint.json
+
+Le checkpoint contient le schéma, le numéro de séquence et le hash de tête. Conserver ce fichier dans un domaine de confiance distinct (par exemple un artefact de release signé, un stockage WORM ou un contrôleur de confiance indépendant). Si le checkpoint est stocké à côté du journal et modifiable par le même acteur, il n’apporte pas de protection indépendante contre la réécriture simultanée des deux fichiers. Vérifier manuellement reste possible avec :
 
     python scripts/aerl.py verify --file $ledger --expected-head HASH_DE_REFERENCE --expected-sequence 1
 
@@ -47,6 +52,8 @@ Sans un checkpoint gardé séparément, une personne qui peut réécrire l'inté
 ## Validation reproductible
 
     python -m unittest discover -s tests -p "test_aerl.py" -v
+    python -m unittest discover -s tests -p "test_aerl_checkpoint.py" -v
+    python -m py_compile scripts/aerl.py scripts/aerl_checkpoint.py tests/test_aerl.py tests/test_aerl_checkpoint.py
     python -m py_compile scripts/aerl.py tests/test_aerl.py
 
 AERL n'accède pas au réseau et les tests n'attaquent que des fichiers temporaires locaux.
