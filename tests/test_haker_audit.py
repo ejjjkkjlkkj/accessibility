@@ -168,4 +168,25 @@ class HakerAuditTests(unittest.TestCase):
             self.assertIn("SEC002", result.stdout)
             self.assertIn("sample.py:1", result.stdout)
 
+
+    def test_refuses_to_overwrite_oversized_existing_report(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            (root / "clean.py").write_text("value = 42\\n", encoding="utf-8")
+            report = root / "report.json"
+            prefix = (
+                b'{"schema_version":"1.0",'
+                b'"audit_type":"OFFLINE_HEURISTIC_STATIC_REVIEW"}'
+            )
+            report.write_bytes(prefix + b" " * (8 * 1024 * 1024 + 1 - len(prefix)))
+            original_size = report.stat().st_size
+
+            result = subprocess.run(
+                [sys.executable, str(SCANNER), "--root", str(root), "--json-out", str(report)],
+                text=True, capture_output=True, check=False, timeout=10,
+            )
+            self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
+            self.assertIn("refusing to overwrite", result.stderr)
+            self.assertEqual(report.stat().st_size, original_size)
+
 if __name__ == "__main__": unittest.main()
