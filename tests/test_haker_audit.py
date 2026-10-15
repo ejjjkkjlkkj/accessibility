@@ -160,7 +160,7 @@ class HakerAuditTests(unittest.TestCase):
             root = Path(temp)
             candidate = root / "sample.py"
             candidate.write_text(
-                'password = "supersecretpasswordvalue" # SECURITY_SCANNER_TEST_FIXTURE\\n',
+                'password = "supersecretpasswordvalue" # SECURITY_SCANNER_TEST_FIXTURE\n',
                 encoding="utf-8",
             )
             result = self.run_scanner(root)
