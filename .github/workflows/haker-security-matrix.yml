@@ -23,6 +23,7 @@ on:
 
 permissions:
   contents: read
+  actions: read
 
 concurrency:
   group: haker-security-${{ github.ref }}
@@ -89,3 +90,52 @@ jobs:
             .aerl-ci.events
           if-no-files-found: ignore
           retention-days: 14
+
+  aggregate-evidence:
+    name: Aggregate verified matrix evidence
+    if: always()
+    needs: contract-and-tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Download per-matrix evidence
+        uses: actions/download-artifact@v4
+        with:
+          pattern: haker-audit-*
+          path: artifacts
+          merge-multiple: false
+      - name: Initialize master evidence ledger
+        run: python scripts/aerl_tool.py init --file .aerl-run.events
+      - name: Import each verified matrix ledger
+        shell: bash
+        run: |
+          set -euo pipefail
+          while IFS= read -r -d '' ledger; do
+            label="${ledger#artifacts/}"
+            python scripts/aerl_tool.py import-ledger --source "$ledger" --file .aerl-run.events --source-label "$label"
+          done < <(find artifacts -type f -name .aerl-ci.events -print0)
+      - name: Collect bounded reports from matrix artifacts
+        if: always()
+        run: python scripts/aerl_tool.py collect --root artifacts --file .aerl-run.events
+      - name: Verify master evidence ledger
+        if: always()
+        run: python scripts/aerl_tool.py verify --file .aerl-run.events
+      - name: Write master evidence summary
+        if: always()
+        run: python scripts/aerl_tool.py summary --file .aerl-run.events --out aerl-run-summary.json
+      - name: Upload master evidence ledger
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aerl-master-evidence
+          path: |
+            .aerl-run.events
+            aerl-run-summary.json
+          if-no-files-found: warn
+          retention-days: 30
