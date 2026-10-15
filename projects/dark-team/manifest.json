@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "project": "accessibility",
+  "team": "dark-team",
+  "status": "PARTIAL",
+  "mission": "Authorized threat research, adversarial testing, defensive engineering, and accessibility security across hardware-to-network layers.",
+  "evidence_statuses": ["PASS", "FAIL", "PARTIAL", "BLOCKED", "NOT_VALIDATED"],
+  "evidence_classes": ["STATIC_ANALYSIS", "UNIT_TEST", "HOSTED_CI", "LOCAL_RUNNER", "SIMULATION", "PHYSICAL_HARDWARE"],
+  "operating_constraints": {
+    "authorized_targets_only": true,
+    "default_hardware_access": "READ_ONLY",
+    "firmware_write_allowed": false,
+    "nvram_write_allowed": false,
+    "automatic_reboot_allowed": false,
+    "untrusted_pull_requests_on_self_hosted_runner": false,
+    "simulator_counts_as_physical_proof": false,
+    "ai_may_issue_privileged_actions_directly": false,
+    "secrets_in_logs_allowed": false
+  },
+  "workstreams": [
+    {"id":"DT-01","name":"Threat model and asset inventory","status":"NOT_VALIDATED"},
+    {"id":"DT-02","name":"Authorized Red Team and safe adversarial tests","status":"NOT_VALIDATED"},
+    {"id":"DT-03","name":"Blue Team detection and response","status":"NOT_VALIDATED"},
+    {"id":"DT-04","name":"Hardware, buses, DMA/IOMMU and silicon boundary","status":"PARTIAL"},
+    {"id":"DT-05","name":"UEFI, firmware, ACPI and boot integrity","status":"NOT_VALIDATED"},
+    {"id":"DT-06","name":"Core/runtime memory safety","status":"NOT_VALIDATED"},
+    {"id":"DT-07","name":"Screen-reader and accessibility attack surface","status":"NOT_VALIDATED"},
+    {"id":"DT-08","name":"Network stack and overlay networks","status":"NOT_VALIDATED"},
+    {"id":"DT-09","name":"Surface/Deep/Dark Web research and provenance","status":"NOT_VALIDATED"},
+    {"id":"DT-10","name":"Supply chain, SBOM and artifact provenance","status":"NOT_VALIDATED"},
+    {"id":"DT-11","name":"Digital forensics and cyber threat intelligence","status":"NOT_VALIDATED"},
+    {"id":"DT-12","name":"Cross-platform labs and hardware evidence","status":"PARTIAL"},
+    {"id":"DT-13","name":"Accessibility of security tools","status":"NOT_VALIDATED"},
+    {"id":"DT-14","name":"Governance, CI permissions and release gates","status":"PARTIAL"}
+  ],
+  "layer_coverage": [
+    "physical-hardware-silicon-buses",
+    "boot-rom-uefi-firmware-acpi-secure-boot",
+    "memory-interrupts-dma-iommu-device-access",
+    "kernel-drivers-services-runtime",
+    "accessibility-apis-focus-keyboard-speech-braille",
+    "applications-browser-document-engine-user-data",
+    "network-dns-pki-public-private-restricted-overlay",
+    "source-control-ci-dependencies-signing-artifacts",
+    "research-forensics-data-retention-provenance"
+  ],
+  "explicit_non_claims": [
+    "A listed workstream is not proof of implementation.",
+    "A successful build is not proof of runtime behavior.",
+    "OS-reported device inventory is not physical verification.",
+    "Simulation is not physical-hardware proof.",
+    "Research findings do not imply that discovered third-party tools are integrated."
+  ]
+}
