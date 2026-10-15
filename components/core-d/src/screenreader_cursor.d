@@ -17,7 +17,14 @@ struct ScreenReaderCursor {
 }
 unittest {
  auto c = ScreenReaderCursor(2); uint i;
- assert(c.first(i) && i == 0); assert(c.next(i) && i == 1);
- assert(!c.next(i)); assert(c.previous(i) && i == 0); assert(!c.previous(i));
+ assert(!c.next(i)); assert(!c.hasItem && c.current == 0);
+ assert(!c.previous(i)); assert(!c.hasItem && c.current == 0);
+ assert(c.first(i) && i == 0);
+ assert(c.first(i) && i == 0);
+ assert(c.next(i) && i == 1);
+ assert(!c.next(i)); assert(c.hasItem && c.current == 1);
+ assert(c.previous(i) && i == 0);
+ assert(!c.previous(i)); assert(c.hasItem && c.current == 0);
  auto empty = ScreenReaderCursor(0); assert(!empty.first(i));
+ assert(!empty.hasItem);
 }
