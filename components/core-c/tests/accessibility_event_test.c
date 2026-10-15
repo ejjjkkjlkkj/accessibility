@@ -15,6 +15,13 @@ int main(void) {
     assert(strcmp(event.name, "Continue") == 0);
     assert(event.state_flags == 0u);
     assert(accessibility_state_flags_valid(0u));
+
+    for (uint64_t flags = 0; flags <= UINT64_C(255); ++flags) {
+        int expected = flags == 0u || flags == 2u || flags == 4u ||
+                       flags == 6u || flags == 7u || flags == 8u ||
+                       flags == 10u;
+        assert(accessibility_state_flags_valid(flags) == expected);
+    }
     assert(accessibility_state_flags_valid(ACCESSIBILITY_STATE_FOCUSABLE |
                                            ACCESSIBILITY_STATE_ENABLED |
                                            ACCESSIBILITY_STATE_FOCUSED));

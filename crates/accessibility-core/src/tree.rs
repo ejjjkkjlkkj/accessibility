@@ -194,6 +194,14 @@ mod tests {
     }
 
     #[test]
+    fn exhaustively_checks_all_low_byte_state_flag_combinations() {
+        for flags in 0u64..=255 {
+            let expected = matches!(flags, 0 | 2 | 4 | 6 | 7 | 8 | 10);
+            assert_eq!(state_flags_are_valid(flags), expected, "flags={flags:#x}");
+        }
+    }
+
+    #[test]
     fn rejects_trees_over_the_node_limit() {
         let nodes: Vec<_> = (0..=MAX_ACCESSIBLE_NODES)
             .map(|index| {

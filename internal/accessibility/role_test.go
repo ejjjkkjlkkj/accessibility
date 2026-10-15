@@ -35,6 +35,19 @@ func TestEventContractV1(t *testing.T) {
 }
 
 func TestSemanticStateFlagsV1(t *testing.T) {
+	validMasks := map[StateFlags]bool{
+		0: true, StateFocusable: true, StateEnabled: true,
+		StateFocusable | StateEnabled: true,
+		StateFocused | StateFocusable | StateEnabled: true,
+		StateDisabled: true, StateFocusable | StateDisabled: true,
+	}
+	for raw := uint64(0); raw <= 255; raw++ {
+		flags := StateFlags(raw)
+		expected := validMasks[flags]
+		if actual := flags.Valid(); actual != expected {
+			t.Fatalf("flags=%#x: got %v, want %v", flags, actual, expected)
+		}
+	}
 	valid := StateFocusable | StateEnabled | StateFocused
 	if !valid.Valid() {
 		t.Fatal("valid focused target rejected")
