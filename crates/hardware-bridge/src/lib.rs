@@ -1,14 +1,14 @@
 #![no_std]
-
-pub mod acpi;
-pub mod provenance;
-pub mod uefi;
 //! Platform-neutral contracts for describing physical and software-defined devices.
 //!
 //! This crate deliberately performs no PCI configuration access, MMIO, port I/O,
 //! DMA, interrupt registration, firmware mutation, or device emulation. A future
 //! platform adapter must validate and authorize resources before touching hardware.
 //! Passing these data-model tests is not evidence of operation on physical hardware.
+
+pub mod acpi;
+pub mod provenance;
+pub mod uefi;
 
 pub const HARDWARE_BRIDGE_ABI_VERSION: u32 = 1;
 pub const MAX_DEVICE_NAME_BYTES: usize = 128;
