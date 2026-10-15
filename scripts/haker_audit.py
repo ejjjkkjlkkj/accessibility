@@ -105,10 +105,10 @@ def audit(root, exclude_paths=()):
             for rule_id, severity, pattern, title in RULES:
                 if pattern.search(line):
                     evidence = line.strip()[:240]
-                    # CI artifacts must not copy likely credential values or private-key markers.
-                    if rule_id == "SEC001":
+                    # Redact by line content, not only by finding ID: one line can trigger several rules.
+                    if RULES[0][2].search(line):
                         evidence = "[REDACTED: private-key marker]"
-                    elif rule_id == "SEC002":
+                    elif RULES[1][2].search(line):
                         evidence = "[REDACTED: potential credential assignment]"
                     findings.append({"id": rule_id, "severity": severity, "title": title, "path": rel, "line": number, "evidence": evidence, "status": "UNCONFIRMED_REVIEW_REQUIRED"})
     counts = {s: sum(f["severity"] == s for f in findings) for s in ("CRITICAL", "HIGH", "MEDIUM", "LOW", "INFO")}
