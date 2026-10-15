@@ -36,6 +36,10 @@ Cible d'exécution : un binaire natif maîtrisé par le projet, avec dépendance
    - tests séparés pour le moteur, chaque adaptateur et le résultat combiné ;
    - QEMU/VM = SIMULATION_ONLY ; aucune simulation ne vaut preuve matérielle.
 
+## Cycle WHITE → BLACK → GREY
+
+Le cycle de travail sécurité du dépôt est défini dans [`WHITE-BLACK-GREY-CONTINUOUS-CYCLE.md`](WHITE-BLACK-GREY-CONTINUOUS-CYCLE.md) : WHITE construit, BLACK teste de façon adversariale le code du projet dans le périmètre autorisé, GREY corrige et ajoute les tests de non-régression, puis un vérificateur indépendant rejoue les preuves. La boucle recommence jusqu'à satisfaire les critères de sortie du jalon. Si les ressources sont épuisées ou qu'une preuve manque, le statut reste `PARTIAL`, `BLOCKED` ou `UNPROVEN` ; il ne devient jamais automatiquement `PASS`. L'orchestrateur autonome complet reste `NOT_IMPLEMENTED` tant qu'un exécuteur réel et ses preuves ne sont pas ajoutés.
+
 ## Parc de tests Kali
 
 Kali est utile parce qu'il rassemble des outils de sécurité, mais la présence d'un outil ne prouve ni sa bonne installation ni la validité de son résultat. Construire un inventaire versionné comportant, pour chaque outil : nom, version, licence, source, empreinte du binaire ou paquet quand disponible, rôle, prérequis, tests autorisés, limites, code retour attendu et format de preuve.
