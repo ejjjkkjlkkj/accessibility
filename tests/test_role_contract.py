@@ -147,6 +147,7 @@ class AccessibilityRoleContractTests(unittest.TestCase):
             "Go": ("internal/accessibility/role.go", "type Event struct", "func (e Event) Valid()"),
             "D": ("components/core-d/src/accessibility_event.d", "STATE_FOCUSED", "isValidStateFlags"),
             "Ada": ("components/core-ada/accessibility_event.ads", "State_Focused", "State_Flags_Valid"),
+            "Ada UTF-8": ("components/core-ada/accessibility_event.adb", "Is_Valid_Name", "Byte_At"),
             "Nim": ("components/core-nim/src/accessibility_event.nim", "STATE_FOCUSED", "isValidStateFlags"),
             "Swift": ("components/core-swift/Sources/AccessibilityCore/AccessibilityEvent.swift", "AccessibilityState", "stateFlags"),
             "Zig": ("components/core-zig/src/accessibility_event.zig", "STATE_FOCUSED", "stateFlagsAreValid"),
@@ -179,6 +180,9 @@ class AccessibilityRoleContractTests(unittest.TestCase):
             ]),
             "Zig": ("components/core-zig/src/accessibility_event.zig", [
                 "utf8ValidateSlice(name)", "byte == 0",
+            ]),
+            "Ada": ("components/core-ada/accessibility_event.adb", [
+                "function Is_Valid_Name", "16#C2#", "16#F4#", "B1 = 0",
             ]),
         }
         for language, (path, markers) in requirements.items():

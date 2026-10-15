@@ -20,6 +20,10 @@ package Accessibility_Event is
       List_Item_Role => 12, Table_Role => 13, Row_Role => 14,
       Cell_Role => 15, Menu_Role => 16, Menu_Item_Role => 17);
    for Event_Role'Size use 8;
+   function Is_Valid_Name (Name : String) return Boolean;
+   function Is_Valid (Abi_Version : Positive; Role : Event_Role;
+                      Name : String;
+                      State_Flags : Interfaces.Unsigned_64 := 0) return Boolean;
    function Is_Valid (Abi_Version : Positive; Role : Event_Role;
                       Name_Length : Natural;
                       State_Flags : Interfaces.Unsigned_64 := 0) return Boolean;
