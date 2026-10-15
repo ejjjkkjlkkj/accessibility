@@ -214,7 +214,7 @@ class HakerAuditTests(unittest.TestCase):
     def test_refuses_to_overwrite_report_with_duplicate_json_keys(self):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
-            (root / "clean.py").write_text("value = 42\\n", encoding="utf-8")
+            (root / "clean.py").write_text("value = 42\n", encoding="utf-8")
             report = root / "report.json"
             original = (
                 '{"schema_version":"0.9","schema_version":"1.0",'
@@ -233,7 +233,7 @@ class HakerAuditTests(unittest.TestCase):
     def test_refuses_to_overwrite_report_with_nonstandard_json_constant(self):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
-            (root / "clean.py").write_text("value = 42\\n", encoding="utf-8")
+            (root / "clean.py").write_text("value = 42\n", encoding="utf-8")
             report = root / "report.json"
             original = (
                 '{"schema_version":"1.0",'
@@ -252,7 +252,7 @@ class HakerAuditTests(unittest.TestCase):
     def test_refuses_to_overwrite_deeply_nested_report_without_traceback(self):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
-            (root / "clean.py").write_text("value = 42\\n", encoding="utf-8")
+            (root / "clean.py").write_text("value = 42\n", encoding="utf-8")
             report = root / "report.json"
             original = (
                 b'{"schema_version":"1.0",'
@@ -273,23 +273,23 @@ class HakerAuditTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp:
             base = Path(temp)
             target = base / "target.py"
-            target.write_text("value = 42\\n", encoding="utf-8")
+            target.write_text("value = 42\n", encoding="utf-8")
             link = base / "linked.py"
             try:
                 link.symlink_to(target)
             except (OSError, NotImplementedError):
                 self.skipTest("file symlinks unavailable")
             probe = (
-                "import sys\\n"
-                "from pathlib import Path\\n"
-                f"sys.path.insert(0, {str(SCANNER.parent)!r})\\n"
-                "import haker_audit\\n"
-                "try:\\n"
-                "    value = haker_audit.read_bounded_text(Path(sys.argv[1]))\\n"
-                "except OSError:\\n"
-                "    print('REFUSED')\\n"
-                "else:\\n"
-                "    print('READ' if value is not None else 'REFUSED')\\n"
+                "import sys\n"
+                "from pathlib import Path\n"
+                f"sys.path.insert(0, {str(SCANNER.parent)!r})\n"
+                "import haker_audit\n"
+                "try:\n"
+                "    value = haker_audit.read_bounded_text(Path(sys.argv[1]))\n"
+                "except OSError:\n"
+                "    print('REFUSED')\n"
+                "else:\n"
+                "    print('READ' if value is not None else 'REFUSED')\n"
             )
             result = subprocess.run(
                 [sys.executable, "-c", probe, str(link)],
