@@ -19,6 +19,8 @@ def confined_relative_path(value: str) -> bool:
     windows = PureWindowsPath(value)
     return not (
         not value
+        or value in {".", ".."}
+        or "\\x00" in value
         or posix.is_absolute()
         or windows.is_absolute()
         or windows.drive
