@@ -96,12 +96,14 @@ Un fichier de conception, un commit, une compilation réussie ou un workflow con
 
 ## Garde-fous
 
-- périmètre local et autorisé uniquement par défaut ;
-- aucune exfiltration, propagation, persistance cachée ou cible tierce ;
-- aucune action destructive, élévation de privilèges, modification firmware/NVRAM/BIOS ou action sur la machine principale sans procédure explicite et revue humaine ;
+- cible par défaut : ce dépôt, ses artefacts de test et les laboratoires jetables explicitement autorisés ;
+- les scénarios peuvent simuler l'exfiltration, la propagation ou la persistance pour tester la détection, mais ne doivent pas transmettre de vraies données, se propager hors du laboratoire ni installer de persistance cachée sur des systèmes réels ;
+- aucune cible tierce et aucun élargissement automatique du périmètre ;
+- les actions destructives sont réservées aux copies jetables avec restauration vérifiée ;
+- aucune modification firmware/NVRAM/BIOS, aucun flash et aucune action sur la machine principale sans autorisation explicite et revue humaine ;
 - aucun secret dans les journaux ;
 - aucune fusion, publication ou installation automatique ;
-- séparation entre génération d'hypothèses et vérification des preuves.
+- séparation entre génération d'hypothèses, exécution du test et vérification indépendante des preuves.
 
 ## Critères d'acceptation du premier jalon
 
