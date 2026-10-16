@@ -1,0 +1,94 @@
+name: Multi-OS accessibility validation
+
+on:
+  push:
+    branches: [main, "**"]
+    paths:
+      - "projects/**"
+      - "docs/**"
+      - "README.md"
+      - ".github/workflows/multi-os-validation.yml"
+      - ".github/workflows/ci.yml"
+      - ".github/workflows/polyglot-ci.yml"
+      - "crates/**"
+      - "internal/**"
+      - "cmd/**"
+      - "tests/**"
+      - "components/**"
+      - "data/**"
+      - "**/*.go"
+      - "**/*.rs"
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - "go.mod"
+      - "go.sum"
+  pull_request:
+    paths:
+      - "projects/**"
+      - "docs/**"
+      - "README.md"
+      - ".github/workflows/multi-os-validation.yml"
+  workflow_dispatch:
+  schedule:
+    - cron: "41 3 * * 1"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: accessibility-multi-os-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  docs-manifests-and-catalog:
+    name: Docs / ${{ matrix.target.runner }} / Python ${{ matrix.python }}
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      max-parallel: 20
+      matrix:
+        target:
+          - runner: ubuntu-x64
+            os: ubuntu-latest
+          - runner: ubuntu-arm64
+            os: ubuntu-24.04-arm
+          - runner: ubuntu-26.04-x64
+            os: ubuntu-26.04
+          - runner: windows-x64
+            os: windows-latest
+          - runner: windows-arm64
+            os: windows-11-arm
+          - runner: macos-arm64
+            os: macos-26
+          - runner: macos-intel
+            os: macos-15-intel
+        python: ["3.11", "3.12", "3.13"]
+    runs-on: ${{ matrix.target.os }}
+    steps:
+      - name: Checkout accessibility repository
+        uses: actions/checkout@v6
+      - name: Checkout canonical IA catalog
+        uses: actions/checkout@v6
+        with:
+          repository: ejjjkkjlkkj/ia
+          ref: main
+          path: ia-repo
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Validate JSON manifests
+        shell: bash
+        run: |
+          python -c "import json; from pathlib import Path; files=[p for p in Path('.').rglob('*.json') if '.git' not in p.parts and 'ia-repo' not in p.parts]; [json.loads(p.read_text(encoding='utf-8')) for p in files]; print(f'PASS: {len(files)} JSON files')"
+      - name: Validate language ID synchronization
+        shell: bash
+        run: |
+          python -c "import json,re; from pathlib import Path; m=json.loads(Path('projects/manifest.json').read_text(encoding='utf-8')); ids={x['id'] for x in m['languages']}; s=Path('ia-repo/LANGUAGE-CATALOG.md').read_text(encoding='utf-8'); catalog={x.group(1) for line in s.splitlines() if (x:=re.match(r'^\|\s*([a-z0-9][a-z0-9_-]*)\s*\|\s*([^|]+?)\s*\|',line,re.I)) and x.group(1) not in {'ID','---'}}; print('manifest-only:',sorted(ids-catalog)); print('catalog-only:',sorted(catalog-ids)); raise SystemExit(ids != catalog)"
+      - name: Check release-gate documentation
+        shell: bash
+        run: |
+          python -c "from pathlib import Path; required=['README.md','docs/LANGUAGE_CARTOGRAPHY_SCREENREADER_UEFI_OS.md','docs/EXECUTION_PLAN_ALL_LANGUAGE_RELEASE_GATES.md','projects/manifest.json']; missing=[p for p in required if not Path(p).is_file()]; print('missing:',missing); raise SystemExit(bool(missing))"
+      - name: Record platform proof
+        shell: bash
+        run: python -c "import os,platform,sys; print('RUNNER=',os.getenv('RUNNER_NAME')); print('OS=',platform.platform()); print('ARCH=',platform.machine()); print('Python=',sys.version); print('STATUS=PASS for documentation checks only')"
