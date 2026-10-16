@@ -28,6 +28,20 @@ on:
       - "docs/**"
       - "README.md"
       - ".github/workflows/multi-os-validation.yml"
+      - ".github/workflows/polyglot-ci.yml"
+      - ".github/workflows/ci.yml"
+      - "go.sum"
+      - "go.mod"
+      - "Cargo.lock"
+      - "Cargo.toml"
+      - "**/*.rs"
+      - "**/*.go"
+      - "data/**"
+      - "components/**"
+      - "tests/**"
+      - "cmd/**"
+      - "internal/**"
+      - "crates/**"
   workflow_dispatch:
   schedule:
     - cron: "41 3 * * 1"
@@ -42,6 +56,7 @@ concurrency:
 jobs:
   docs-manifests-and-catalog:
     name: Docs / ${{ matrix.target.runner }} / Python ${{ matrix.python }}
+    if: github.ref == 'refs/heads/main' || github.event_name != 'push'
     timeout-minutes: 10
     strategy:
       fail-fast: false
@@ -92,3 +107,22 @@ jobs:
       - name: Record platform proof
         shell: bash
         run: python -c "import os,platform,sys; print('RUNNER=',os.getenv('RUNNER_NAME')); print('OS=',platform.platform()); print('ARCH=',platform.machine()); print('Python=',sys.version); print('STATUS=PASS for documentation checks only')"
+
+  rust-semantic-core:
+    name: Rust semantic-tree bounded validation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+      - name: Format and test the Rust semantic core when present
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ ! -f crates/accessibility-core/Cargo.toml ]; then
+            echo "PARTIAL: this branch has no crates/accessibility-core/Cargo.toml"
+            exit 0
+          fi
+          rustc --version
+          cargo --version
+          cargo fmt --manifest-path crates/accessibility-core/Cargo.toml -- --check
+          cargo test --manifest-path crates/accessibility-core/Cargo.toml
