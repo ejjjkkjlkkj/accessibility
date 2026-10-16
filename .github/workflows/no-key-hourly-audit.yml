@@ -93,11 +93,17 @@ jobs:
             echo "- No Cargo.toml found within depth 4: NOT APPLICABLE" | tee -a audit-report/report.md
           fi
 
-          if [ -d tests ] || find . -maxdepth 3 -type f -name 'test_*.py' -not -path './.git/*' -print -quit | grep -q .; then
-            echo "- Running unittest discovery" | tee -a audit-report/report.md
-            python -m unittest discover -v >>audit-report/report.md 2>&1 || { echo "- unittest discovery: FAIL (see log)" | tee -a audit-report/report.md; test_rc=1; }
+          if find tests -maxdepth 3 -type f -name 'test_*.py' -not -path './.git/*' -print -quit 2>/dev/null | grep -q .; then
+            echo "- Running unittest discovery under tests/" | tee -a audit-report/report.md
+            if ! python -m unittest discover -s tests -p 'test_*.py' -v >>audit-report/report.md 2>&1; then
+              echo "- unittest discovery under tests/: FAIL (see uploaded report)" | tee -a audit-report/report.md
+              test_rc=1
+            fi
+          elif find . -maxdepth 3 -type f -name 'test_*.py' -not -path './.git/*' -print -quit | grep -q .; then
+            echo "- Python test files exist outside tests/: BLOCKED (no safe discovery root configured)" | tee -a audit-report/report.md
+            test_rc=1
           else
-            echo "- No obvious Python tests found: NOT APPLICABLE" | tee -a audit-report/report.md
+            echo "- No tracked-layout Python tests found: NOT APPLICABLE" | tee -a audit-report/report.md
           fi
 
           echo >> audit-report/report.md
