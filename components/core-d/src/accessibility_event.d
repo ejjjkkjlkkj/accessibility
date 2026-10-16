@@ -45,6 +45,6 @@ unittest {
     assert(!isValid(invalid));
     auto tooLong = AccessibilityEvent(1, Role.button, cast(string) replicate("x", 4097));
     assert(!isValid(tooLong));
-    auto embeddedNul = AccessibilityEvent(1, Role.button, "bad\\0name");
+    auto embeddedNul = AccessibilityEvent(1, Role.button, "bad\0name");
     assert(!isValid(embeddedNul));
 }
