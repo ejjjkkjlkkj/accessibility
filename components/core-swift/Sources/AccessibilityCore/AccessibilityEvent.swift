@@ -31,6 +31,6 @@ public struct AccessibilityEvent: Sendable {
     }
 
     public var isValid: Bool {
-        abiVersion == 1 && name.utf8.count <= 4096
+        abiVersion == 1 && name.utf8.count <= 4096 && !name.utf8.contains(0)
     }
 }
