@@ -47,3 +47,10 @@ Thumbs.db
 .env.*
 !.env.example
 !.env.template
+
+# Generated local audit evidence; keep raw ledgers and reports out of Git by default
+.aerl-*.events
+.aerl*.events
+haker-audit-report.json
+aerl-summary.json
+aerl-run-summary.json

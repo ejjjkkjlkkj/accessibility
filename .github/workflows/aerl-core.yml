@@ -1,0 +1,39 @@
+name: AERL no_std binary evidence ledger
+
+on:
+  push:
+    paths:
+      - "crates/aerl-core/**"
+      - "crates/accessibility-core/**"
+      - ".github/workflows/aerl-core.yml"
+  pull_request:
+    paths:
+      - "crates/aerl-core/**"
+      - "crates/accessibility-core/**"
+      - ".github/workflows/aerl-core.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: aerl-core-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: AERL core / ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v6
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+      - name: Test binary evidence ledger core
+        run: cargo test --manifest-path crates/aerl-core/Cargo.toml
+      - name: Build no_std library
+        run: cargo build --manifest-path crates/aerl-core/Cargo.toml --lib --release

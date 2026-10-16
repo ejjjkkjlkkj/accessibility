@@ -63,6 +63,8 @@ jobs:
       - run: rustup target add x86_64-unknown-uefi
       - run: cargo test --manifest-path crates/accessibility-core/Cargo.toml
       - run: cargo check --manifest-path crates/accessibility-core/Cargo.toml --lib
+      - run: cargo test --manifest-path crates/aerl-core/Cargo.toml
+      - run: cargo build --manifest-path crates/aerl-core/Cargo.toml --lib --release
       - run: cargo build --manifest-path src/rust-uefi/Cargo.toml --target x86_64-unknown-uefi --release --target-dir build/rust-uefi
 
   c:
