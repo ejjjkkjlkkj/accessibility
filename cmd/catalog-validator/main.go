@@ -7,18 +7,18 @@ import (
 	"net"
 	"net/url"
 	"os"
+	"strconv"
 	"strings"
 )
 
 var required = []string{"id", "name", "domain", "url", "category", "layer", "official_status", "notes"}
 
-func validDomain(domain string) bool {
-	domain = strings.TrimSuffix(strings.ToLower(domain), ".")
-	if domain == "" || len(domain) > 253 || strings.Contains(domain, "..") {
+// validDNSDomain accepts an ASCII DNS name (including a fully-qualified trailing dot).
+// Internationalized names must be supplied in their IDNA ASCII form (punycode).
+func validDNSDomain(raw string) bool {
+	domain := strings.TrimSuffix(strings.ToLower(strings.TrimSpace(raw)), ".")
+	if domain == "" || len(domain) > 253 || net.ParseIP(domain) != nil {
 		return false
-	}
-	if net.ParseIP(domain) != nil {
-		return true
 	}
 	labels := strings.Split(domain, ".")
 	if len(labels) < 2 {
@@ -28,8 +28,8 @@ func validDomain(domain string) bool {
 		if len(label) == 0 || len(label) > 63 || label[0] == '-' || label[len(label)-1] == '-' {
 			return false
 		}
-		for _, r := range label {
-			if !((r >= 'a' && r <= 'z') || (r >= '0' && r <= '9') || r == '-') {
+		for _, ch := range label {
+			if !((ch >= 'a' && ch <= 'z') || (ch >= '0' && ch <= '9') || ch == '-') {
 				return false
 			}
 		}
@@ -61,44 +61,55 @@ func validate(r io.Reader) error {
 		}
 	}
 	seen := map[string]bool{}
-	record := 1
+	line := 1
 	for {
 		row, err := reader.Read()
 		if err == io.EOF {
 			break
 		}
-		record++
+		line++
 		if err != nil {
-			return fmt.Errorf("CSV record %d: %w", record, err)
+			return fmt.Errorf("CSV line %d: %w", line, err)
 		}
 		if len(row) != len(header) {
-			return fmt.Errorf("CSV record %d: got %d fields, want %d", record, len(row), len(header))
+			return fmt.Errorf("CSV line %d: got %d fields, want %d", line, len(row), len(header))
 		}
-		value := func(key string) string { return strings.TrimSpace(row[index[key]]) }
+		value := func(key string) string {
+			return strings.TrimSpace(row[index[key]])
+		}
 		id := value("id")
 		if id == "" {
-			return fmt.Errorf("CSV record %d: empty id", record)
+			return fmt.Errorf("CSV line %d: empty id", line)
 		}
 		if seen[id] {
-			return fmt.Errorf("CSV record %d: duplicate id %q", record, id)
+			return fmt.Errorf("CSV line %d: duplicate id %q", line, id)
 		}
 		seen[id] = true
 		for _, key := range []string{"name", "domain", "url", "category", "layer", "official_status"} {
 			if value(key) == "" {
-				return fmt.Errorf("CSV record %d: empty %s", record, key)
+				return fmt.Errorf("CSV line %d: empty %s", line, key)
+			}
+		}
+		parsedURL, err := url.Parse(value("url"))
+		if err != nil || (strings.ToLower(parsedURL.Scheme) != "https" && strings.ToLower(parsedURL.Scheme) != "http") || parsedURL.Hostname() == "" || parsedURL.User != nil {
+			return fmt.Errorf("CSV line %d: URL must be absolute HTTP(S), include a hostname, and contain no userinfo", line)
+		}
+		if port := parsedURL.Port(); port != "" {
+			portNumber, err := strconv.Atoi(port)
+			if err != nil || portNumber < 1 || portNumber > 65535 {
+				return fmt.Errorf("CSV line %d: URL port must be between 1 and 65535", line)
 			}
 		}
 		domain := strings.TrimSuffix(strings.ToLower(value("domain")), ".")
-		if !validDomain(domain) {
-			return fmt.Errorf("CSV record %d: invalid DNS domain %q", record, value("domain"))
-		}
-		parsedURL, err := url.Parse(value("url"))
-		if err != nil || (parsedURL.Scheme != "https" && parsedURL.Scheme != "http") || parsedURL.Hostname() == "" || parsedURL.User != nil {
-			return fmt.Errorf("CSV record %d: URL must be absolute HTTP(S), include a hostname, and contain no userinfo", record)
-		}
 		hostname := strings.TrimSuffix(strings.ToLower(parsedURL.Hostname()), ".")
-		if !validDomain(hostname) || (hostname != domain && !strings.HasSuffix(hostname, "."+domain)) {
-			return fmt.Errorf("CSV record %d: URL hostname %q does not match valid declared domain %q", record, hostname, domain)
+		if !validDNSDomain(domain) {
+			return fmt.Errorf("CSV line %d: declared domain %q is not a valid DNS name", line, value("domain"))
+		}
+		if !validDNSDomain(hostname) {
+			return fmt.Errorf("CSV line %d: URL hostname %q is not a valid DNS name", line, hostname)
+		}
+		if hostname != domain && !strings.HasSuffix(hostname, "."+domain) {
+			return fmt.Errorf("CSV line %d: URL hostname %q does not match domain %q", line, hostname, domain)
 		}
 	}
 	if len(seen) == 0 {
