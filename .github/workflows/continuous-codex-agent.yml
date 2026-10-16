@@ -1,84 +1,77 @@
-name: Continuous Accessibility Engineering Agent
+name: Local Ollama accessibility engineering loop
 
 on:
   workflow_dispatch:
-  schedule:
-    # Hosted GitHub runner; runs hourly without depending on a personal PC.
-    - cron: "37 * * * *"
 
 permissions:
-  contents: write
-  pull-requests: write
-  issues: read
+  contents: read
 
 concurrency:
-  group: continuous-agent-${{ github.repository }}
+  group: local-ollama-agent-${{ github.repository }}-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
-  agent:
-    name: Inspect, implement, test, and propose one verified improvement
-    runs-on: ubuntu-latest
+  local-agent:
+    name: Run one local-model cycle without publishing
+    runs-on: self-hosted
     timeout-minutes: 45
     steps:
-      - name: Checkout default branch
+      - name: Checkout selected feature branch
         uses: actions/checkout@v4
         with:
           persist-credentials: false
           fetch-depth: 0
 
-      - name: Resume agent branch when it exists
+      - name: Verify branch and clean worktree
         shell: bash
-        env:
-          AGENT_BRANCH: automation/codex-continuous-agent
         run: |
           set -euo pipefail
-          if git fetch --no-tags origin "$AGENT_BRANCH"; then
-            git checkout -B "$AGENT_BRANCH" FETCH_HEAD
-          else
-            git checkout -b "$AGENT_BRANCH"
-          fi
-
-      - name: Require configured model credential
-        shell: bash
-        env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-        run: |
-          set -euo pipefail
-          if [ -z "$OPENAI_API_KEY" ]; then
-            echo "::error::BLOCKED: add the repository Actions secret OPENAI_API_KEY to enable the hosted coding agent."
+          branch="$(git branch --show-current)"
+          case "$branch" in
+            main|master|"") echo "BLOCKED: use a dedicated feature branch"; exit 1 ;;
+          esac
+          if [ -n "$(git status --porcelain)" ]; then
+            echo "BLOCKED: checkout is not clean"
             exit 1
           fi
-          echo "PASS: hosted coding-agent credential is configured (value not displayed)."
+          test -s AGENT-TASK.md
+          test -s tools/local_agent_loop.py
+          echo "PASS: dedicated branch and required local-agent files found"
 
-      - name: Run Codex engineering cycle
-        id: codex
-        uses: openai/codex-action@v1
-        with:
-          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
-          permission-profile: ":workspace"
-          safety-strategy: drop-sudo
-          output-file: agent-report.md
-          prompt: |
-            You are the autonomous engineering agent for the Accessibility/ZERO repository. Work only in this checkout and on branch automation/codex-continuous-agent.
-            Read AGENTS.md first and follow its security, evidence, and release gates.
-            Inspect the current implementation, tests, open TODOs, and git diff. Choose ONE highest-impact, small, independently verifiable task. Implement real functionality, add regression tests, and run the relevant available tests/static checks. Prefer screen-reader semantics, keyboard navigation, UEFI/bare-metal correctness, reproducible builds, fuzzing, and defensive security. Red-team work must remain confined to owned/authorized code and test targets.
-            If a prior change on this branch is still unverified or broken, fix that first. Avoid repeating a completed task. Do not weaken security checks, fabricate test results, claim physical hardware success from unit tests/QEMU, alter firmware/NVRAM/partitions, publish releases, or merge pull requests.
-            Write agent-report.md with: task selected, files changed, exact commands and outcomes, evidence labels PASS/FAIL/PARTIAL/BLOCKED/NOT_VALIDATED, limitations, and the next task. Never include secrets.
-            If no safe useful code change can be verified, make no code changes and explain why in the report.
+      - name: Verify local Ollama endpoint
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:11434/api/tags', timeout=5).read(100000)"
+          echo "PASS: local Ollama endpoint responds; no hosted model/API key is used"
 
-      - name: Create or update reviewable pull request
-        uses: peter-evans/create-pull-request@v7
+      - name: Run exactly one local engineering cycle
+        env:
+          AGENT_AUTO_PUSH: "0"
+          AGENT_MAX_RUNS: "1"
+          AGENT_SLEEP_SECONDS: "60"
+          OLLAMA_URL: "http://127.0.0.1:11434"
+          OLLAMA_MODEL: "qwen3-coder:30b"
+          AGENT_WORKSPACE: ${{ github.workspace }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          before="$(git rev-parse HEAD)"
+          python tools/local_agent_loop.py
+          after="$(git rev-parse HEAD)"
+          if [ "$after" != "$before" ]; then
+            git format-patch -1 "$after" --stdout > local-agent-proposal.patch
+            echo "PASS: local commit created; no push performed"
+          else
+            echo "PARTIAL: no verified patch was committed"
+          fi
+          git diff --check
+
+      - name: Upload local proposal for review
+        if: always()
+        uses: actions/upload-artifact@v4
         with:
-          token: ${{ github.token }}
-          branch: automation/codex-continuous-agent
-          base: main
-          delete-branch: false
-          title: "chore(agent): continuous verified engineering improvements"
-          commit-message: "chore(agent): apply verified engineering improvements"
-          body: |
-            Updated by the scheduled hosted coding agent.
-            Review the diff and agent-report.md. This PR is not auto-merged; all repository release gates remain mandatory.
-          add-paths: |
-            **
-            !.github/workflows/**
+          name: local-ollama-proposal-${{ github.run_id }}
+          path: local-agent-proposal.patch
+          if-no-files-found: warn
+          retention-days: 14
