@@ -56,20 +56,25 @@ class CheckUrlTests(unittest.TestCase):
         self.assertEqual(result["final_url"], "https://example.org/")
         self.assertTrue(result["tls"])
 
-    @patch.object(builder.urllib.request, "urlopen")
-    def test_tls_reflects_final_url_after_http_redirect(self, urlopen):
+    @patch.object(builder, "_open_catalog_url")
+    def test_plain_http_response_reports_tls_false(self, urlopen):
         response = MagicMock()
         response.status = 200
-        response.geturl.return_value = "http://example.org/final"
+        response.geturl.return_value = "http://example.org/"
         response.__enter__.return_value = response
         urlopen.return_value = response
 
-        result = builder.check_url("https://example.org/")
+        result = builder.check_url("http://example.org/")
 
         self.assertTrue(result["reachable"])
         self.assertFalse(result["tls"])
 
-    @patch.object(builder.urllib.request, "urlopen")
+    def test_initial_url_must_match_declared_catalog_domain(self):
+        result = builder.check_url("https://evil.test/", "example.org")
+        self.assertFalse(result["reachable"])
+        self.assertEqual(result["error"], "redirect_outside_declared_domain")
+
+    @patch.object(builder, "_open_catalog_url")
     def test_head_405_retries_with_bounded_range_get(self, urlopen):
         response = MagicMock()
         response.status = 206
@@ -88,7 +93,7 @@ class CheckUrlTests(unittest.TestCase):
         retry_request = urlopen.call_args_list[1].args[0]
         self.assertEqual(retry_request.get_header("Range"), "bytes=0-0")
 
-    @patch.object(builder.urllib.request, "urlopen")
+    @patch.object(builder, "_open_catalog_url")
     def test_network_failure_is_partial_not_exception(self, urlopen):
         urlopen.side_effect = TimeoutError()
         result = builder.check_url("https://example.org/")
