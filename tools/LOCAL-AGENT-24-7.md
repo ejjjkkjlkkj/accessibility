@@ -22,7 +22,7 @@ After checking out this branch in a dedicated clone, ensure the worktree is clea
 
 ## Sequential specialist team
 
-Each iteration rotates through five specialist roles: implementer, test engineer, accessibility reviewer, repository-local security red team, and independent reviewer. They share one model and one clean worktree **sequentially**, not as five conflicting writers. A successful iteration must pass the detected test suite before creating a local commit. Logs identify the role, test exit code, changed paths, and commit. After tests pass, the runner creates a local commit only. Pushes are disabled by default; set `AGENT_AUTO_PUSH=1` only when you explicitly authorize publishing to the dedicated feature branch. It never merges or releases.
+Each iteration rotates through five specialist roles: implementer, test engineer, accessibility reviewer, repository-local security red team, and independent reviewer. They share one model and one clean worktree **sequentially**, not as five conflicting writers. A successful iteration must pass the detected test suite before creating a local commit. Logs identify the role, test exit code, changed paths, and commit. After tests pass, the runner creates a local commit only. Pushes are disabled by default; set `AGENT_AUTO_PUSH=1` only when you explicitly authorize publishing to the dedicated feature branch. It never merges or releases. The manual self-hosted workflow keeps proposal patches under `$HOME/LocalCodingAgents/proposals/`; it does not upload model output or patch artifacts to GitHub.
 
 ## Important execution boundary
 
