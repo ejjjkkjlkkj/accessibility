@@ -238,3 +238,23 @@ func TestValidateRejectsMalformedURL(t *testing.T) {
 		}
 	}
 }
+
+func TestValidateRejectsEmptyInput(t *testing.T) {
+	if err := validate(strings.NewReader("")); err == nil {
+		t.Fatal("expected empty input to fail")
+	}
+}
+
+func TestValidateRejectsSingleLabelDomain(t *testing.T) {
+	row := "a,Example,org,https://example.org/,docs,web,candidate,test\n"
+	if err := validate(strings.NewReader(validHeader + row)); err == nil {
+		t.Fatal("expected single-label domain to fail")
+	}
+}
+
+func TestValidateAcceptsCaseInsensitiveURLScheme(t *testing.T) {
+	row := "a,Example,example.org,HTTPS://example.org/,docs,web,candidate,test\n"
+	if err := validate(strings.NewReader(validHeader + row)); err != nil {
+		t.Fatalf("expected uppercase HTTPS scheme to pass, got %v", err)
+	}
+}
