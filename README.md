@@ -44,6 +44,10 @@ The accessibility boundary for the experimental NEXORA language is documented in
 
 Le prototype Ollama local et ses garde-fous sont décrits dans [la documentation de l’agent local](docs/LOCAL-AGENT-24-7.md). Il reste **à exécuter et valider sur le poste cible**; l’ajout au dépôt ne prétend pas qu’un agent tourne en arrière-plan.
 
+## Pont matériel expérimental
+
+Le crate `crates/hardware-bridge` fournit des contrats `no_std`, des analyseurs ACPI bornés, une politique de ressources en refus par défaut et une sonde Windows PnP en lecture seule. L’énumération UEFI est étiquetée comme rapportée par le firmware; elle ne prouve pas une présence physique. Le pont n’effectue pas encore d’accès PCI/MMIO natif ni de sortie audio. Voir [la documentation du pont matériel](crates/hardware-bridge/README.md).
+
 ## Manifestes et statuts
 
 - `projects/manifest.json` est le catalogue canonique des identifiants de langues et de leurs statuts généraux.
