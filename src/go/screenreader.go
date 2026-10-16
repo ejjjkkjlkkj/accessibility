@@ -43,8 +43,11 @@ const (
 
 type Event struct {
 	Kind EventKind
-	Role, Name, Value string
-	Focused, Disabled bool
+	Role     string
+	Name     string
+	Value    string
+	Focused  bool
+	Disabled bool
 }
 
 type EventQueue struct {
