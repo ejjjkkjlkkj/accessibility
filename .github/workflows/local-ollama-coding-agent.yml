@@ -49,8 +49,9 @@ jobs:
           if [ -n "$AGENT" ]; then
             "$AGENT" --task-file .github/agent-task.md
           else
-            echo 'BLOCKED: repository-owned model CLI not implemented; no third-party model fallback.'
+            echo 'BLOCKED: repository-owned model CLI not implemented; no third-party model fallback.' >&2
             printf '%s\n' 'BLOCKED: own-model CLI/checkpoint unavailable; third-party model fallback prohibited.' > agent-status.md
+            exit 2
           fi
 
       - name: Run repository tests
