@@ -60,18 +60,14 @@ jobs:
           python tools/local_agent_loop.py
           after="$(git rev-parse HEAD)"
           if [ "$after" != "$before" ]; then
-            git format-patch -1 "$after" --stdout > local-agent-proposal.patch
+            proposal_dir="$HOME/LocalCodingAgents/proposals"
+            mkdir -p "$proposal_dir"
+            proposal_path="$proposal_dir/accessibility-${GITHUB_RUN_ID}.patch"
+            git format-patch -1 "$after" --stdout > "$proposal_path"
             echo "PASS: local commit created; no push performed"
+            echo "LOCAL_PROPOSAL_PATH=$proposal_path"
           else
             echo "PARTIAL: no verified patch was committed"
           fi
           git diff --check
 
-      - name: Upload local proposal for review
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: local-ollama-proposal-${{ github.run_id }}
-          path: local-agent-proposal.patch
-          if-no-files-found: warn
-          retention-days: 14
