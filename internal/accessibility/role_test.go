@@ -37,7 +37,7 @@ func TestEventContractV1(t *testing.T) {
 func TestSemanticStateFlagsV1(t *testing.T) {
 	validMasks := map[StateFlags]bool{
 		0: true, StateFocusable: true, StateEnabled: true,
-		StateFocusable | StateEnabled: true,
+		StateFocusable | StateEnabled:                true,
 		StateFocused | StateFocusable | StateEnabled: true,
 		StateDisabled: true, StateFocusable | StateDisabled: true,
 	}
@@ -66,7 +66,11 @@ func TestSemanticStateFlagsV1(t *testing.T) {
 func TestCanonicalRoleCodesV1(t *testing.T) {
 	roles := []Role{RoleUnknown, RoleApplication, RoleWindow, RoleGroup, RoleText, RoleButton, RoleCheckbox, RoleRadio, RoleTextbox, RoleLink, RoleHeading, RoleList, RoleListItem, RoleTable, RoleRow, RoleCell, RoleMenu, RoleMenuItem}
 	for want, got := range roles {
-		if int(got) != want { t.Fatalf("role at code %d has value %d", want, got) }
+		if int(got) != want {
+			t.Fatalf("role at code %d has value %d", want, got)
+		}
 	}
-	if !RoleUnknown.Valid() || !RoleMenuItem.Valid() || Role(18).Valid() { t.Fatal("role code boundary validation failed") }
+	if !RoleUnknown.Valid() || !RoleMenuItem.Valid() || Role(18).Valid() {
+		t.Fatal("role code boundary validation failed")
+	}
 }
