@@ -20,7 +20,11 @@ func validDNSDomain(raw string) bool {
 	if domain == "" || len(domain) > 253 || net.ParseIP(domain) != nil {
 		return false
 	}
-	for _, label := range strings.Split(domain, ".") {
+	labels := strings.Split(domain, ".")
+	if len(labels) < 2 {
+		return false
+	}
+	for _, label := range labels {
 		if len(label) == 0 || len(label) > 63 || label[0] == '-' || label[len(label)-1] == '-' {
 			return false
 		}
