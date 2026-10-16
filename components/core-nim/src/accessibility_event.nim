@@ -13,9 +13,10 @@ type
 
 proc isValid*(event: AccessibilityEvent): bool =
   event.abiVersion == 1'u32 and
-    event.name.len <= 4096
+    event.name.len <= 4096 and '\\0' notin event.name
 
 when isMainModule:
   doAssert AccessibilityEvent(abiVersion: 1, role: erButton, name: "Save").isValid()
   doAssert not AccessibilityEvent(abiVersion: 2, role: erButton, name: "Save").isValid()
   doAssert not AccessibilityEvent(abiVersion: 1, role: erButton, name: repeat('x', 4097)).isValid()
+  doAssert not AccessibilityEvent(abiVersion: 1, role: erButton, name: "bad\\0name").isValid()
