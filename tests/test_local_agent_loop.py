@@ -65,20 +65,20 @@ class AgentPatchValidationTests(unittest.TestCase):
 
     def test_rejects_protected_git_header_even_when_body_uses_safe_paths(self):
         patch = (
-            "diff --git a/.github/workflows/ci.yml b/.github/workflows/ci.yml\\n"
-            "--- a/src/example.py\\n"
-            "+++ b/src/example.py\\n"
-            "@@ -1 +1 @@\\n-old\\n+new\\n"
+            "diff --git a/.github/workflows/ci.yml b/.github/workflows/ci.yml\n"
+            "--- a/src/example.py\n"
+            "+++ b/src/example.py\n"
+            "@@ -1 +1 @@\n-old\n+new\n"
         )
         with self.assertRaisesRegex(RuntimeError, "protected path"):
             local_agent_loop.validate_patch(patch)
 
     def test_rejects_github_agent_task_changes(self):
         patch = (
-            "diff --git a/.github/agent-task.md b/.github/agent-task.md\\n"
-            "--- a/.github/agent-task.md\\n"
-            "+++ b/.github/agent-task.md\\n"
-            "@@ -1 +1 @@\\n-old\\n+new\\n"
+            "diff --git a/.github/agent-task.md b/.github/agent-task.md\n"
+            "--- a/.github/agent-task.md\n"
+            "+++ b/.github/agent-task.md\n"
+            "@@ -1 +1 @@\n-old\n+new\n"
         )
         with self.assertRaisesRegex(RuntimeError, "protected path"):
             local_agent_loop.validate_patch(patch)
