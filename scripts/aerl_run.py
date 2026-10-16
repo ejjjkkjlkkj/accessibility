@@ -20,7 +20,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--file", required=True, type=Path, help="shared AERL ledger")
     parser.add_argument("--actor", default="CI")
     parser.add_argument("--kind", required=True, help="stable test/workflow event identifier")
-    parser.add_argument("--timeout-seconds", type=int, default=0, help="0 means no timeout")
+    parser.add_argument("--timeout-seconds", type=int, default=300, help="command timeout in seconds; 0 explicitly disables the timeout (default: 300)")
     parser.add_argument("command", nargs=argparse.REMAINDER, help="command after --")
     return parser
 
