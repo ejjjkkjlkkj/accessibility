@@ -5,6 +5,10 @@ from tools import local_agent_loop
 
 class AgentPatchValidationTests(unittest.TestCase):
     def test_auto_push_is_disabled_by_default(self):
+        from unittest.mock import patch
+
+        with patch.dict("os.environ", {}, clear=True):
+            self.assertFalse(local_agent_loop.auto_push_enabled())
         self.assertFalse(local_agent_loop.auto_push_enabled("0"))
         self.assertFalse(local_agent_loop.auto_push_enabled("false"))
         self.assertFalse(local_agent_loop.auto_push_enabled("no"))
