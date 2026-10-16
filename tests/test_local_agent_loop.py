@@ -4,6 +4,16 @@ from tools import local_agent_loop
 
 
 class AgentPatchValidationTests(unittest.TestCase):
+    def test_auto_push_is_disabled_by_default(self):
+        self.assertFalse(local_agent_loop.auto_push_enabled("0"))
+        self.assertFalse(local_agent_loop.auto_push_enabled("false"))
+        self.assertFalse(local_agent_loop.auto_push_enabled("no"))
+
+    def test_auto_push_requires_explicit_opt_in(self):
+        self.assertTrue(local_agent_loop.auto_push_enabled("1"))
+        self.assertTrue(local_agent_loop.auto_push_enabled("true"))
+        self.assertTrue(local_agent_loop.auto_push_enabled("yes"))
+
     def test_accepts_small_source_and_test_patch(self):
         patch = (
             "diff --git a/src/example.py b/src/example.py\n"
