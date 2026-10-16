@@ -5,8 +5,8 @@ const eventQueueLimit = 16
 
 // Node is normalized focus metadata. Native accessibility API adapters are separate.
 type Node struct {
-	Role, Name, Value string
-	Focused, Disabled bool
+	Role, Name, Value	string
+	Focused, Disabled	bool
 }
 
 func Announce(n Node) string {
