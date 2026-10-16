@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import csv
 import json
+import ipaddress
 import os
 import sqlite3
 import ssl
@@ -32,10 +33,33 @@ def check_url(url: str) -> dict:
         "http_status": None,
         "final_url": None,
         "reachable": False,
-        "tls": parsed.scheme == "https",
+        "tls": parsed.scheme.lower() == "https",
         "error": None,
     }
-    if parsed.scheme not in ("https", "http") or not parsed.netloc:
+    try:
+        port = parsed.port
+    except ValueError:
+        result["error"] = "invalid_http_url"
+        return result
+    hostname = (parsed.hostname or "").rstrip(".").lower()
+    # The catalog contract requires DNS hostnames, not IP literals or local
+    # names. Reject userinfo to avoid confusing the visible authority with
+    # the actual destination.
+    try:
+        ipaddress.ip_address(hostname)
+        is_ip_literal = bool(hostname)
+    except ValueError:
+        is_ip_literal = False
+    if (
+        parsed.scheme.lower() not in ("https", "http")
+        or not hostname
+        or parsed.username is not None
+        or parsed.password is not None
+        or is_ip_literal
+        or hostname == "localhost"
+        or hostname.endswith((".localhost", ".local", ".internal"))
+        or (port is not None and not 1 <= port <= 65535)
+    ):
         result["error"] = "invalid_http_url"
         return result
     request = urllib.request.Request(
@@ -47,6 +71,7 @@ def check_url(url: str) -> dict:
         ) as response:
             result["http_status"] = response.status
             result["final_url"] = response.geturl()
+            result["tls"] = urlparse(result["final_url"]).scheme.lower() == "https"
             result["reachable"] = 200 <= response.status < 400
     except urllib.error.HTTPError as exc:
         # Some sites reject HEAD; retry a bounded GET without downloading the body.
@@ -60,6 +85,7 @@ def check_url(url: str) -> dict:
             ) as response:
                 result["http_status"] = response.status
                 result["final_url"] = response.geturl()
+                result["tls"] = urlparse(result["final_url"]).scheme.lower() == "https"
                 result["reachable"] = 200 <= response.status < 400
         except Exception as retry_exc:
             result["error"] = f"http_{exc.code}; retry_{type(retry_exc).__name__}"
