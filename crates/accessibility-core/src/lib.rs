@@ -50,9 +50,7 @@ impl<'a> AccessibleEvent<'a> {
 
     /// Validate the shared logical event contract; this is not a platform adapter.
     pub fn is_valid(&self) -> bool {
-        self.abi_version == ABI_VERSION
-            && self.name.len() <= 4096
-            && !self.name.contains('\0')
+        self.abi_version == ABI_VERSION && self.name.len() <= 4096 && !self.name.contains('\0')
     }
 }
 
