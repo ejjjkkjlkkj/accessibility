@@ -129,11 +129,71 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          if git ls-files | grep -E '(^|/)(\.env|id_rsa|id_ed25519|credentials\.json|secrets\.json)$'; then
+          if git ls-files | grep -E '(^|/)(\.env($|\.(?!example$|template$))|id_rsa|id_ed25519|credentials\.json|secrets\.json)
+  go-core:
+    name: Go core and catalog validator
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+      - name: Format check
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -d '' -t files < <(git ls-files -z -- '*.go')
+          if (("${#files[@]}" == 0)); then
+            echo "PARTIAL: no tracked Go files found"
+          else
+            unformatted="$(printf '%s\0' "${files[@]}" | xargs -0 -r gofmt -l)"
+            if [ -n "$unformatted" ]; then
+              printf '%s\n' "$unformatted"
+              echo "FAIL: Go files require gofmt"
+              exit 1
+            fi
+            echo "PASS: gofmt (${#files[@]} files)"
+          fi
+      - name: Run Go unit tests
+        run: go test ./...
+      - name: Validate the committed resource catalog
+        run: go run ./cmd/catalog-validator data/resources.csv
+; then
             echo "FAIL: suspicious secret-like filename tracked; inspect manually"
             exit 1
           fi
           echo "PASS: no common secret-like filenames detected"
+
+      - name: Reject tracked build and interpreter cache artifacts
+        shell: python {0}
+        run: |
+          import pathlib
+          import subprocess
+          import sys
+
+          tracked = subprocess.run(
+              ["git", "ls-files", "-z"],
+              check=True,
+              stdout=subprocess.PIPE,
+          ).stdout.decode("utf-8", errors="surrogateescape").split("\0")
+          forbidden_dirs = {
+              "target", "node_modules", "__pycache__", ".pytest_cache",
+              ".mypy_cache", ".ruff_cache", ".venv",
+          }
+          failures = []
+          for raw in tracked:
+              if not raw:
+                  continue
+              path = pathlib.PurePosixPath(raw)
+              if any(part in forbidden_dirs for part in path.parts):
+                  failures.append(f"{raw}: generated/cache directory is tracked")
+              elif path.suffix in {".pyc", ".pyo"}:
+                  failures.append(f"{raw}: Python bytecode is tracked")
+          if failures:
+              print("\n".join(failures))
+              sys.exit(1)
+          print(f"PASS: no tracked build/cache artifacts ({len(tracked) - 1} files checked)")
 
   go-core:
     name: Go core and catalog validator
