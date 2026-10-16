@@ -27,7 +27,11 @@ Les documents canoniques maintenus dans docs/ sont la cartographie des langages 
 GitHub Actions vérifie les documents ZERO requis, les manifestes JSON, les liens Markdown relatifs, la syntaxe des fichiers Python suivis par Git, les tests Python disponibles, le formatage Go, les tests Go, `go vet` et le catalogue de ressources. Les contrôles effectivement exécutés et leurs résultats doivent être confirmés dans les journaux Actions. Cette CI ne prouve pas le fonctionnement d'un screen reader sur matériel réel.
 
 
-## Shared role identifiers\n\nThe numeric role mapping for C, Rust, Go, D, Ada, Nim, Swift and Zig is defined in [Accessibility role codes v1](docs/ACCESSIBILITY-ROLE-CODES-V1.md). This is a logical role-code contract, not a claim that all binary layouts or platform adapters are already interchangeable.\n\n## NEXORA integration
+## Identifiants de rôles partagés
+
+Le mapping numérique des rôles pour C, Rust, Go, D, Ada, Nim, Swift et Zig est défini dans [Accessibility role codes v1](docs/ACCESSIBILITY-ROLE-CODES-V1.md). Il s'agit d'un contrat logique, pas d'une preuve d'interopérabilité des représentations binaires ou des adaptateurs de plateforme.
+
+## Intégration NEXORA
 
 The accessibility boundary for the experimental NEXORA language is documented in [the NEXORA accessibility contract](docs/NEXORA-ACCESSIBILITY-CONTRACT.md) and its machine-readable contract at `projects/nexora/accessibility-contract.json`. This is a contract only: it does not claim a working NEXORA screen reader, OS backend, or UEFI runtime.
 
