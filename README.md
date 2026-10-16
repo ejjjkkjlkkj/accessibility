@@ -40,6 +40,10 @@ The accessibility boundary for the experimental NEXORA language is documented in
 - [Independent implementation tracks for every language and the separate NEXORA universal language](docs/ARCHITECTURE-INDEPENDENT-LANGUAGE-TRACKS-AND-NEXORA.md)
 
 
+## Agent de développement local (prototype)
+
+Le prototype Ollama local et ses garde-fous sont décrits dans [la documentation de l’agent local](docs/LOCAL-AGENT-24-7.md). Il reste **à exécuter et valider sur le poste cible**; l’ajout au dépôt ne prétend pas qu’un agent tourne en arrière-plan.
+
 ## Manifestes et statuts
 
 - `projects/manifest.json` est le catalogue canonique des identifiants de langues et de leurs statuts généraux.
