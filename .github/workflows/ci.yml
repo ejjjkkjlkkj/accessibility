@@ -107,7 +107,31 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          python -m compileall -q .
+          python - <<'PY'
+          import ast
+          import pathlib
+          import subprocess
+          import sys
+
+          result = subprocess.run(
+              ["git", "ls-files", "-z", "--", "*.py"],
+              check=True,
+              stdout=subprocess.PIPE,
+          )
+          files = [pathlib.Path(p.decode("utf-8")) for p in result.stdout.split(b"\0") if p]
+          failures = []
+          for path in files:
+              try:
+                  ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+              except (OSError, UnicodeError, SyntaxError) as exc:
+                  failures.append(f"{path}: {exc}")
+              else:
+                  print(f"PASS: Python syntax: {path}")
+          if failures:
+              print("\n".join(failures))
+              sys.exit(1)
+          print(f"PASS: parsed {len(files)} tracked Python files")
+          PY
           if [ -d tests ]; then
             if python -c "import pytest" >/dev/null 2>&1; then
               python -m pytest -q
