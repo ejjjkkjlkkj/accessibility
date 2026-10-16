@@ -196,17 +196,16 @@ jobs:
       - name: Create a draft release for review
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_TAG_INPUT: ${{ inputs.release_tag }}
         shell: bash
         run: |
           set -euo pipefail
           release_tag="$GITHUB_REF_NAME"
           if [[ "$GITHUB_EVENT_NAME" == "workflow_dispatch" ]]; then
-            release_tag="${{ inputs.release_tag }}"
+            # Validate dispatch input as data; never embed it into this script.
+            release_tag="$RELEASE_TAG_INPUT"
           fi
-          if [[ ! "$release_tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]; then
-            echo "Invalid release tag: $release_tag" >&2
-            exit 2
-          fi
+          release_tag="$(python scripts/validate_release_tag.py "$release_tag")"
           if [[ "$GITHUB_EVENT_NAME" == "workflow_dispatch" ]] && gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$release_tag" >/dev/null 2>&1; then
             echo "Refusing to reuse an existing tag; choose a new release_tag." >&2
             exit 2
