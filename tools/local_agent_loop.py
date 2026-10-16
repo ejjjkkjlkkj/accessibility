@@ -77,6 +77,8 @@ class _NoRedirectHandler(urllib.request.HTTPRedirectHandler):
 
     def redirect_request(self, req, fp, code, msg, headers, newurl):  # type: ignore[no-untyped-def]
         return None
+
+
 MAX_PATCH_BYTES = 200_000
 MAX_CONTEXT_CHARS = 80_000
 MAX_CONTEXT_FILES = 60
@@ -422,24 +424,55 @@ def _run_native_checks(changed_paths: list[str]) -> tuple[int, str]:
     return 0, "\n".join(results)[-16_000:]
 
 
+def cargo_command_for_manifest(manifest: pathlib.Path) -> list[str]:
+    """Keep the freestanding UEFI binary on its real target, never host cargo test."""
+    try:
+        relative = manifest.resolve().relative_to(ROOT).as_posix()
+    except ValueError:
+        relative = ""
+    if relative == "src/rust-uefi/Cargo.toml":
+        return [
+            "cargo", "build", "--manifest-path", str(manifest),
+            "--target", "x86_64-unknown-uefi", "--release",
+            "--target-dir", str(ROOT / "build" / "local-agent-rust-uefi"),
+        ]
+    return ["cargo", "test", "--manifest-path", str(manifest)]
+
+
 def run_tests(changed_paths: list[str]) -> tuple[int, str]:
     results: list[str] = []
     manifests = sorted(
         p for p in ROOT.rglob("Cargo.toml")
-        if not any(part in EXCLUDED_PARTS for part in p.parts)
+        if not p.is_symlink()
+        and p.resolve().is_relative_to(ROOT)
+        and not any(part in EXCLUDED_PARTS for part in p.parts)
         and len(p.relative_to(ROOT).parts) <= 6
     )
     for manifest in manifests:
-        command = ["cargo", "test", "--manifest-path", str(manifest)]
+        command = cargo_command_for_manifest(manifest)
         if (manifest.parent / "Cargo.lock").is_file():
             command.append("--locked")
+        if "--target" in command:
+            rustup = shutil.which("rustup")
+            if rustup is None:
+                return 2, f"BLOCKED: UEFI validation requires rustup target x86_64-unknown-uefi for {manifest}"
+            try:
+                installed = subprocess.run(
+                    [rustup, "target", "list", "--installed"],
+                    cwd=ROOT, text=True, stdout=subprocess.PIPE,
+                    stderr=subprocess.STDOUT, timeout=30,
+                )
+            except (OSError, subprocess.TimeoutExpired) as exc:
+                return 2, f"BLOCKED: could not inspect installed Rust targets: {exc}"
+            if installed.returncode or "x86_64-unknown-uefi" not in installed.stdout.splitlines():
+                return 2, "BLOCKED: install the x86_64-unknown-uefi Rust target before local validation; no toolchain is downloaded automatically"
         try:
             result = subprocess.run(
                 command, cwd=ROOT, text=True, stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT, timeout=1800,
             )
         except (OSError, subprocess.TimeoutExpired) as exc:
-            return 2, f"BLOCKED: Rust test execution failed for {manifest}: {exc}"
+            return 2, f"BLOCKED: Rust validation failed for {manifest}: {exc}"
         results.append(f"$ {' '.join(command)}\n{result.stdout[-6000:]}")
         if result.returncode:
             return result.returncode, "\n".join(results)[-16_000:]
