@@ -62,4 +62,5 @@ jobs:
           git diff --check
 
       - name: Confirm no automatic publication
-        run: echo "PASS: local agent output is not committed or pushed automatically; review and publish explicitly."
+        run: |
+          echo "PASS: local agent output is not committed or pushed automatically; review and publish explicitly."
