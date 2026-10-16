@@ -78,7 +78,7 @@ impl PciFunction {
     pub fn descriptor(&self, stable_id: u64) -> DeviceDescriptor<'static> {
         DeviceDescriptor::new(
             stable_id,
-            DeviceOrigin::PhysicalInventory,
+            DeviceOrigin::FirmwareReported,
             Some(self.address),
             Some(self.vendor_id),
             Some(self.device_id),
@@ -160,6 +160,16 @@ mod tests {
         assert_eq!(found.device_id, 0x145c);
         assert_eq!(found.class_code(), 0x060600);
         assert!(found.descriptor(1).is_valid());
+    }
+
+    #[test]
+    fn firmware_inventory_is_not_mislabeled_as_physical_proof() {
+        let mut reader = MockReader;
+        let function = PciFunction::read(
+            &mut reader,
+            PciAddress::new(0, 0, 1, 0),
+        ).unwrap().unwrap();
+        assert_eq!(function.descriptor(1).origin, DeviceOrigin::FirmwareReported);
     }
 
     #[test]
