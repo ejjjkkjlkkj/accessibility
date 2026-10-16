@@ -13,7 +13,7 @@
 
 ## Run a single iteration
 
-Requirements: Python 3.11+, Git, Cargo/Rust for the repository's Rust manifests, a local Ollama installation, and the configured model already installed. Use a disposable checkout under a low-privilege account, without secrets or personal files. Do not run generated tests with access to sensitive data.
+Requirements: Python 3.11+, Git, Cargo/Rust, the preinstalled `x86_64-unknown-uefi` Rust target, a local Ollama installation, and the configured model already installed. The runner does not download toolchains automatically. Use a disposable checkout under a low-privilege account, without secrets or personal files. Do not run generated tests with access to sensitive data.
 
 From PowerShell at the repository root, on a clean feature branch:
 
