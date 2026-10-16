@@ -1,0 +1,49 @@
+# Build output
+/target/
+/build/
+/dist/
+/out/
+/bin/
+/obj/
+**/target/
+**/build/
+**/dist/
+**/out/
+**/bin/
+**/obj/
+
+# Python caches and virtual environments
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.tox/
+.venv/
+venv/
+
+# Rust/Cargo caches
+.cargo/
+
+# Test and coverage output
+.coverage
+.coverage.*
+htmlcov/
+coverage/
+*.profraw
+*.profdata
+*.test
+
+# IDE and OS metadata
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Local secrets and environment files (examples/templates may be committed explicitly)
+.env
+.env.*
+!.env.example
+!.env.template
