@@ -103,7 +103,7 @@ func TestValidateRejectsDuplicateHeadersAfterTrimming(t *testing.T) {
 
 func TestValidateRejectsOutOfRangeURLPorts(t *testing.T) {
 	for _, port := range []string{"0", "65536"} {
-		row := "a,Example,example.org,https://example.org:" + port + "/,docs,web,candidate,test\\n"
+		row := "a,Example,example.org,https://example.org:" + port + "/,docs,web,candidate,test\n"
 		if err := validate(strings.NewReader(validHeader + row)); err == nil {
 			t.Errorf("expected invalid port %q to fail", port)
 		}
@@ -111,7 +111,7 @@ func TestValidateRejectsOutOfRangeURLPorts(t *testing.T) {
 }
 
 func TestValidateAcceptsValidURLPort(t *testing.T) {
-	row := "a,Example,example.org,https://example.org:443/,docs,web,candidate,test\\n"
+	row := "a,Example,example.org,https://example.org:443/,docs,web,candidate,test\n"
 	if err := validate(strings.NewReader(validHeader + row)); err != nil {
 		t.Fatalf("expected valid HTTPS port to pass, got %v", err)
 	}
@@ -150,13 +150,13 @@ func TestValidateEnforcesDNSDomainLengthBoundary(t *testing.T) {
 	}
 
 	maximum := makeDomain(61) // 253 octets including separators
-	row := "a,Example," + maximum + ",https://" + maximum + "/,docs,web,candidate,test\\n"
+	row := "a,Example," + maximum + ",https://" + maximum + "/,docs,web,candidate,test\n"
 	if err := validate(strings.NewReader(validHeader + row)); err != nil {
 		t.Fatalf("expected 253-character DNS name to pass, got %v", err)
 	}
 
 	tooLong := makeDomain(62) // 254 octets including separators
-	row = "a,Example," + tooLong + ",https://" + tooLong + "/,docs,web,candidate,test\\n"
+	row = "a,Example," + tooLong + ",https://" + tooLong + "/,docs,web,candidate,test\n"
 	if err := validate(strings.NewReader(validHeader + row)); err == nil {
 		t.Fatal("expected 254-character DNS name to fail")
 	}
@@ -223,7 +223,7 @@ func TestValidateRejectsMalformedURLHostnames(t *testing.T) {
 		"https://bad-.example.org/",
 		"https://[::1]/",
 	} {
-		row := "a,Example,example.org," + rawURL + ",docs,web,candidate,test\\n"
+		row := "a,Example,example.org," + rawURL + ",docs,web,candidate,test\n"
 		if err := validate(strings.NewReader(validHeader + row)); err == nil {
 			t.Errorf("expected invalid DNS hostname to fail: %q", rawURL)
 		}
