@@ -61,6 +61,8 @@ impl ResourcePolicy {
         self.allowed_kinds |= kind_bit(kind);
         if allow_write {
             self.writable_kinds |= kind_bit(kind);
+        } else {
+            self.writable_kinds &= !kind_bit(kind);
         }
         self
     }
@@ -135,6 +137,21 @@ mod tests {
         assert_eq!(validated.length(), 0x100);
         assert_eq!(validated.mode(), AccessMode::Read);
         assert_eq!(policy.evaluate(declared, request, AccessMode::Write), Err(PolicyError::WriteDenied));
+    }
+
+    #[test]
+    fn later_read_only_rule_revokes_previously_allowed_writes() {
+        let declared = ResourceWindow::new(ResourceKind::Mmio, 0x1000, 0x1000);
+        let request = ResourceWindow::new(ResourceKind::Mmio, 0x1100, 0x100);
+        let policy = ResourcePolicy::deny_all()
+            .with_max_window_bytes(0x200)
+            .allow_kind(ResourceKind::Mmio, true)
+            .allow_kind(ResourceKind::Mmio, false);
+        assert!(policy.evaluate(declared, request, AccessMode::Read).is_ok());
+        assert_eq!(
+            policy.evaluate(declared, request, AccessMode::Write),
+            Err(PolicyError::WriteDenied)
+        );
     }
 
     #[test]
