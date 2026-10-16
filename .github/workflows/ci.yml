@@ -2,7 +2,7 @@ name: Accessibility and ZERO CI
 
 on:
   push:
-    branches: [main, master]
+    branches: [main, master, "audit/**", "fix/**"]
   pull_request:
   workflow_dispatch:
   schedule:
@@ -35,58 +35,90 @@ jobs:
       - name: Check whitespace errors
         run: git diff --check
 
+      - name: Validate JSON manifests
+        shell: python {0}
+        run: |
+          import json
+          import pathlib
+          import sys
+
+          candidates = [
+              pathlib.Path("projects/manifest.json"),
+              pathlib.Path("projects/nexora/accessibility-contract.json"),
+          ]
+          failures = []
+          for path in candidates:
+              if not path.is_file():
+                  failures.append(f"{path}: required JSON manifest is missing")
+                  continue
+              try:
+                  with path.open("r", encoding="utf-8") as stream:
+                      json.load(stream)
+              except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+                  failures.append(f"{path}: invalid JSON: {exc}")
+              else:
+                  print(f"PASS: valid JSON: {path}")
+          if failures:
+              print("\n".join(failures))
+              sys.exit(1)
+
       - name: Check Markdown relative links
         shell: python {0}
         run: |
-          import pathlib, re, sys
+          import pathlib
+          import re
+          import sys
+          from urllib.parse import unquote, urlsplit
+
           root = pathlib.Path(".")
           failures = []
           ignored = {".git", ".github"}
+          link_pattern = re.compile(r"!?(?:\[[^\]]*\])\(([^)]+)\)")
+
           for path in root.rglob("*.md"):
               if any(part in ignored for part in path.parts):
                   continue
-              text = path.read_text(encoding="utf-8", errors="replace")
-              for target in re.findall(r"!?(?:\[[^\]]*\])\(([^)]+)\)", text):
-                  target = target.strip().split()[0].strip("<>")
-                  if not target or target.startswith(("http://", "https://", "mailto:", "#", "data:")):
-                      continue
-                  target = target.split("#", 1)[0].split("?", 1)[0]
+              try:
+                  content = path.read_text(encoding="utf-8")
+              except (OSError, UnicodeError) as exc:
+                  failures.append(f"{path}: cannot read UTF-8 Markdown: {exc}")
+                  continue
+
+              for raw_target in link_pattern.findall(content):
+                  target = raw_target.strip()
                   if not target:
+                      failures.append(f"{path}: empty Markdown link target")
                       continue
-                  resolved = (path.parent / target).resolve()
+                  target = target.split(maxsplit=1)[0].strip("<>")
+                  parsed = urlsplit(target)
+                  if parsed.scheme or parsed.netloc or target.startswith("#"):
+                      continue
+                  local_path = unquote(parsed.path)
+                  if not local_path:
+                      continue
+                  resolved = (path.parent / local_path).resolve()
                   if not resolved.exists():
-                      failures.append(f"{path}: broken relative link: {target}")
+                      failures.append(f"{path}: broken relative link: {local_path}")
+
           if failures:
               print("\n".join(failures))
               sys.exit(1)
           print("PASS: Markdown relative links")
 
-      - name: Inventory implementation and tests
+      - name: Check Python syntax when Python sources exist
         shell: bash
         run: |
           set -euo pipefail
-          echo "Repository inventory (no claim of hardware validation):"
-          find . -maxdepth 3 -type f \( -name Cargo.toml -o -name pyproject.toml -o -name pytest.ini -o -name CMakeLists.txt -o -name Makefile \) -not -path './.git/*' -print
-          if [ -f Cargo.toml ]; then
-            if command -v cargo >/dev/null 2>&1; then
-              cargo test --workspace --locked
-            else
-              echo "BLOCKED: Cargo manifest found but toolchain unavailable"
-              exit 1
-            fi
+          mapfile -t files < <(git ls-files '*.py')
+          if (("${#files[@]}" == 0)); then
+            echo "PARTIAL: no tracked Python files found"
           else
-            echo "PARTIAL: no root Cargo.toml; no Rust workspace test was inferred"
+            python -m py_compile "${files[@]}"
+            echo "PASS: Python syntax (${#files[@]} files)"
           fi
-          if [ -f pyproject.toml ] || [ -d tests ]; then
-            python -m compileall -q .
-            if python -c "import pytest" >/dev/null 2>&1; then
-              python -m pytest -q
-            else
-              echo "PARTIAL: Python sources compiled; pytest is not installed"
-            fi
-          else
-            echo "PARTIAL: no root Python project/tests detected"
-          fi
+
+      - name: Check repository whitespace
+        run: git diff --check
 
   security-baseline:
     name: Dependency and secret hygiene baseline
@@ -102,3 +134,33 @@ jobs:
             exit 1
           fi
           echo "PASS: no common secret-like filenames detected"
+
+  go-core:
+    name: Go core and catalog validator
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+      - name: Format check
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -d '' -t files < <(git ls-files -z -- '*.go')
+          if (("${#files[@]}" == 0)); then
+            echo "PARTIAL: no tracked Go files found"
+          else
+            unformatted="$(printf '%s\0' "${files[@]}" | xargs -0 -r gofmt -l)"
+            if [ -n "$unformatted" ]; then
+              printf '%s\n' "$unformatted"
+              echo "FAIL: Go files require gofmt"
+              exit 1
+            fi
+            echo "PASS: gofmt (${#files[@]} files)"
+          fi
+      - name: Run Go unit tests
+        run: go test ./...
+      - name: Validate the committed resource catalog
+        run: go run ./cmd/catalog-validator data/resources.csv
