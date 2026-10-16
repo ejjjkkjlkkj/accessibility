@@ -86,6 +86,16 @@ class AerlRunTests(unittest.TestCase):
         self.assertNotIn("SECRET_TOKEN", json.dumps(records[0]))
         self.assertNotIn("must-not-be-recorded", json.dumps(records[0]))
 
+    def test_default_command_timeout_is_bounded(self):
+        from aerl_run import build_parser
+
+        args = build_parser().parse_args([
+            "--file", str(self.ledger),
+            "--kind", "test.timeout",
+            "--", sys.executable, "-c", "pass",
+        ])
+        self.assertEqual(args.timeout_seconds, 300)
+
     def test_rejects_invalid_timeout(self):
         result = self.run_cli("--timeout-seconds", "86401", "--", sys.executable, "-c", "pass")
         self.assertEqual(result.returncode, 2)
