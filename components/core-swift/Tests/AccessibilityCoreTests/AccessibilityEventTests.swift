@@ -7,6 +7,9 @@ final class AccessibilityEventTests: XCTestCase {
         XCTAssertFalse(AccessibilityEvent(abiVersion: 2, role: .button, name: "Save").isValid)
         XCTAssertFalse(AccessibilityEvent(role: .button, name: String(repeating: "x", count: 4097)).isValid)
     }
+    func testEmbeddedNULIsRejected() {
+        XCTAssertFalse(AccessibilityEvent(role: .button, name: "bad\\0name").isValid)
+    }
     func testCanonicalRoleCodes() { XCTAssertEqual(AccessibilityRole.button.rawValue, 5); XCTAssertEqual(AccessibilityRole.menuItem.rawValue, 17) }
     func testScreenReaderCursorBoundaries() {
         var cursor = ScreenReaderCursor(count: 2)
