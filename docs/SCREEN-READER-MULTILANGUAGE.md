@@ -28,16 +28,6 @@ The core only navigates a count supplied by an adapter. It does not discover acc
 | Nim | components/core-nim/src/screenreader_cursor.nim | nim c -r |
 | Swift | components/core-swift/Sources/AccessibilityCore/ScreenReaderCursor.swift | swift test |
 
-## IA universelle partagée — intégration optionnelle
-
-Le modèle cible est un modèle commun aux langues naturelles et aux langages de programmation, maintenu dans `ejjjkkjlkkj/ia` (architecture : `UNIVERSAL-MODEL-ARCHITECTURE.md`). Ce dépôt d'accessibilité fournit les interfaces et tests d'intégration; il ne doit pas créer un modèle différent par langage ni dépendre d'un service cloud.
-
-- L'IA ne remplace pas le noyau déterministe de navigation, l'arbre sémantique ou les API d'accessibilité natives.
-- Les sorties du modèle sont non fiables : aucune action UI, commande système ou action firmware ne s'exécute sans validation déterministe et autorisation explicite.
-- UEFI/bare metal : chargement seulement si la mémoire, le runtime et les pilotes sont disponibles; le chemin de démarrage et les annonces minimales doivent fonctionner sans IA.
-- Les tests doivent séparer la couverture UTF-8, l'interopérabilité du checkpoint, la qualité par langue/tâche et la validation matérielle.
-- La baseline bigramme UTF-8 actuelle est expérimentale; elle ne prouve ni compréhension sémantique ni aptitude à guider un utilisateur aveugle.
-
 ## Next required components
 
 1. Semantic node model: role, accessible name, states, value, bounds, parent/children, stable identity.

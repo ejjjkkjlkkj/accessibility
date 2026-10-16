@@ -74,7 +74,7 @@ int accessibility_event_init(accessibility_event *event,
     if (event == NULL || name == NULL) {
         return -1;
     }
-    if ((int)role < ACCESSIBILITY_ROLE_UNKNOWN || (int)role > ACCESSIBILITY_ROLE_MENU_ITEM) {
+    if ((uint32_t)role > (uint32_t)ACCESSIBILITY_ROLE_MENU_ITEM) {
         return -2;
     }
     if (strlen(name) >= ACCESSIBILITY_NAME_CAPACITY) {

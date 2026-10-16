@@ -1,104 +1,247 @@
-# Cartographie multi-langage : Screen Reader, UEFI et OS
+# Language cartography: screen reader, UEFI and OS
 
-## Objectif
+## Purpose
 
-Définir une piste de travail pour chaque ID du catalogue commun IA. Cette cartographie est une feuille de route, pas une déclaration d'implémentation achevée. Tous les statuts commencent à NOT_VALIDATED tant qu'une preuve spécifique n'est pas attachée.
+This document maps candidate languages to three independent deliverables: a native screen reader, a UEFI/pre-OS application, and an independently bootable OS/kernel. It is a feasibility and execution map, not evidence that the components already exist.
 
-## Architecture de référence
+## Rules that apply to every language
 
-1. **Noyau commun** : événements d'entrée, état du focus, arbre sémantique, commandes clavier, gestion des erreurs et journal de preuve.
-2. **Screen reader hébergé** : adaptateur vers les API natives d'accessibilité du système (par exemple UI Automation sur Windows); parole, braille, navigation et tests clavier.
-3. **Screen reader UEFI / bare metal** : console texte et événements firmware disponibles, GOP pour l'affichage, clavier selon protocoles exposés, synthèse vocale et audio uniquement lorsque le chemin matériel est démontré. Les API UEFI ne fournissent pas universellement un pilote audio ou une API d'accessibilité.
-4. **Couche OS** : adaptateurs distincts pour Windows, Linux et autres cibles effectivement supportées; ne pas confondre un binaire UEFI avec un pilote ou une application OS.
-5. **IA locale** : optionnelle, hors du chemin critique de démarrage; un modèle externe ou un service cloud ne constitue pas le screen reader lui-même.
+- Keep screen reader, UEFI app and kernel in separate source trees, build jobs and release gates.
+- A native executable is not automatically UEFI-compatible, freestanding, or a bootable OS.
+- Mark each result PASS, FAIL, PARTIAL, BLOCKED or NOT_VALIDATED. Never infer PASS from a source file existing.
+- Every PASS must record source commit, compiler/toolchain version, exact command, exit code, test logs and artifact SHA-256.
+- QEMU results must be labelled EMULATOR; they do not prove physical hardware support.
+- No firmware flashing, NVRAM writes, unattended physical reboot, or changes to the user's Windows disk.
+- Accessibility must use semantic OS APIs where available; OCR is fallback only. Audio is not considered working until a real backend/device path is demonstrated.
+- Do not force every language into every target. Where runtime, compiler, ABI or SDK requirements cannot be met, record BLOCKED with evidence and preserve a stable C ABI boundary where appropriate.
 
-## Matrice des pistes
+## Shared architecture
 
-| ID | Langage | Screen reader | UEFI / bare metal | OS | Statut initial |
-|---|---|---|---|---|---|
-| c | C | À ÉVALUER — composants et adaptateurs selon runtime | À ÉVALUER — seulement si cible/compiler et interfaces firmware disponibles | À ÉVALUER — API natives et dépendances déclarées | NOT_VALIDATED |
-| cpp | C++ | À ÉVALUER — composants et adaptateurs selon runtime | À ÉVALUER — seulement si cible/compiler et interfaces firmware disponibles | À ÉVALUER — API natives et dépendances déclarées | NOT_VALIDATED |
-| rust | Rust | À ÉVALUER — composants et adaptateurs selon runtime | À ÉVALUER — seulement si cible/compiler et interfaces firmware disponibles | À ÉVALUER — API natives et dépendances déclarées | NOT_VALIDATED |
-| zig | Zig | À ÉVALUER — composants et adaptateurs selon runtime | À ÉVALUER — seulement si cible/compiler et interfaces firmware disponibles | À ÉVALUER — API natives et dépendances déclarées | NOT_VALIDATED |
-| ada | Ada | À ÉVALUER — composants et adaptateurs selon runtime | À ÉVALUER — seulement si cible/compiler et interfaces firmware disponibles | À ÉVALUER — API natives et dépendances déclarées | NOT_VALIDATED |
-| asm-x86_64 | x86-64 Assembly | À ÉVALUER — composants et adaptateurs selon runtime | À ÉVALUER — seulement si cible/compiler et interfaces firmware disponibles | À ÉVALUER — API natives et dépendances déclarées | NOT_VALIDATED |
-| asm-aarch64 | AArch64 Assembly | À ÉVALUER — composants et adaptateurs selon runtime | À ÉVALUER — seulement si cible/compiler et interfaces firmware disponibles | À ÉVALUER — API natives et dépendances déclarées | NOT_VALIDATED |
-| asm-riscv64 | RISC-V Assembly | À ÉVALUER — composants et adaptateurs selon runtime | À ÉVALUER — seulement si cible/compiler et interfaces firmware disponibles | À ÉVALUER — API natives et dépendances déclarées | NOT_VALIDATED |
-| go | Go | À ÉVALUER — composants et adaptateurs selon runtime | À ÉVALUER — seulement si cible/compiler et interfaces firmware disponibles | À ÉVALUER — API natives et dépendances déclarées | NOT_VALIDATED |
-| d | D | À ÉVALUER — composants et adaptateurs selon runtime | À ÉVALUER — seulement si cible/compiler et interfaces firmware disponibles | À ÉVALUER — API natives et dépendances déclarées | NOT_VALIDATED |
-| nim | Nim | À ÉVALUER — composants et adaptateurs selon runtime | À ÉVALUER — seulement si cible/compiler et interfaces firmware disponibles | À ÉVALUER — API natives et dépendances déclarées | NOT_VALIDATED |
-| swift | Swift | À ÉVALUER — composants et adaptateurs selon runtime | À ÉVALUER — seulement si cible/compiler et interfaces firmware disponibles | À ÉVALUER — API natives et dépendances déclarées | NOT_VALIDATED |
-| pascal | Free Pascal / Object Pascal | À ÉVALUER — composants et adaptateurs selon runtime | À ÉVALUER — seulement si cible/compiler et interfaces firmware disponibles | À ÉVALUER — API natives et dépendances déclarées | NOT_VALIDATED |
-| odin | Odin | À ÉVALUER — composants et adaptateurs selon runtime | À ÉVALUER — seulement si cible/compiler et interfaces firmware disponibles | À ÉVALUER — API natives et dépendances déclarées | NOT_VALIDATED |
-| fortran | Fortran | À ÉVALUER — composants et adaptateurs selon runtime | À ÉVALUER — seulement si cible/compiler et interfaces firmware disponibles | À ÉVALUER — API natives et dépendances déclarées | NOT_VALIDATED |
-| csharp | C# | À ÉVALUER — composants et adaptateurs selon runtime | À ÉVALUER — seulement si cible/compiler et interfaces firmware disponibles | À ÉVALUER — API natives et dépendances déclarées | NOT_VALIDATED |
-| objc | Objective-C | À ÉVALUER — composants et adaptateurs selon runtime | À ÉVALUER — seulement si cible/compiler et interfaces firmware disponibles | À ÉVALUER — API natives et dépendances déclarées | NOT_VALIDATED |
-| v | V | À ÉVALUER — composants et adaptateurs selon runtime | À ÉVALUER — seulement si cible/compiler et interfaces firmware disponibles | À ÉVALUER — API natives et dépendances déclarées | NOT_VALIDATED |
-| crystal | Crystal | À ÉVALUER — composants et adaptateurs selon runtime | À ÉVALUER — seulement si cible/compiler et interfaces firmware disponibles | À ÉVALUER — API natives et dépendances déclarées | NOT_VALIDATED |
-| modula2 | Modula-2 | À ÉVALUER — composants et adaptateurs selon runtime | À ÉVALUER — seulement si cible/compiler et interfaces firmware disponibles | À ÉVALUER — API natives et dépendances déclarées | NOT_VALIDATED |
-| cobol | COBOL | À ÉVALUER — composants et adaptateurs selon runtime | À ÉVALUER — seulement si cible/compiler et interfaces firmware disponibles | À ÉVALUER — API natives et dépendances déclarées | NOT_VALIDATED |
-| pli | PL/I | À ÉVALUER — composants et adaptateurs selon runtime | À ÉVALUER — seulement si cible/compiler et interfaces firmware disponibles | À ÉVALUER — API natives et dépendances déclarées | NOT_VALIDATED |
-| java | Java | À ÉVALUER — composants et adaptateurs selon runtime | À ÉVALUER — seulement si cible/compiler et interfaces firmware disponibles | À ÉVALUER — API natives et dépendances déclarées | NOT_VALIDATED |
-| kotlin | Kotlin | À ÉVALUER — composants et adaptateurs selon runtime | À ÉVALUER — seulement si cible/compiler et interfaces firmware disponibles | À ÉVALUER — API natives et dépendances déclarées | NOT_VALIDATED |
-| python | Python | À ÉVALUER — composants et adaptateurs selon runtime | À ÉVALUER — seulement si cible/compiler et interfaces firmware disponibles | À ÉVALUER — API natives et dépendances déclarées | NOT_VALIDATED |
-| javascript | JavaScript | À ÉVALUER — composants et adaptateurs selon runtime | À ÉVALUER — seulement si cible/compiler et interfaces firmware disponibles | À ÉVALUER — API natives et dépendances déclarées | NOT_VALIDATED |
-| typescript | TypeScript | À ÉVALUER — composants et adaptateurs selon runtime | À ÉVALUER — seulement si cible/compiler et interfaces firmware disponibles | À ÉVALUER — API natives et dépendances déclarées | NOT_VALIDATED |
-| scratch | Scratch | À ÉVALUER — composants et adaptateurs selon runtime | À ÉVALUER — seulement si cible/compiler et interfaces firmware disponibles | À ÉVALUER — API natives et dépendances déclarées | NOT_VALIDATED |
-| u | U (ulanguage.org) | À ÉVALUER — composants et adaptateurs selon runtime | À ÉVALUER — seulement si cible/compiler et interfaces firmware disponibles | À ÉVALUER — API natives et dépendances déclarées | NOT_VALIDATED |
-| nexora | NEXORA (langage universel expérimental) | NOT_VALIDATED — aucun screen reader écrit en NEXORA validé | NOT_VALIDATED — aucun compilateur/backend UEFI ni runtime freestanding validé | NOT_VALIDATED — aucun backend OS ni adaptateur natif validé | PARTIAL — interpréteur de référence limité seulement |
-| julia | Julia | À ÉVALUER — composants et adaptateurs selon runtime | À ÉVALUER — seulement si cible/compiler et interfaces firmware disponibles | À ÉVALUER — API natives et dépendances déclarées | NOT_VALIDATED |
-| mojo | Mojo | À ÉVALUER — composants et adaptateurs selon runtime | À ÉVALUER — seulement si cible/compiler et interfaces firmware disponibles | À ÉVALUER — API natives et dépendances déclarées | NOT_VALIDATED |
-| chapel | Chapel | À ÉVALUER — composants et adaptateurs selon runtime | À ÉVALUER — seulement si cible/compiler et interfaces firmware disponibles | À ÉVALUER — API natives et dépendances déclarées | NOT_VALIDATED |
-| r | R | À ÉVALUER — composants et adaptateurs selon runtime | À ÉVALUER — seulement si cible/compiler et interfaces firmware disponibles | À ÉVALUER — API natives et dépendances déclarées | NOT_VALIDATED |
-| apl | APL | À ÉVALUER — composants et adaptateurs selon runtime | À ÉVALUER — seulement si cible/compiler et interfaces firmware disponibles | À ÉVALUER — API natives et dépendances déclarées | NOT_VALIDATED |
-| j | J | À ÉVALUER — composants et adaptateurs selon runtime | À ÉVALUER — seulement si cible/compiler et interfaces firmware disponibles | À ÉVALUER — API natives et dépendances déclarées | NOT_VALIDATED |
-| k | K | À ÉVALUER — composants et adaptateurs selon runtime | À ÉVALUER — seulement si cible/compiler et interfaces firmware disponibles | À ÉVALUER — API natives et dépendances déclarées | NOT_VALIDATED |
-| q | q | À ÉVALUER — composants et adaptateurs selon runtime | À ÉVALUER — seulement si cible/compiler et interfaces firmware disponibles | À ÉVALUER — API natives et dépendances déclarées | NOT_VALIDATED |
-| lua | Lua | À ÉVALUER — composants et adaptateurs selon runtime | À ÉVALUER — seulement si cible/compiler et interfaces firmware disponibles | À ÉVALUER — API natives et dépendances déclarées | NOT_VALIDATED |
+### Screen-reader layer
 
-### Piste NEXORA — limites actuelles
+1. Language-neutral event contract: semantic node, accessible name, role, state, value, hierarchy, focus, live-region change, alert, keyboard input, speech request, cancellation and backend error.
+2. Bounded event/speech queues, deterministic ordering, cancellation, duplicate suppression and overflow recovery.
+3. Platform adapters:
+   - Windows: UI Automation and a supported speech API.
+   - Linux: AT-SPI2 and a supported local speech API/service.
+   - Apple: Accessibility APIs and supported speech APIs.
+4. Keyboard-first navigation and focus reporting; configurable voice, rate, volume and output device where supported.
+5. Optional Braille and magnification adapters; unsupported targets must be explicitly documented.
+6. Shared conformance vectors run against each language's portable core and platform adapter.
 
-NEXORA est distinct de U (ulanguage.org). Le dépôt IA contient un prototype d’interpréteur limité; cela ne prouve pas l’existence d’un compilateur, d’un IR typé stable, d’un binaire natif, d’un screen reader, d’un backend OS ou d’un exécutable UEFI. Les trois axes Screen Reader, UEFI/bare metal et OS restent NOT_VALIDATED jusqu’à des tests spécifiques reproductibles.
+### UEFI/pre-OS layer
 
-## Règles propres aux cibles
+1. Produce a valid PE/COFF EFI application for a named architecture and ABI.
+2. Discover console input/output and GOP where available; handle missing protocols and errors.
+3. Keep pre-boot interaction useful even without sound: keyboard navigation, readable console output, structured status, and a documented handoff path.
+4. No universal UEFI audio capability is assumed. Audio stays BLOCKED until a device-specific driver/path is implemented and tested.
+5. Separate emulator validation from physical validation.
 
-- **C, C++, Rust, Zig, Ada, D et assembleurs** : candidats bas niveau selon compilateur, ABI, pilotes et bibliothèques réellement disponibles; ne pas présumer qu'un langage suffit à lui seul.
-- **Go, Nim, Swift, Pascal, Odin, Fortran, C#, Objective-C et langages JVM** : capacité OS selon runtime/cible; la prise en charge UEFI/freestanding doit être prouvée séparément.
-- **Python, JavaScript, TypeScript, R, Julia, Mojo, Chapel, Lua, APL, J, K, q et autres langages hébergés/expérimentaux** : prototypes et composants OS selon runtime; aucune prétention bare metal sans toolchain freestanding et preuve d'exécution.
-- **Assembleurs x86-64, AArch64 et RISC-V** : noyaux/entrées bas niveau; ils ne remplacent pas à eux seuls un lecteur d'écran complet.
-- **Scratch** : piste pédagogique, pas une cible de release UEFI/OS.
-- **U** : valider précisément le compilateur et la chaîne U → C avant d'affirmer une capacité native.
+### OS/kernel layer
 
-## Preuves de release
+1. Specify architecture, boot protocol, linker layout, entry point and image format.
+2. Implement early serial diagnostics, firmware memory-map ingestion, allocator, exceptions/interrupts and a documented scheduler baseline.
+3. Add device discovery, keyboard/input and display drivers, then a stable event model.
+4. Integrate accessibility events before claiming a complete graphical system.
+5. Define audio hardware support and a real speech path; a synthesized PCM buffer alone is not proof of sound output.
+6. Build a reproducible boot image and test host logic, emulator boot and physical boot separately.
 
-### Screen Reader
-- Tests clavier sans souris; focus observable et cohérent.
-- Rôles, noms, états, changements et annonces vérifiés avec une application de test.
-- Tests NVDA/JAWS/Narrator/Orca quand la cible le permet; consigner les versions.
-- Parole et braille testés réellement, avec logs et cas d'erreur.
+## Language-by-language execution map
 
-### UEFI / bare metal
-- Compilation EFI reproductible, architecture et hash consignés.
-- Boot QEMU explicitement étiqueté SIMULATION.
-- Validation sur matériel physique séparée, avec matériel, firmware, méthode, logs et résultat.
-- Aucune preuve audio physique basée uniquement sur l'écriture de registres ou un buffer PCM.
+### Progress update — 14 full language records
 
-### OS
-- Compilation et tests sur chaque OS revendiqué.
-- API d'accessibilité et périphériques testés sur la cible; pas de réussite extrapolée depuis un autre OS.
-- Package de release et procédure de retour arrière documentés.
+The repository now includes initial portable-core scaffolding for C++, Free Pascal, Odin, Fortran, Objective-C and C#; C# has a hosted core and smoke-test executable. UEFI and kernel status for these additions remains NOT_VALIDATED, NOT_IMPLEMENTED or BLOCKED as stated in `projects/manifest.json`. CI jobs were added for C++ and Free Pascal, and Fortran. Their results are pending; no PASS is claimed. Objective-C is scoped to Apple-specific adapter work, not a shared bare-metal kernel.
 
-## Statuts obligatoires
+### Existing eight priority tracks
 
-- NOT_IMPLEMENTED : aucun composant vérifiable.
-- PARTIAL : composants présents, critères incomplets.
-- BLOCKED : blocage reproductible documenté.
-- NOT_VALIDATED : preuve insuffisante ou tests non exécutés.
-- PASS : critères de la cible satisfaits et artefacts/logs disponibles.
+#### C
+- Screen reader: native OS adapters, semantic event core, speech backend, queue and failure tests.
+- UEFI: EDK2 or equivalent PE/COFF build; console input/output and GOP.
+- OS: freestanding compiler, linker script, boot protocol, memory/interrupt baseline.
+- Gate: validate ABI, memory safety boundaries and reproducible artifacts.
 
-Un test unitaire ou une simulation ne prouve pas une validation matérielle. La cible de fiabilité du projet est 99,99 %, mais elle ne peut être revendiquée sans une méthode statistique et des données d'essai adaptées.
+#### Rust
+- Screen reader: portable core plus platform bindings and speech integration.
+- UEFI: `x86_64-unknown-uefi`, EFI entry/ABI, panic strategy and allocation policy.
+- OS: `no_std`, target, linker, allocator and boot handoff.
+- Gate: ensure all unsafe/MMIO code is isolated and tested; target builds must be reproducible.
+
+#### Go
+- Screen reader: native platform APIs through supported bindings; audit runtime, GC and speech dependencies.
+- UEFI: demonstrate a reliable EFI ABI and runtime startup path before implementation is counted.
+- OS: runtime/GC and scheduler/startup dependencies are a major feasibility gate.
+- Gate: if freestanding startup/runtime cannot be demonstrated, mark UEFI/kernel BLOCKED rather than create a misleading stub.
+
+#### D
+- Screen reader: platform bindings, speech backend and runtime/GC audit.
+- UEFI: prove compiler/runtime profile, EFI ABI and PE/COFF output.
+- OS: prove freestanding profile, startup and runtime requirements.
+- Gate: no kernel PASS until runtime and linker behavior are demonstrated.
+
+#### Ada
+- Screen reader: OS bindings and local speech integration.
+- UEFI: validate GNAT target/runtime profile and elaboration/startup.
+- OS: runtime profile, startup, linker and interrupt integration.
+- Gate: preserve reproducible compiler/runtime configuration and document unavailable targets.
+
+#### Zig
+- Screen reader: native API bindings and speech backend.
+- UEFI: target support, EFI ABI and linker output.
+- OS: freestanding target, linker, boot protocol and allocator.
+- Gate: pin compiler version and run the same shared behavioral test vectors.
+
+#### Nim
+- Screen reader: generated C and platform bindings; inspect generated code and runtime dependencies.
+- UEFI: generated C toolchain, startup and runtime audit.
+- OS: prove generated startup/runtime can operate freestanding.
+- Gate: include generated-source and compiler-version evidence in artifacts.
+
+#### Swift
+- Screen reader: use supported platform SDKs and speech APIs; support differs by OS.
+- UEFI: prove target/ABI and Swift runtime availability before coding beyond a feasibility prototype.
+- OS: standard-library, runtime and freestanding feasibility must be demonstrated.
+- Gate: unsupported compiler/runtime combinations remain BLOCKED.
+
+### Additional candidates to evaluate
+
+These candidates expand the language survey. They must first pass a toolchain/ABI feasibility spike; they are not automatically part of the release count.
+
+#### C++
+- Screen reader: high priority for Windows/Linux native adapters, system integration and speech backends.
+- UEFI: feasible with a suitable freestanding C++ toolchain and disciplined runtime use.
+- OS: feasible for kernel components with exceptions, RTTI, constructors and standard-library dependencies deliberately controlled.
+- Priority: HIGH; candidate for a ninth full track after a reproducible toolchain check.
+
+#### Assembly
+- x86-64: boot entry, interrupt stubs, context switching and CPU-specific routines.
+- AArch64/ARM64: equivalent routines for ARM systems.
+- RISC-V: boot and trap/interrupt routines for RISC-V targets.
+- Screen reader: not a practical standalone application language; use for narrowly scoped architecture-specific primitives.
+- UEFI: only where architecture and firmware ABI match.
+- OS: complementary to C/Rust/Ada/Zig; not a replacement for a complete systems language.
+- Priority: HIGH as an architecture support layer, not as three independent complete screen readers.
+
+#### Free Pascal
+- Screen reader: native tooling and platform adapters if APIs and speech libraries are available.
+- UEFI: first prove compiler output, PE/COFF format and entry ABI.
+- OS: first prove freestanding startup, linker and runtime dependencies.
+- Priority: MEDIUM; feasibility spike before creating full tracks.
+
+#### Odin
+- Screen reader: investigate native OS bindings and speech integrations.
+- UEFI: verify target support, ABI, linker and runtime assumptions experimentally.
+- OS: verify freestanding startup and memory/runtime dependencies.
+- Priority: MEDIUM/EXPERIMENTAL; no UEFI/kernel claim without artifacts.
+
+#### V
+- Screen reader: evaluate generated C, native API bindings and speech dependencies.
+- UEFI: generated C toolchain and runtime audit required.
+- OS: generated startup and runtime must be proven freestanding.
+- Priority: EXPERIMENTAL.
+
+#### Objective-C
+- Screen reader: targeted Apple Accessibility and speech adapter; not a cross-platform core replacement.
+- UEFI: low priority; runtime and object model make it an unsuitable default for a common EFI implementation.
+- OS: low priority for a portable freestanding kernel.
+- Priority: HIGH only for Apple-specific adapter work.
+
+#### Fortran
+- Screen reader: low priority; could support numerical/ML subroutines, not the main event/focus layer.
+- UEFI: toolchain/runtime and ABI would need proof.
+- OS: low priority; runtime and I/O assumptions need a freestanding audit.
+- Priority: LOW for the core, possible specialized numeric library.
+
+#### Crystal
+- Screen reader: possible native utility/backend experiments; runtime and GC must be present and audited.
+- UEFI: not a default candidate unless a minimal runtime and EFI ABI are proven.
+- OS: low priority because runtime/GC requirements are a substantial barrier.
+- Priority: LOW/EXPERIMENTAL.
+
+#### Modula-2
+- Screen reader: only if a maintained compiler and required OS bindings are available.
+- UEFI: compiler target and PE/COFF ABI must be demonstrated.
+- OS: freestanding toolchain, linker and boot path must be demonstrated.
+- Priority: LOW; compiler/toolchain availability is the first gate.
+
+#### COBOL and PL/I
+- Screen reader: not recommended for the semantic event/focus engine; possible only for peripheral tooling where useful.
+- UEFI: not recommended unless a concrete supported freestanding target exists.
+- OS: not recommended as a primary kernel language.
+- Priority: LOW; do not create placeholder tracks merely to inflate language count.
+
+## Recommended implementation order
+
+1. Stabilize and test the existing eight portable cores using shared event and queue test vectors.
+2. Build one real native screen-reader vertical slice on Windows: UI Automation + keyboard focus/navigation + connected speech backend + accessibility tests.
+3. Add Linux AT-SPI2 and then Apple adapters when the required SDK/toolchain is available.
+4. Validate C UEFI, then Rust UEFI, with reproducible PE/COFF artifacts and explicit emulator evidence.
+5. Create one small bootable kernel milestone first (serial output, memory map, interrupts); use it as the reference design for other feasible language tracks.
+6. Add C++ as the first extra full language only after its native reader, EFI and kernel gates are individually evidenced.
+7. Add assembly per CPU architecture as support modules.
+8. Run feasibility spikes for Free Pascal and Odin. Promote only candidates that pass build, ABI and runtime gates.
+9. Keep Objective-C scoped to Apple accessibility. Keep V, Crystal, Fortran and Modula-2 experimental until a concrete need and reliable toolchain are established.
+10. Produce a release evidence report listing all language × component combinations, with unsupported combinations clearly BLOCKED.
+
+## Release status vocabulary
+
+- PASS: all applicable requirements have reproducible evidence.
+- PARTIAL: some implementation exists, but required integration or tests are missing.
+- BLOCKED: a documented dependency, ABI, SDK, runtime or hardware limitation prevents progress.
+- FAIL: a check was run and failed.
+- NOT_VALIDATED: no adequate evidence has been collected yet.
+
+## Current baseline
+
+The eight existing language cores remain PARTIAL until real native accessibility adapters and speech backends are connected. C and Rust UEFI sources must be treated as prototypes until EFI build and runtime evidence is current. Do not mark any of the eight OS/kernel tracks as complete without a reproducible boot image and recorded boot tests. Additional candidates above are mapped for feasibility, not claimed implemented.
 
 
-## NEXORA accessibility interface
+## Latest expansion status
 
-The proposed language-neutral node/event/command contract is defined in `projects/nexora/accessibility-contract.json` and explained in `docs/NEXORA-ACCESSIBILITY-CONTRACT.md`. It is a design boundary only; native adapters and end-to-end behavior remain NOT_VALIDATED.
+The project manifest has been expanded to 14 language tracks (42 language/component records). C++ and Free Pascal have portable core test programs and CI jobs; Fortran has a portable core test program and CI job. Odin and Objective-C source has been added but is not yet compiler-validated. C# has a CI smoke-test job pending results. UEFI and kernel work for all new tracks remains unproven; see the manifest and CI runs. Architecture assembly is tracked as support code, not a standalone complete screen reader.
+
+
+C# addition: the hosted .NET core has announcement and bounded FIFO queue smoke checks. Its UEFI and freestanding kernel tracks are explicitly BLOCKED until a compatible runtime/ABI is proven; .NET Native AOT alone is not UEFI or kernel proof.
+
+
+## Expanded machine-language coverage and completion policy (2026-10-14)
+
+The scope is expanded from the initial 14 records to a feasibility-driven catalog. A language is a track only where a maintained compiler/toolchain and a technically meaningful target exist. Every eligible track has three separate work packages: **screen reader**, **UEFI application**, and **OS/kernel**. This catalog is a work plan, not a claim that any track is complete.
+
+### Tier A — primary implementation languages
+
+C, C++, Rust, Zig, Ada, Assembly (x86-64, AArch64, RISC-V support modules), Go, D, Nim, Swift, Free Pascal/Object Pascal, Odin, Fortran, C#, Objective-C.
+
+- **Screen reader:** native accessibility adapter where the host OS supports it, semantic event model, focus/navigation, live announcements, speech backend, cancellation, settings, automated conformance tests.
+- **UEFI:** EFI ABI and PE/COFF build, ConsoleIn/ConsoleOut, GOP, robust input/navigation, error reporting, artifact hashes and emulator logs. No generic firmware audio claim.
+- **OS/kernel:** independently bootable image, declared architecture/boot protocol, serial diagnostics, memory map/allocator, exception and interrupt path, keyboard/display drivers, event model, and speech/audio driver for declared hardware before calling the system an accessible OS.
+- C and Rust are reference vertical slices, not substitutes for independent validation in the other languages.
+
+### Tier B — additional systems-language feasibility tracks
+
+V, Crystal, Modula-2, COBOL, PL/I, and other compiled languages discovered in the repository/toolchain inventory. For each, first record compiler availability/version, target architecture, runtime/GC dependencies, ABI, freestanding viability, native accessibility bindings, and a reproducible minimal build. Promote only after that gate passes. Do not add empty source placeholders merely to inflate language counts.
+
+### Tier C — host/platform-specific reader tracks
+
+Java, Kotlin, Python, JavaScript/TypeScript, and Objective-C/C# hosted integrations may implement full native screen-reader applications on supported OS platforms where their runtimes and accessibility APIs are appropriate. They must not be misrepresented as freestanding UEFI or kernel languages. Where a language cannot credibly produce UEFI or a freestanding kernel, mark that component BLOCKED with the exact technical reason and retain the shared C ABI/IPC boundary; the deliverable is complete only within its declared feasible scope.
+
+### AI-language tracks shared with repository `ejjjkkjlkkj/ia`
+
+Use the same language catalog and stable language IDs in the AI repository. Each language track includes:
+1. parser/compiler/toolchain-aware source ingestion and diagnostics;
+2. code corpus provenance, license and deduplication checks;
+3. language-specific tokenizer/parser/indexing and retrieval tests where applicable;
+4. code generation/editing/evaluation harness and security tests;
+5. optional adapter/fine-tune experiment only when suitable licensed data, compute, and evaluation are available;
+6. local inference integration and a shared cross-language orchestration contract.
+
+A separate foundation model trained from scratch for every programming language is **not** a default assumption. Share a local base model and build per-language adapters, retrieval indexes, tools and evaluations first. Report any fine-tuning as experimental until measured against a held-out benchmark. No cloud/API dependency is mandatory.
+
+### Release status vocabulary
+
+- `PASS`: reproducible evidence exists for the stated target and environment.
+- `PARTIAL`: meaningful implementation exists, but required functionality is missing.
+- `BLOCKED`: a documented runtime, ABI, SDK, hardware or toolchain constraint prevents the stated target.
+- `NOT_VALIDATED`: implementation exists but no trustworthy build/runtime evidence is recorded.
+- `NOT_IMPLEMENTED`: no implementation for that component.
+
+Do not use “complete” based on a source file, host unit tests, a successful compile alone, a PCM buffer, or QEMU alone. Host, emulator and physical evidence remain separate. Never write firmware/NVRAM, flash firmware, alter the user's Windows disk, or reboot physical hardware unattended.

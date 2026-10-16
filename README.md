@@ -38,3 +38,10 @@ The accessibility boundary for the experimental NEXORA language is documented in
 ## Architecture rules
 
 - [Independent implementation tracks for every language and the separate NEXORA universal language](docs/ARCHITECTURE-INDEPENDENT-LANGUAGE-TRACKS-AND-NEXORA.md)
+
+
+## Manifestes et statuts
+
+- `projects/manifest.json` est le catalogue canonique des identifiants de langues et de leurs statuts généraux.
+- `projects/multilanguage-component-manifest.json` décrit séparément les 14 pistes d'implémentation et les statuts de leurs composants.
+- `python scripts/validate_manifest.py` valide la matrice des composants; `python scripts/validate_source_inventory.py` vérifie la présence des fichiers attendus. Ces contrôles ne prouvent pas le fonctionnement sur système ou matériel réel.

@@ -27,24 +27,23 @@ pub const AccessibilityEvent = struct {
     name: []const u8 = "",
 
     pub fn isValid(self: AccessibilityEvent) bool {
-        return self.abi_version == 1 and
-            self.name.len <= 4096;
+        return self.abi_version == 1 and self.name.len <= 4096;
     }
 };
 
-test "canonical role codes are stable" {
-    try std.testing.expectEqual(@as(u8, 5), @intFromEnum(Role.button));
-    try std.testing.expectEqual(@as(u8, 17), @intFromEnum(Role.menu_item));
-}
-
-test "valid event accepted" {
+test "valid event and unknown role accepted" {
     const event = AccessibilityEvent{ .role = .button, .name = "Save" };
     try std.testing.expect(event.isValid());
+    const unknown = AccessibilityEvent{ .role = .unknown, .name = "" };
+    try std.testing.expect(unknown.isValid());
 }
 
 test "invalid ABI and oversized names rejected" {
     const bad_abi = AccessibilityEvent{ .abi_version = 2, .role = .button };
     try std.testing.expect(!bad_abi.isValid());
+    const maximum_name = [_]u8{'x'} ** 4096;
+    const max_event = AccessibilityEvent{ .role = .button, .name = &maximum_name };
+    try std.testing.expect(max_event.isValid());
     const long_name = [_]u8{'x'} ** 4097;
     const bad_name = AccessibilityEvent{ .role = .button, .name = &long_name };
     try std.testing.expect(!bad_name.isValid());

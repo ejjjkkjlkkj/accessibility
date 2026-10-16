@@ -1,0 +1,118 @@
+name: Core smoke tests
+
+on:
+  push:
+    branches: ["main", "work/**"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  c-core:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile with warnings as errors
+        run: cc -std=c11 -Wall -Wextra -Werror src/c/test_screen_reader_core.c -o /tmp/test-screen-reader-c
+      - name: Run C core tests
+        run: /tmp/test-screen-reader-c
+
+  go-core:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.23"
+      - name: Run Go core tests
+        working-directory: src/go
+        run: go test ./...
+
+  rust-core:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Run Rust core tests
+        working-directory: src/rust
+        run: cargo test
+
+  d-core:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dlang-community/setup-dlang@v2
+        with:
+          compiler: ldc-latest
+      - name: Compile and run D unit tests
+        run: ldc2 -unittest -main -I=src/d src/d/screenreader.d src/d/test_screenreader.d -of=/tmp/test-screenreader-d && /tmp/test-screenreader-d
+
+  ada-core:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install GNAT
+        run: sudo apt-get update && sudo apt-get install -y gnat
+      - name: Compile and run Ada core tests
+        run: gnatmake -Isrc/ada -o /tmp/test-screenreader-ada src/ada/test_screen_reader_core.adb && /tmp/test-screenreader-ada
+
+  zig-core:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: mlugg/setup-zig@v2
+        with:
+          version: 0.14.1
+      - name: Run Zig core tests
+        run: zig test src/zig/screenreader_test.zig
+
+  nim-core:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Nim
+        run: sudo apt-get update && sudo apt-get install -y nim
+      - name: Compile and run Nim core tests
+        run: nim c -r --path:src/nim -o:/tmp/test-screenreader-nim src/nim/test_screenreader_core.nim
+
+  swift-core:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile and run Swift core tests
+        run: swiftc src/swift/ScreenReaderCore.swift src/swift/test_screen_reader_core.swift -o /tmp/test-screenreader-swift && /tmp/test-screenreader-swift
+
+  rust-uefi-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Rust UEFI target
+        run: rustup target add x86_64-unknown-uefi
+      - name: Build Rust UEFI application
+        run: cargo build --manifest-path src/rust-uefi/Cargo.toml --target x86_64-unknown-uefi --release --target-dir src/rust-uefi/target
+      - name: Normalize and verify EFI artifact
+        shell: bash
+        run: |
+          artifact_dir="src/rust-uefi/target/x86_64-unknown-uefi/release"
+          mkdir -p "$artifact_dir"
+          echo "Generated UEFI-target files:"
+          find src/rust-uefi/target -type f -path '*/x86_64-unknown-uefi/release/*' -size +0c -print
+          artifact="$(find "$artifact_dir" -maxdepth 2 -type f -name '*.efi' -size +0c -print -quit)"
+          test -n "$artifact"
+          if [ "$artifact" != "$artifact_dir/accessibility_uefi_rust.efi" ]; then
+            cp "$artifact" "$artifact_dir/accessibility_uefi_rust.efi"
+          fi
+          test -s "$artifact_dir/accessibility_uefi_rust.efi"
+          printf 'EFI-target artifact bytes: '
+          wc -c < "$artifact_dir/accessibility_uefi_rust.efi"
+
+  c-kernel-object:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile C entry sketch as a freestanding object
+        run: cc -std=c11 -ffreestanding -fno-stack-protector -Wall -Wextra -Werror -c src/c/kernel/kernel.c -o /tmp/accessibility-kernel-c.o
+      - name: Verify object exists
+        run: test -s /tmp/accessibility-kernel-c.o
