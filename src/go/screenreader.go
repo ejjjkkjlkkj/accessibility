@@ -51,7 +51,7 @@ type Event struct {
 }
 
 type EventQueue struct {
-	items [eventQueueLimit]Event
+	items       [eventQueueLimit]Event
 	head, count int
 }
 
