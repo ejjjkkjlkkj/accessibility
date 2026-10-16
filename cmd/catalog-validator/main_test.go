@@ -162,7 +162,6 @@ func TestValidateEnforcesDNSDomainLengthBoundary(t *testing.T) {
 	}
 }
 
-
 func TestValidateRequiresIDNAASCIIForInternationalizedDomains(t *testing.T) {
 	t.Run("punycode is accepted", func(t *testing.T) {
 		domain := "xn--bcher-kva.example"
