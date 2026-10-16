@@ -19,3 +19,4 @@ when isMainModule:
   doAssert AccessibilityEvent(abiVersion: 1, role: erButton, name: "Save").isValid()
   doAssert not AccessibilityEvent(abiVersion: 2, role: erButton, name: "Save").isValid()
   doAssert not AccessibilityEvent(abiVersion: 1, role: erButton, name: repeat('x', 4097)).isValid()
+  doAssert not AccessibilityEvent(abiVersion: 1, role: erButton, name: "bad\\0name").isValid()
