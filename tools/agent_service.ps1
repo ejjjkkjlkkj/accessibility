@@ -1,7 +1,7 @@
 param(
     [string]$Model = "qwen3-coder:30b",
     [int]$SleepSeconds = 300,
-    [bool]$AutoPush = $true
+    [bool]$AutoPush = $false
 )
 $ErrorActionPreference = "Continue"
 $RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
