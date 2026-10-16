@@ -1,6 +1,7 @@
 module accessibility_event;
 
 import std.array : replicate;
+import std.algorithm.searching : canFind;
 
 enum Role : ubyte {
     unknown = 0,
@@ -32,7 +33,7 @@ struct AccessibilityEvent {
 bool isValid(const ref AccessibilityEvent event) {
     return event.abiVersion == 1 &&
         event.role <= Role.menuItem &&
-        event.name.length <= 4096;
+        event.name.length <= 4096 && !event.name.canFind('\0');
 }
 
 unittest {
@@ -44,4 +45,6 @@ unittest {
     assert(!isValid(invalid));
     auto tooLong = AccessibilityEvent(1, Role.button, cast(string) replicate("x", 4097));
     assert(!isValid(tooLong));
+    auto embeddedNul = AccessibilityEvent(1, Role.button, "bad\\0name");
+    assert(!isValid(embeddedNul));
 }
