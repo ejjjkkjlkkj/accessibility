@@ -1,6 +1,9 @@
 name: Create draft repository release
 
 on:
+  pull_request:
+    paths:
+      - ".github/workflows/release.yml"
   push:
     tags:
       - "v*"
@@ -158,6 +161,7 @@ jobs:
       - run: dotnet run --project src/csharp/ScreenReaderCore.Tests.csproj --configuration Release
 
   create-draft-release:
+    if: startsWith(github.ref, 'refs/tags/v')
     name: Package EFI demo and create draft release
     needs: [python-validation, go, rust, c, cpp, d, ada, zig, nim, swift, pascal, fortran, csharp]
     runs-on: ubuntu-latest
