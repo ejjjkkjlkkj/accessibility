@@ -17,17 +17,17 @@ State bits currently defined:
 - bit 2: enabled
 - bit 3: disabled
 
-A node is eligible for keyboard focus traversal only when both `focusable` and `enabled` are set and `disabled` is not set. This is a logical rule; it does not move the real operating-system focus.
+A node is eligible for keyboard focus traversal only when both `focusable` and `enabled` are set and `disabled` is not set. Unknown state bits and simultaneous `enabled`/`disabled` are rejected; `focused` requires a focusable, enabled, non-disabled node, and at most one node may be focused. This is a logical rule; it does not move the real operating-system focus.
 
 ## Validation guarantees
 
-`validate_tree` rejects an empty node slice, duplicate IDs, anything other than exactly one root, self-parenting, missing parents, ancestry cycles, and names exceeding 4096 UTF-8 bytes. Validation is allocation-free and iterative. The tree is represented in caller-provided slice order; this version does not enforce parent-before-child ordering or a maximum child count.
+`validate_tree` rejects an empty slice, more than 512 nodes, duplicate IDs, anything other than exactly one root, self-parenting, missing parents, ancestry cycles, parent chains deeper than 64 links, names longer than 4096 UTF-8 bytes, and names containing an embedded NUL. Validation is allocation-free and iterative. Nodes may appear in any slice order; the validator does not impose parent-before-child ordering. These fixed bounds limit work on untrusted input.
 
 `next_focusable` and `previous_focusable` traverse in slice order without wrapping. They return an ID only; they do not dispatch input, announce a name, or modify focus state. Callers must validate untrusted node slices before traversal.
 
 ## Verification
 
-The Rust unit tests cover valid tree traversal, disabled-node exclusion, navigation boundaries, unknown cursor IDs, duplicate IDs, missing parents, cycles, empty trees and oversized names. GitHub Actions results for the commit that adds this module must be checked before marking these tests PASS.
+The Rust unit tests cover valid tree traversal, disabled-node exclusion, navigation boundaries, unknown cursor IDs, duplicate IDs, missing parents, cycles, empty trees, oversized and NUL-containing names, invalid/unknown state flags, multiple focused nodes, and node-count/depth limits. Hosted CI must pass for the exact commit before these tests are marked PASS.
 
 ## Next required implementation
 
