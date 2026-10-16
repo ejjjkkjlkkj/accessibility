@@ -1,0 +1,195 @@
+name: Create draft repository release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: draft-release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  python-validation:
+    name: Python / manifest / source inventory
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python scripts/validate_manifest.py
+      - run: python scripts/validate_source_inventory.py
+      - run: python -m unittest discover -s tests -p 'test_*.py' -v
+      - run: git diff --check
+
+  go:
+    name: Go core and catalogue
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - name: Check Go formatting
+        shell: bash
+        run: |
+          set -euo pipefail
+          files="$(git ls-files '*.go')"
+          test -z "$(gofmt -l $files)"
+      - run: go test ./...
+      - run: go vet ./...
+      - run: go run ./cmd/catalog-validator data/resources.csv
+
+  rust:
+    name: Rust core and UEFI build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - run: rustup target add x86_64-unknown-uefi
+      - run: cargo test --manifest-path crates/accessibility-core/Cargo.toml
+      - run: cargo check --manifest-path crates/accessibility-core/Cargo.toml --lib
+      - run: cargo build --manifest-path src/rust-uefi/Cargo.toml --target x86_64-unknown-uefi --release --target-dir build/rust-uefi
+
+  c:
+    name: C11 core and freestanding object
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: cmake -S components/core-c -B build/core-c -DCMAKE_BUILD_TYPE=Release
+      - run: cmake --build build/core-c --parallel 2
+      - run: ctest --test-dir build/core-c --output-on-failure
+      - run: cc -std=c11 -ffreestanding -fno-stack-protector -Wall -Wextra -Werror -c src/c/kernel/kernel.c -o /tmp/accessibility-kernel-c.o
+      - run: test -s /tmp/accessibility-kernel-c.o
+
+  cpp:
+    name: C++ core
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: g++ -std=c++20 -Wall -Wextra -Werror -pedantic src/cpp/test_screenreader_core.cpp -o /tmp/test-screenreader-cpp
+      - run: /tmp/test-screenreader-cpp
+
+  d:
+    name: D core
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dlang-community/setup-dlang@v2
+        with:
+          compiler: dmd
+      - working-directory: components/core-d
+        run: dub test
+
+  ada:
+    name: Ada core
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update && sudo apt-get install -y gnat
+      - working-directory: components/core-ada
+        run: |
+          gnatmake -gnata test_accessibility_event.adb
+          ./test_accessibility_event
+          gnatmake -gnata test_screenreader_cursor.adb
+          ./test_screenreader_cursor
+
+  zig:
+    name: Zig core
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: mlugg/setup-zig@v1
+        with:
+          version: "0.13.0"
+      - run: zig test components/core-zig/src/accessibility_event.zig
+      - run: zig test components/core-zig/src/screenreader_cursor.zig
+
+  nim:
+    name: Nim core
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update && sudo apt-get install -y nim
+      - run: nim c -r --hints:off components/core-nim/src/accessibility_event.nim
+      - run: nim c -r --hints:off components/core-nim/src/screenreader_cursor.nim
+
+  swift:
+    name: Swift core
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: swift-actions/setup-swift@v2
+        with:
+          swift-version: "6.0.3"
+      - working-directory: components/core-swift
+        run: swift test
+
+  pascal:
+    name: Free Pascal core
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update && sudo apt-get install -y fp-compiler
+      - run: fpc -Fu./src/pascal -FU/tmp -FE/tmp src/pascal/test_screenreader_core.pas
+      - run: /tmp/test_screenreader_core
+
+  fortran:
+    name: Fortran core
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update && sudo apt-get install -y gfortran
+      - run: gfortran -J/tmp -I/tmp src/fortran/screenreader_core.f90 src/fortran/test_screenreader_core.f90 -o /tmp/test-screenreader-fortran
+      - run: /tmp/test-screenreader-fortran
+
+  csharp:
+    name: C# core
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+      - run: dotnet run --project src/csharp/ScreenReaderCore.Tests.csproj --configuration Release
+
+  create-draft-release:
+    name: Package EFI demo and create draft release
+    needs: [python-validation, go, rust, c, cpp, d, ada, zig, nim, swift, pascal, fortran, csharp]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - run: rustup target add x86_64-unknown-uefi
+      - run: cargo build --manifest-path src/rust-uefi/Cargo.toml --target x86_64-unknown-uefi --release --target-dir build/rust-uefi
+      - name: Package artifact and checksum
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p release-artifacts
+          artifact="$(find build/rust-uefi/x86_64-unknown-uefi/release -type f -name '*.efi' -size +0c -print -quit)"
+          test -n "$artifact"
+          cp "$artifact" release-artifacts/accessibility_uefi_rust.efi
+          (cd release-artifacts && sha256sum accessibility_uefi_rust.efi > SHA256SUMS)
+          cat > release-artifacts/RELEASE-NOTES.md <<'EOF'
+          This is an experimental repository pre-release. The EFI file is a UEFI demonstration artifact, not a complete standalone screen reader or operating system.
+
+          The language/component manifest deliberately retains NOT_VALIDATED/PARTIAL statuses where evidence is incomplete. Hosted CI proves only the tests and build commands it actually runs. QEMU or other virtual machines do not constitute physical-hardware proof. Physical boot, OS accessibility API integration, speech output, and hardware audio remain unclaimed unless separately evidenced.
+          EOF
+      - name: Create a draft release for review
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          args=(--draft --verify-tag --title "$GITHUB_REF_NAME" --notes-file release-artifacts/RELEASE-NOTES.md)
+          if [[ "$GITHUB_REF_NAME" == *-alpha* || "$GITHUB_REF_NAME" == *-beta* || "$GITHUB_REF_NAME" == *-rc* ]]; then
+            args+=(--prerelease)
+          fi
+          gh release create "$GITHUB_REF_NAME" "${args[@]}" release-artifacts/accessibility_uefi_rust.efi release-artifacts/SHA256SUMS
