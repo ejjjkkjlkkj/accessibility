@@ -129,7 +129,44 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          if git ls-files | grep -E '(^|/)(\.env($|\.(?!example$|template$))|id_rsa|id_ed25519|credentials\.json|secrets\.json)
+          suspicious="$(git ls-files | grep -E '(^|/)(\.env($|\.)|id_rsa|id_ed25519|credentials\.json|secrets\.json)$' | grep -Ev '(^|/)\.env\.(example|template)$' || true)"
+          if [ -n "$suspicious" ]; then
+            printf '%s\n' "$suspicious"
+            echo "FAIL: suspicious secret-like filename tracked; inspect manually"
+            exit 1
+          fi
+          echo "PASS: no common secret-like filenames detected"
+
+      - name: Reject tracked build and interpreter cache artifacts
+        shell: python {0}
+        run: |
+          import pathlib
+          import subprocess
+          import sys
+
+          tracked = subprocess.run(
+              ["git", "ls-files", "-z"],
+              check=True,
+              stdout=subprocess.PIPE,
+          ).stdout.decode("utf-8", errors="surrogateescape").split("\0")
+          forbidden_dirs = {
+              "target", "node_modules", "__pycache__", ".pytest_cache",
+              ".mypy_cache", ".ruff_cache", ".venv",
+          }
+          failures = []
+          for raw in tracked:
+              if not raw:
+                  continue
+              path = pathlib.PurePosixPath(raw)
+              if any(part in forbidden_dirs for part in path.parts):
+                  failures.append(f"{raw}: generated/cache directory is tracked")
+              elif path.suffix in {".pyc", ".pyo"}:
+                  failures.append(f"{raw}: Python bytecode is tracked")
+          if failures:
+              print("\n".join(failures))
+              sys.exit(1)
+          print(f"PASS: no tracked build/cache artifacts ({len(tracked) - 1} files checked)")
+
   go-core:
     name: Go core and catalog validator
     runs-on: ubuntu-latest
