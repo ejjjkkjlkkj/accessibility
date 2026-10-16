@@ -33,6 +33,11 @@ int main(void) {
     const char valid_utf8[] = "Accès — 中文";
     assert(accessibility_event_init(&event, ACCESSIBILITY_ROLE_BUTTON, 1u, valid_utf8) == 0);
     assert(strcmp(event.name, valid_utf8) == 0);
+    char maximum_name[ACCESSIBILITY_NAME_CAPACITY];
+    memset(maximum_name, 'x', sizeof(maximum_name) - 1u);
+    maximum_name[sizeof(maximum_name) - 1u] = '\0';
+    assert(accessibility_event_init(&event, ACCESSIBILITY_ROLE_BUTTON, 1u, maximum_name) == 0);
+    assert(strlen(event.name) == 4096u);
     char long_name[ACCESSIBILITY_NAME_CAPACITY + 1u];
     memset(long_name, 'x', sizeof(long_name));
     long_name[sizeof(long_name) - 1u] = '\0';
