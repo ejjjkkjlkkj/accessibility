@@ -10,24 +10,24 @@ import (
 type Role uint32
 
 const (
-	RoleUnknown Role = 0
+	RoleUnknown     Role = 0
 	RoleApplication Role = 1
-	RoleWindow Role = 2
-	RoleGroup Role = 3
-	RoleText Role = 4
-	RoleButton Role = 5
-	RoleCheckbox Role = 6
-	RoleRadio Role = 7
-	RoleTextbox Role = 8
-	RoleLink Role = 9
-	RoleHeading Role = 10
-	RoleList Role = 11
-	RoleListItem Role = 12
-	RoleTable Role = 13
-	RoleRow Role = 14
-	RoleCell Role = 15
-	RoleMenu Role = 16
-	RoleMenuItem Role = 17
+	RoleWindow      Role = 2
+	RoleGroup       Role = 3
+	RoleText        Role = 4
+	RoleButton      Role = 5
+	RoleCheckbox    Role = 6
+	RoleRadio       Role = 7
+	RoleTextbox     Role = 8
+	RoleLink        Role = 9
+	RoleHeading     Role = 10
+	RoleList        Role = 11
+	RoleListItem    Role = 12
+	RoleTable       Role = 13
+	RoleRow         Role = 14
+	RoleCell        Role = 15
+	RoleMenu        Role = 16
+	RoleMenuItem    Role = 17
 )
 
 // Valid reports whether code is assigned by role contract v1.
