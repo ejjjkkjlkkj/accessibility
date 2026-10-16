@@ -2,7 +2,7 @@
 
 Status: planning baseline; this document is not implementation or validation evidence.
 Branch: work/8-language-screenreader-uefi-os
-Manifest of record: `projects/manifest.json`.
+Language catalogue: `projects/manifest.json`; implementation/component matrix: `projects/multilanguage-component-manifest.json`.
 
 ## Objective and non-negotiable release gates
 

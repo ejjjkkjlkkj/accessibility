@@ -19,7 +19,7 @@ ALLOWED_STATUSES = {
 
 
 def main() -> int:
-    manifest_path = Path(sys.argv[1]) if len(sys.argv) > 1 else Path("projects/manifest.json")
+    manifest_path = Path(sys.argv[1]) if len(sys.argv) > 1 else Path("projects/multilanguage-component-manifest.json")
     try:
         data = json.loads(manifest_path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as exc:
