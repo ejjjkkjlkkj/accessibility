@@ -27,7 +27,14 @@ LOG_FILE = pathlib.Path(os.environ.get(
 )).expanduser().resolve()
 SLEEP_SECONDS = max(60, min(int(os.environ.get("AGENT_SLEEP_SECONDS", "300")), 3600))
 MAX_RUNS = max(1, min(int(os.environ.get("AGENT_MAX_RUNS", "12")), 100))
-AUTO_PUSH = os.environ.get("AGENT_AUTO_PUSH", "1").strip().lower() not in {"0", "false", "no"}
+def auto_push_enabled(value: str | None = None) -> bool:
+    """Return whether feature-branch pushes were explicitly enabled."""
+    if value is None:
+        value = os.environ.get("AGENT_AUTO_PUSH", "0")
+    return value.strip().lower() in {"1", "true", "yes"}
+
+
+AUTO_PUSH = auto_push_enabled()
 MAX_PATCH_BYTES = 200_000
 MAX_CONTEXT_CHARS = 80_000
 MAX_CONTEXT_FILES = 60
