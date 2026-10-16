@@ -24,7 +24,7 @@ Les documents canoniques maintenus dans docs/ sont la cartographie des langages 
 
 ## CI
 
-GitHub Actions vérifie les fichiers de documentation, la syntaxe JSON des manifestes présents et les liens Markdown locaux. Cette CI ne prétend pas prouver le fonctionnement d'un screen reader sur matériel réel.
+GitHub Actions vérifie les documents ZERO requis, les manifestes JSON, les liens Markdown relatifs, la syntaxe des fichiers Python suivis par Git, les tests Python disponibles, le formatage Go, les tests Go, `go vet` et le catalogue de ressources. Les contrôles effectivement exécutés et leurs résultats doivent être confirmés dans les journaux Actions. Cette CI ne prouve pas le fonctionnement d'un screen reader sur matériel réel.
 
 
 ## Shared role identifiers\n\nThe numeric role mapping for C, Rust, Go, D, Ada, Nim, Swift and Zig is defined in [Accessibility role codes v1](docs/ACCESSIBILITY-ROLE-CODES-V1.md). This is a logical role-code contract, not a claim that all binary layouts or platform adapters are already interchangeable.\n\n## NEXORA integration
