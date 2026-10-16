@@ -16,14 +16,15 @@ int main(void) {
 
     assert(accessibility_event_init(NULL, ACCESSIBILITY_ROLE_BUTTON, 1u, "x") != 0);
     assert(accessibility_event_init(&event, ACCESSIBILITY_ROLE_BUTTON, 1u, NULL) != 0);
-    assert(accessibility_event_init(&event, (accessibility_role)99, 1u, "x") != 0);
-    const char invalid_utf8[] = { (char)0xC0, (char)0xAF, '\\0' };
+    assert(accessibility_event_init(&event, (accessibility_role)99, 1u, "x") == -2);
+    assert(accessibility_event_init(&event, (accessibility_role)-1, 1u, "x") == -2);
+    const char invalid_utf8[] = { (char)0xC0, (char)0xAF, '\0' };
     assert(accessibility_event_init(&event, ACCESSIBILITY_ROLE_BUTTON, 1u, invalid_utf8) == -4);
-    const char truncated_two[] = { (char)0xC2, '\\0' };
-    const char truncated_three[] = { (char)0xE2, (char)0x82, '\\0' };
-    const char truncated_four[] = { (char)0xF0, (char)0x9F, (char)0x92, '\\0' };
-    const char surrogate_utf8[] = { (char)0xED, (char)0xA0, (char)0x80, '\\0' };
-    const char too_large_codepoint[] = { (char)0xF4, (char)0x90, (char)0x80, (char)0x80, '\\0' };
+    const char truncated_two[] = { (char)0xC2, '\0' };
+    const char truncated_three[] = { (char)0xE2, (char)0x82, '\0' };
+    const char truncated_four[] = { (char)0xF0, (char)0x9F, (char)0x92, '\0' };
+    const char surrogate_utf8[] = { (char)0xED, (char)0xA0, (char)0x80, '\0' };
+    const char too_large_codepoint[] = { (char)0xF4, (char)0x90, (char)0x80, (char)0x80, '\0' };
     assert(accessibility_event_init(&event, ACCESSIBILITY_ROLE_BUTTON, 1u, truncated_two) == -4);
     assert(accessibility_event_init(&event, ACCESSIBILITY_ROLE_BUTTON, 1u, truncated_three) == -4);
     assert(accessibility_event_init(&event, ACCESSIBILITY_ROLE_BUTTON, 1u, truncated_four) == -4);

@@ -1,0 +1,18 @@
+[Defines]
+  INF_VERSION    = 0x0001001B
+  BASE_NAME      = AccessibleUefiHello
+  FILE_GUID      = 5A8E5B7D-9D0D-4F4D-90D8-2F6D5A28B01C
+  MODULE_TYPE    = UEFI_APPLICATION
+  VERSION_STRING = 0.1
+  ENTRY_POINT    = UefiMain
+
+[Sources]
+  AccessibleUefiHello.c
+
+[Packages]
+  MdePkg/MdePkg.dec
+
+[LibraryClasses]
+  UefiApplicationEntryPoint
+  UefiLib
+  UefiBootServicesTableLib

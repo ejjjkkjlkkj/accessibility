@@ -1,0 +1,70 @@
+{
+  "schema_version": 1,
+  "purpose": "Language-neutral behavioral vectors for portable screen-reader cores. These vectors test event interpretation only; they do not prove native accessibility API integration or speech output.",
+  "cases": [
+    {
+      "id": "focus_named_control",
+      "input": {
+        "type": "focus",
+        "name": "Save",
+        "role": "button",
+        "state": "enabled"
+      },
+      "expected_announcement": "Save, button, enabled"
+    },
+    {
+      "id": "focus_unnamed_control",
+      "input": {
+        "type": "focus",
+        "name": "",
+        "role": "button",
+        "state": "enabled"
+      },
+      "expected_announcement": "unnamed, button, enabled"
+    },
+    {
+      "id": "value_changed",
+      "input": {
+        "type": "value_changed",
+        "name": "Volume",
+        "role": "slider",
+        "value": "50 percent"
+      },
+      "expected_announcement": "Volume, slider, 50 percent"
+    },
+    {
+      "id": "state_changed",
+      "input": {
+        "type": "state_changed",
+        "name": "Wi-Fi",
+        "role": "toggle button",
+        "state": "off"
+      },
+      "expected_announcement": "Wi-Fi, toggle button, off"
+    },
+    {
+      "id": "alert",
+      "input": {
+        "type": "alert",
+        "name": "Connection lost",
+        "role": "alert"
+      },
+      "expected_announcement": "Connection lost, alert"
+    },
+    {
+      "id": "speech_cancel",
+      "input": {
+        "type": "cancel_speech"
+      },
+      "expected_action": "cancel_current_and_queued_speech"
+    },
+    {
+      "id": "backend_failure",
+      "input": {
+        "type": "speech_backend_error",
+        "name": "device unavailable"
+      },
+      "expected_action": "report_backend_failure_and_keep_navigation_alive"
+    }
+  ]
+}

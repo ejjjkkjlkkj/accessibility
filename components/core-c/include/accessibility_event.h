@@ -9,7 +9,7 @@ extern "C" {
 #endif
 
 #define ACCESSIBILITY_EVENT_ABI_VERSION 1u
-#define ACCESSIBILITY_NAME_CAPACITY 4097u
+#define ACCESSIBILITY_NAME_CAPACITY 128u
 
 typedef enum accessibility_role {
     ACCESSIBILITY_ROLE_UNKNOWN = 0,

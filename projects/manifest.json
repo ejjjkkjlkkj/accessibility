@@ -1,320 +1,299 @@
 {
   "schema_version": 1,
-  "catalog_source": "ejjjkkjlkkj/ia:LANGUAGE-CATALOG.md",
-  "generated_from_catalog_commit": "b4f93f61de919269b585133e299e7f5712b32588",
-  "rule": "Initial states are not validation claims. Each axis must earn PASS independently.",
+  "project_goal": "Feasibility-driven catalog of machine-language tracks, each with separate screen-reader, UEFI/pre-OS, and OS/kernel deliverables; shared language catalog mirrored to ejjjkkjlkkj/ia for language-specific AI tooling/model experiments.",
+  "evidence_policy": {
+    "initial_status": "NOT_IMPLEMENTED",
+    "emulator_is_physical_proof": false,
+    "require_command_and_environment_for_pass": true
+  },
   "languages": [
     {
-      "id": "c",
-      "name": "C",
-      "screenreader": "NOT_VALIDATED",
-      "uefi_bare_metal": "NOT_VALIDATED",
-      "os": "NOT_VALIDATED",
-      "notes": "Capability depends on compiler, runtime, target APIs, and reproducible tests."
+      "language": "C",
+      "components": {
+        "screen_reader": {
+          "status": "PARTIAL",
+          "evidence": "Portable announcement core and bounded event queue with C tests; no native UI API adapter or speech output."
+        },
+        "uefi_pre_os": {
+          "status": "NOT_VALIDATED",
+          "evidence": "EDK2 source now has an interactive arrow-key menu using UEFI text input; no confirmed EFI build/run, semantic HII/IFR reader, or audio output."
+        },
+        "operating_system_kernel": {
+          "status": "NOT_IMPLEMENTED",
+          "evidence": "Independent kernel entry sketch/documentation exists, but no complete bootable kernel or OS."
+        }
+      }
     },
     {
-      "id": "cpp",
-      "name": "C++",
-      "screenreader": "NOT_VALIDATED",
-      "uefi_bare_metal": "NOT_VALIDATED",
-      "os": "NOT_VALIDATED",
-      "notes": "Capability depends on compiler, runtime, target APIs, and reproducible tests."
+      "language": "Rust",
+      "components": {
+        "screen_reader": {
+          "status": "PARTIAL",
+          "evidence": "no_std announcement core and bounded event queue with unit tests; no native platform adapter or speech output."
+        },
+        "uefi_pre_os": {
+          "status": "NOT_VALIDATED",
+          "evidence": "Console-only Rust UEFI source and CI build job added; current build result not confirmed."
+        },
+        "operating_system_kernel": {
+          "status": "NOT_IMPLEMENTED",
+          "evidence": "Independent kernel entry sketch/documentation exists, but no complete bootable kernel or OS."
+        }
+      }
     },
     {
-      "id": "rust",
-      "name": "Rust",
-      "screenreader": "NOT_VALIDATED",
-      "uefi_bare_metal": "NOT_VALIDATED",
-      "os": "NOT_VALIDATED",
-      "notes": "Capability depends on compiler, runtime, target APIs, and reproducible tests."
+      "language": "Go",
+      "components": {
+        "screen_reader": {
+          "status": "PARTIAL",
+          "evidence": "Announcement core and bounded FIFO queue with tests; standard runtime is used; no native adapter or speech output."
+        },
+        "uefi_pre_os": {
+          "status": "NOT_IMPLEMENTED",
+          "evidence": "Toolchain/ABI/runtime feasibility gates documented; no implementation validated."
+        },
+        "operating_system_kernel": {
+          "status": "NOT_IMPLEMENTED",
+          "evidence": "Independent kernel entry sketch/documentation exists, but no complete bootable kernel or OS."
+        }
+      }
     },
     {
-      "id": "zig",
-      "name": "Zig",
-      "screenreader": "NOT_VALIDATED",
-      "uefi_bare_metal": "NOT_VALIDATED",
-      "os": "NOT_VALIDATED",
-      "notes": "Capability depends on compiler, runtime, target APIs, and reproducible tests."
+      "language": "D",
+      "components": {
+        "screen_reader": {
+          "status": "PARTIAL",
+          "evidence": "Announcement core and fixed-capacity event queue with tests; runtime/toolchain limitations remain."
+        },
+        "uefi_pre_os": {
+          "status": "NOT_IMPLEMENTED",
+          "evidence": "Toolchain/ABI/runtime feasibility gates documented; no implementation validated."
+        },
+        "operating_system_kernel": {
+          "status": "NOT_IMPLEMENTED",
+          "evidence": "Independent kernel entry sketch/documentation exists, but no complete bootable kernel or OS."
+        }
+      }
     },
     {
-      "id": "ada",
-      "name": "Ada",
-      "screenreader": "NOT_VALIDATED",
-      "uefi_bare_metal": "NOT_VALIDATED",
-      "os": "NOT_VALIDATED",
-      "notes": "Capability depends on compiler, runtime, target APIs, and reproducible tests."
+      "language": "Ada",
+      "components": {
+        "screen_reader": {
+          "status": "PARTIAL",
+          "evidence": "Announcement core and fixed-capacity event queue; CI must validate queue tests before claiming a pass."
+        },
+        "uefi_pre_os": {
+          "status": "NOT_IMPLEMENTED",
+          "evidence": "Toolchain/ABI/runtime feasibility gates documented; no implementation validated."
+        },
+        "operating_system_kernel": {
+          "status": "NOT_IMPLEMENTED",
+          "evidence": "Independent kernel entry sketch/documentation exists, but no complete bootable kernel or OS."
+        }
+      }
     },
     {
-      "id": "asm-x86_64",
-      "name": "x86-64 Assembly",
-      "screenreader": "NOT_VALIDATED",
-      "uefi_bare_metal": "NOT_VALIDATED",
-      "os": "NOT_VALIDATED",
-      "notes": "Low-level kernels only; not a complete standalone screen reader."
+      "language": "Zig",
+      "components": {
+        "screen_reader": {
+          "status": "PARTIAL",
+          "evidence": "Announcement core and fixed-capacity queue; compiler/API compatibility remains subject to CI."
+        },
+        "uefi_pre_os": {
+          "status": "NOT_IMPLEMENTED",
+          "evidence": "Toolchain/ABI/runtime feasibility gates documented; no implementation validated."
+        },
+        "operating_system_kernel": {
+          "status": "NOT_IMPLEMENTED",
+          "evidence": "Independent kernel entry sketch/documentation exists, but no complete bootable kernel or OS."
+        }
+      }
     },
     {
-      "id": "asm-aarch64",
-      "name": "AArch64 Assembly",
-      "screenreader": "NOT_VALIDATED",
-      "uefi_bare_metal": "NOT_VALIDATED",
-      "os": "NOT_VALIDATED",
-      "notes": "Low-level kernels only; not a complete standalone screen reader."
+      "language": "Nim",
+      "components": {
+        "screen_reader": {
+          "status": "PARTIAL",
+          "evidence": "Announcement core and fixed-capacity queue; generated/runtime behavior and tests need CI confirmation."
+        },
+        "uefi_pre_os": {
+          "status": "NOT_IMPLEMENTED",
+          "evidence": "Toolchain/ABI/runtime feasibility gates documented; no implementation validated."
+        },
+        "operating_system_kernel": {
+          "status": "NOT_IMPLEMENTED",
+          "evidence": "Independent kernel entry sketch/documentation exists, but no complete bootable kernel or OS."
+        }
+      }
     },
     {
-      "id": "asm-riscv64",
-      "name": "RISC-V Assembly",
-      "screenreader": "NOT_VALIDATED",
-      "uefi_bare_metal": "NOT_VALIDATED",
-      "os": "NOT_VALIDATED",
-      "notes": "Low-level kernels only; not a complete standalone screen reader."
+      "language": "Swift",
+      "components": {
+        "screen_reader": {
+          "status": "PARTIAL",
+          "evidence": "Announcement core and bounded queue; tests need CI confirmation; native API and speech not wired."
+        },
+        "uefi_pre_os": {
+          "status": "NOT_IMPLEMENTED",
+          "evidence": "Toolchain/ABI/runtime feasibility gates documented; no implementation validated."
+        },
+        "operating_system_kernel": {
+          "status": "NOT_IMPLEMENTED",
+          "evidence": "Independent kernel entry sketch/documentation exists, but no complete bootable kernel or OS."
+        }
+      }
     },
     {
-      "id": "go",
-      "name": "Go",
-      "screenreader": "NOT_VALIDATED",
-      "uefi_bare_metal": "NOT_VALIDATED",
-      "os": "NOT_VALIDATED",
-      "notes": "Capability depends on compiler, runtime, target APIs, and reproducible tests."
+      "language": "C++",
+      "components": {
+        "screen_reader": {
+          "status": "PARTIAL",
+          "evidence": "Portable semantic announcement formatter and bounded FIFO event queue with source-level test cases; native OS accessibility adapter and speech backend are not connected or CI-validated yet."
+        },
+        "uefi_pre_os": {
+          "status": "NOT_VALIDATED",
+          "evidence": "UEFI feasibility gate documented; no compiled PE/COFF EFI application or emulator result."
+        },
+        "operating_system_kernel": {
+          "status": "NOT_IMPLEMENTED",
+          "evidence": "Kernel feasibility documented; no freestanding C++ boot image, linker/boot protocol validation or boot test."
+        }
+      }
     },
     {
-      "id": "d",
-      "name": "D",
-      "screenreader": "NOT_VALIDATED",
-      "uefi_bare_metal": "NOT_VALIDATED",
-      "os": "NOT_VALIDATED",
-      "notes": "Capability depends on compiler, runtime, target APIs, and reproducible tests."
+      "language": "Free Pascal",
+      "components": {
+        "screen_reader": {
+          "status": "PARTIAL",
+          "evidence": "Portable announcement formatter and fixed-capacity event queue source plus test program added; compiler execution and CI validation are pending; no native API or speech backend."
+        },
+        "uefi_pre_os": {
+          "status": "NOT_VALIDATED",
+          "evidence": "UEFI toolchain, EFI ABI, PE/COFF output and protocol access remain unproven."
+        },
+        "operating_system_kernel": {
+          "status": "NOT_IMPLEMENTED",
+          "evidence": "No freestanding kernel or boot image; runtime/startup and linker feasibility remain unproven."
+        }
+      }
     },
     {
-      "id": "nim",
-      "name": "Nim",
-      "screenreader": "NOT_VALIDATED",
-      "uefi_bare_metal": "NOT_VALIDATED",
-      "os": "NOT_VALIDATED",
-      "notes": "Capability depends on compiler, runtime, target APIs, and reproducible tests."
+      "language": "Odin",
+      "components": {
+        "screen_reader": {
+          "status": "PARTIAL",
+          "evidence": "Portable announcement formatter and fixed-capacity FIFO queue source added; compiler/test validation is pending; no native accessibility adapter or speech backend."
+        },
+        "uefi_pre_os": {
+          "status": "NOT_VALIDATED",
+          "evidence": "EFI target, PE/COFF ABI, runtime and protocol path are not validated."
+        },
+        "operating_system_kernel": {
+          "status": "NOT_IMPLEMENTED",
+          "evidence": "No freestanding kernel or boot image; runtime/startup, linker and boot protocol are not validated."
+        }
+      }
     },
     {
-      "id": "swift",
-      "name": "Swift",
-      "screenreader": "NOT_VALIDATED",
-      "uefi_bare_metal": "NOT_VALIDATED",
-      "os": "NOT_VALIDATED",
-      "notes": "Capability depends on compiler, runtime, target APIs, and reproducible tests."
+      "language": "Fortran",
+      "components": {
+        "screen_reader": {
+          "status": "PARTIAL",
+          "evidence": "Portable announcement formatter and fixed-capacity event queue source and test program added; compiler execution pending; no native accessibility adapter or speech backend."
+        },
+        "uefi_pre_os": {
+          "status": "NOT_VALIDATED",
+          "evidence": "UEFI ABI, PE/COFF output, startup/runtime and firmware protocol access are unproven."
+        },
+        "operating_system_kernel": {
+          "status": "NOT_IMPLEMENTED",
+          "evidence": "No freestanding kernel or boot image; runtime/startup, linker and boot protocol remain unproven."
+        }
+      }
     },
     {
-      "id": "pascal",
-      "name": "Free Pascal / Object Pascal",
-      "screenreader": "NOT_VALIDATED",
-      "uefi_bare_metal": "NOT_VALIDATED",
-      "os": "NOT_VALIDATED",
-      "notes": "Capability depends on compiler, runtime, target APIs, and reproducible tests."
+      "language": "Objective-C",
+      "components": {
+        "screen_reader": {
+          "status": "PARTIAL",
+          "evidence": "Foundation-based semantic announcement core added for future Apple adapter integration; no native Accessibility API adapter, speech connection or tests validated."
+        },
+        "uefi_pre_os": {
+          "status": "BLOCKED",
+          "evidence": "UEFI provides no Objective-C runtime; no freestanding runtime, EFI ABI or PE/COFF implementation demonstrated."
+        },
+        "operating_system_kernel": {
+          "status": "BLOCKED",
+          "evidence": "Objective-C runtime/startup is not proven freestanding; scope is Apple-platform accessibility integration, not a common kernel."
+        }
+      }
     },
     {
-      "id": "odin",
-      "name": "Odin",
-      "screenreader": "NOT_VALIDATED",
-      "uefi_bare_metal": "NOT_VALIDATED",
-      "os": "NOT_VALIDATED",
-      "notes": "Capability depends on compiler, runtime, target APIs, and reproducible tests."
-    },
-    {
-      "id": "fortran",
-      "name": "Fortran",
-      "screenreader": "NOT_VALIDATED",
-      "uefi_bare_metal": "NOT_VALIDATED",
-      "os": "NOT_VALIDATED",
-      "notes": "Capability depends on compiler, runtime, target APIs, and reproducible tests."
-    },
-    {
-      "id": "csharp",
-      "name": "C#",
-      "screenreader": "NOT_VALIDATED",
-      "uefi_bare_metal": "NOT_VALIDATED",
-      "os": "NOT_VALIDATED",
-      "notes": "Capability depends on compiler, runtime, target APIs, and reproducible tests."
-    },
-    {
-      "id": "objc",
-      "name": "Objective-C",
-      "screenreader": "NOT_VALIDATED",
-      "uefi_bare_metal": "NOT_VALIDATED",
-      "os": "NOT_VALIDATED",
-      "notes": "Capability depends on compiler, runtime, target APIs, and reproducible tests."
-    },
-    {
-      "id": "v",
-      "name": "V",
-      "screenreader": "NOT_VALIDATED",
-      "uefi_bare_metal": "NOT_VALIDATED",
-      "os": "NOT_VALIDATED",
-      "notes": "Capability depends on compiler, runtime, target APIs, and reproducible tests."
-    },
-    {
-      "id": "crystal",
-      "name": "Crystal",
-      "screenreader": "NOT_VALIDATED",
-      "uefi_bare_metal": "NOT_VALIDATED",
-      "os": "NOT_VALIDATED",
-      "notes": "Capability depends on compiler, runtime, target APIs, and reproducible tests."
-    },
-    {
-      "id": "modula2",
-      "name": "Modula-2",
-      "screenreader": "NOT_VALIDATED",
-      "uefi_bare_metal": "NOT_VALIDATED",
-      "os": "NOT_VALIDATED",
-      "notes": "Capability depends on compiler, runtime, target APIs, and reproducible tests."
-    },
-    {
-      "id": "cobol",
-      "name": "COBOL",
-      "screenreader": "NOT_VALIDATED",
-      "uefi_bare_metal": "NOT_VALIDATED",
-      "os": "NOT_VALIDATED",
-      "notes": "Capability depends on compiler, runtime, target APIs, and reproducible tests."
-    },
-    {
-      "id": "pli",
-      "name": "PL/I",
-      "screenreader": "NOT_VALIDATED",
-      "uefi_bare_metal": "NOT_VALIDATED",
-      "os": "NOT_VALIDATED",
-      "notes": "Capability depends on compiler, runtime, target APIs, and reproducible tests."
-    },
-    {
-      "id": "java",
-      "name": "Java",
-      "screenreader": "NOT_VALIDATED",
-      "uefi_bare_metal": "NOT_VALIDATED",
-      "os": "NOT_VALIDATED",
-      "notes": "Capability depends on compiler, runtime, target APIs, and reproducible tests."
-    },
-    {
-      "id": "kotlin",
-      "name": "Kotlin",
-      "screenreader": "NOT_VALIDATED",
-      "uefi_bare_metal": "NOT_VALIDATED",
-      "os": "NOT_VALIDATED",
-      "notes": "Capability depends on compiler, runtime, target APIs, and reproducible tests."
-    },
-    {
-      "id": "python",
-      "name": "Python",
-      "screenreader": "NOT_VALIDATED",
-      "uefi_bare_metal": "NOT_VALIDATED",
-      "os": "NOT_VALIDATED",
-      "notes": "Capability depends on compiler, runtime, target APIs, and reproducible tests."
-    },
-    {
-      "id": "javascript",
-      "name": "JavaScript",
-      "screenreader": "NOT_VALIDATED",
-      "uefi_bare_metal": "NOT_VALIDATED",
-      "os": "NOT_VALIDATED",
-      "notes": "Capability depends on compiler, runtime, target APIs, and reproducible tests."
-    },
-    {
-      "id": "typescript",
-      "name": "TypeScript",
-      "screenreader": "NOT_VALIDATED",
-      "uefi_bare_metal": "NOT_VALIDATED",
-      "os": "NOT_VALIDATED",
-      "notes": "Capability depends on compiler, runtime, target APIs, and reproducible tests."
-    },
-    {
-      "id": "scratch",
-      "name": "Scratch",
-      "screenreader": "NOT_VALIDATED",
-      "uefi_bare_metal": "NOT_VALIDATED",
-      "os": "NOT_VALIDATED",
-      "notes": "Educational track; not a production UEFI/OS release target."
-    },
-    {
-      "id": "u",
-      "name": "U (ulanguage.org)",
-      "screenreader": "NOT_VALIDATED",
-      "uefi_bare_metal": "NOT_VALIDATED",
-      "os": "NOT_VALIDATED",
-      "notes": "Validate the exact U compiler/toolchain before claiming support."
-    },
-    {
-      "id": "julia",
-      "name": "Julia",
-      "screenreader": "NOT_VALIDATED",
-      "uefi_bare_metal": "NOT_VALIDATED",
-      "os": "NOT_VALIDATED",
-      "notes": "Capability depends on compiler, runtime, target APIs, and reproducible tests."
-    },
-    {
-      "id": "mojo",
-      "name": "Mojo",
-      "screenreader": "NOT_VALIDATED",
-      "uefi_bare_metal": "NOT_VALIDATED",
-      "os": "NOT_VALIDATED",
-      "notes": "Capability depends on compiler, runtime, target APIs, and reproducible tests."
-    },
-    {
-      "id": "chapel",
-      "name": "Chapel",
-      "screenreader": "NOT_VALIDATED",
-      "uefi_bare_metal": "NOT_VALIDATED",
-      "os": "NOT_VALIDATED",
-      "notes": "Capability depends on compiler, runtime, target APIs, and reproducible tests."
-    },
-    {
-      "id": "r",
-      "name": "R",
-      "screenreader": "NOT_VALIDATED",
-      "uefi_bare_metal": "NOT_VALIDATED",
-      "os": "NOT_VALIDATED",
-      "notes": "Capability depends on compiler, runtime, target APIs, and reproducible tests."
-    },
-    {
-      "id": "apl",
-      "name": "APL",
-      "screenreader": "NOT_VALIDATED",
-      "uefi_bare_metal": "NOT_VALIDATED",
-      "os": "NOT_VALIDATED",
-      "notes": "Capability depends on compiler, runtime, target APIs, and reproducible tests."
-    },
-    {
-      "id": "j",
-      "name": "J",
-      "screenreader": "NOT_VALIDATED",
-      "uefi_bare_metal": "NOT_VALIDATED",
-      "os": "NOT_VALIDATED",
-      "notes": "Capability depends on compiler, runtime, target APIs, and reproducible tests."
-    },
-    {
-      "id": "k",
-      "name": "K",
-      "screenreader": "NOT_VALIDATED",
-      "uefi_bare_metal": "NOT_VALIDATED",
-      "os": "NOT_VALIDATED",
-      "notes": "Capability depends on compiler, runtime, target APIs, and reproducible tests."
-    },
-    {
-      "id": "q",
-      "name": "q",
-      "screenreader": "NOT_VALIDATED",
-      "uefi_bare_metal": "NOT_VALIDATED",
-      "os": "NOT_VALIDATED",
-      "notes": "Capability depends on compiler, runtime, target APIs, and reproducible tests."
-    },
-    {
-      "id": "lua",
-      "name": "Lua",
-      "screenreader": "NOT_VALIDATED",
-      "uefi_bare_metal": "NOT_VALIDATED",
-      "os": "NOT_VALIDATED",
-      "notes": "Capability depends on compiler, runtime, target APIs, and reproducible tests."
-    },
-    {
-      "id": "nexora",
-      "name": "NEXORA (langage universel expérimental)",
-      "screenreader": "NOT_VALIDATED",
-      "uefi_bare_metal": "NOT_VALIDATED",
-      "os": "NOT_VALIDATED",
-      "notes": "Interpréteur de référence limité uniquement; pas encore de compilateur de production, backend OS/UEFI ou runtime freestanding. Ne pas confondre avec U (ulanguage.org)."
+      "language": "C#",
+      "components": {
+        "screen_reader": {
+          "status": "PARTIAL",
+          "evidence": "Hosted C# portable announcement formatter and bounded event queue with source-level smoke tests added; native platform accessibility APIs and speech backend are not connected; CI result pending."
+        },
+        "uefi_pre_os": {
+          "status": "BLOCKED",
+          "evidence": "A normal .NET executable is not a UEFI application; no freestanding/AOT EFI ABI, PE/COFF entry point or compatible runtime has been demonstrated."
+        },
+        "operating_system_kernel": {
+          "status": "BLOCKED",
+          "evidence": "Hosted .NET runtime, garbage collection and startup dependencies are not proven freestanding; no bootable kernel exists."
+        }
+      }
     }
-  ]
+  ],
+  "language_catalog_policy": {
+    "tiers": {
+      "primary_systems": [
+        "C",
+        "C++",
+        "Rust",
+        "Zig",
+        "Ada",
+        "Assembly x86-64",
+        "Assembly AArch64",
+        "Assembly RISC-V",
+        "Go",
+        "D",
+        "Nim",
+        "Swift",
+        "Free Pascal",
+        "Odin",
+        "Fortran",
+        "C#",
+        "Objective-C"
+      ],
+      "feasibility_candidates": [
+        "V",
+        "Crystal",
+        "Modula-2",
+        "COBOL",
+        "PL/I"
+      ],
+      "hosted_screen_reader_candidates": [
+        "Java",
+        "Kotlin",
+        "Python",
+        "JavaScript",
+        "TypeScript"
+      ]
+    },
+    "per_language_components": [
+      "screen_reader",
+      "uefi_pre_os",
+      "operating_system_kernel"
+    ],
+    "rules": [
+      "No PASS without reproducible evidence.",
+      "Host, emulator, and physical validation are distinct.",
+      "Hosted-only languages may have UEFI/kernel BLOCKED with a documented technical reason.",
+      "No placeholder implementations to inflate language count.",
+      "Mirror stable language IDs to ejjjkkjlkkj/ia for AI tooling, datasets, adapters, and benchmarks.",
+      "Do not imply separate foundation-model training without artifacts and benchmark evidence."
+    ]
+  }
 }
