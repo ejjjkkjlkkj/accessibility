@@ -1,0 +1,187 @@
+{
+  "schema_version": "1.0.0",
+  "project": "accessibility",
+  "status": "CONTRACT_ONLY_NOT_AUTONOMOUS",
+  "purpose": "Coordinate authorized defensive security review of this repository and explicitly owned test artifacts.",
+  "operating_rules": {
+    "authorization": "Repository code, locally generated fixtures, and explicitly authorized test machines only.",
+    "external_targets": "PROHIBITED",
+    "destructive_actions": "PROHIBITED",
+    "firmware_nvram_bios_reboot": "PROHIBITED without separate explicit human authorization; CI must never perform these actions.",
+    "secrets": "Never request, print, commit, or exfiltrate credentials or tokens.",
+    "evidence": "Every finding must include artifact/path, reproduction steps, expected/actual behavior, severity rationale, and validation status.",
+    "no_false_claims": "A role definition is not an executable agent. A simulated test is not physical hardware proof."
+  },
+  "agents": [
+    {
+      "id": "DARK-LEAD",
+      "team": "DARK",
+      "specialty": "Authorized red-team coordination",
+      "capabilities": [
+        "scope_review",
+        "attack_tree",
+        "test_plan"
+      ],
+      "forbidden": [
+        "external_scanning",
+        "credential_theft",
+        "persistence",
+        "destructive_actions"
+      ]
+    },
+    {
+      "id": "DARK-UEFI",
+      "team": "DARK",
+      "specialty": "UEFI and boot-chain threat review",
+      "capabilities": [
+        "static_review",
+        "malformed_fixture_testing",
+        "trust_boundary_review"
+      ],
+      "forbidden": [
+        "firmware_flash",
+        "NVRAM_mutation",
+        "unauthorized_boot_changes"
+      ]
+    },
+    {
+      "id": "DARK-BINARY",
+      "team": "DARK",
+      "specialty": "Binary and reverse-engineering review",
+      "capabilities": [
+        "artifact_metadata_review",
+        "safe_local_analysis"
+      ],
+      "forbidden": [
+        "third_party_targeting",
+        "weaponized_payload_delivery"
+      ]
+    },
+    {
+      "id": "DARK-FUZZ",
+      "team": "DARK",
+      "specialty": "Fuzzing and boundary conditions",
+      "capabilities": [
+        "bounded_local_fuzzing",
+        "regression_case_generation"
+      ],
+      "limits": {
+        "network": false,
+        "filesystem_scope": "temporary test workspace",
+        "max_runtime_seconds": 120
+      }
+    },
+    {
+      "id": "DARK-MEMORY",
+      "team": "DARK",
+      "specialty": "Memory-safety and unsafe-code review",
+      "capabilities": [
+        "rust_unsafe_review",
+        "bounds_review",
+        "integer_overflow_review"
+      ]
+    },
+    {
+      "id": "DARK-SUPPLY",
+      "team": "DARK",
+      "specialty": "Dependency and provenance review",
+      "capabilities": [
+        "lockfile_review",
+        "hash_verification",
+        "license_and_advisory_review"
+      ]
+    },
+    {
+      "id": "WHITE-SEC",
+      "team": "WHITE",
+      "specialty": "Security remediation",
+      "capabilities": [
+        "patch_review",
+        "least_privilege_review",
+        "defense_in_depth"
+      ]
+    },
+    {
+      "id": "WHITE-ACCESS",
+      "team": "WHITE",
+      "specialty": "Accessibility and safe-failure review",
+      "capabilities": [
+        "keyboard_path_review",
+        "screen_reader_contract_review",
+        "failure_state_review"
+      ]
+    },
+    {
+      "id": "GREY-RESEARCH",
+      "team": "GREY",
+      "specialty": "Technical research and reverse engineering",
+      "capabilities": [
+        "protocol_documentation",
+        "format_analysis",
+        "provenance_research"
+      ],
+      "requirements": [
+        "record_source",
+        "record_version",
+        "separate_fact_from_hypothesis"
+      ]
+    },
+    {
+      "id": "QA-VERIFY",
+      "team": "QA",
+      "specialty": "Reproducible verification",
+      "capabilities": [
+        "unit_tests",
+        "regression_tests",
+        "schema_validation",
+        "static_checks"
+      ]
+    },
+    {
+      "id": "AUDIT-INDEPENDENT",
+      "team": "INDEPENDENT_AUDIT",
+      "specialty": "Independent evidence review",
+      "capabilities": [
+        "evidence_check",
+        "status_challenge",
+        "release_gate_review"
+      ],
+      "must_not_self_certify": true
+    },
+    {
+      "id": "ORCHESTRATOR",
+      "team": "CONTROL",
+      "specialty": "Task orchestration and release gating",
+      "capabilities": [
+        "task_routing",
+        "evidence_registry",
+        "block_unverified_release"
+      ],
+      "must_not_override_failed_gate": true
+    }
+  ],
+  "release_gate": {
+    "required_statuses": [
+      "PASS",
+      "FAIL",
+      "PARTIAL",
+      "BLOCKED",
+      "NOT_VALIDATED",
+      "UNPROVEN"
+    ],
+    "pass_requires": [
+      "reproducible_command",
+      "recorded_exit_code",
+      "test_output",
+      "scope_and_environment",
+      "independent_review_for_critical_findings"
+    ],
+    "block_on": [
+      "critical_or_high_unresolved_finding",
+      "missing_required_evidence",
+      "failed_ci",
+      "scope_violation"
+    ],
+    "physical_hardware_proof": "Separate evidence required; emulation and hosted CI cannot satisfy it."
+  }
+}
