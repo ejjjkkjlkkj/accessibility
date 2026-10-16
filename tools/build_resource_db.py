@@ -103,7 +103,16 @@ def _open_catalog_url(request, timeout: int, allowed_domain: str):  # type: igno
 
 
 def check_url(url: str, expected_domain: str | None = None) -> dict:
-    parsed = urlparse(url)
+    try:
+        parsed = urlparse(url)
+    except ValueError:
+        return {
+            "http_status": None,
+            "final_url": None,
+            "reachable": False,
+            "tls": False,
+            "error": "invalid_http_url",
+        }
     result = {
         "http_status": None,
         "final_url": None,
