@@ -12,12 +12,12 @@ permissions:
   contents: read
 
 concurrency:
-  group: accessibility-ci-${{ github.ref }}
+  group: accessibility-ci-\${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
   repository-audit:
-    name: Repository and documentation audit
+    name: Repository, documentation and Python tests
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -83,7 +83,6 @@ jobs:
               except (OSError, UnicodeError) as exc:
                   failures.append(f"{path}: cannot read UTF-8 Markdown: {exc}")
                   continue
-
               for raw_target in link_pattern.findall(content):
                   target = raw_target.strip()
                   if not target:
@@ -105,23 +104,26 @@ jobs:
               sys.exit(1)
           print("PASS: Markdown relative links")
 
-      - name: Check Python syntax when Python sources exist
+      - name: Compile Python and run available test suite
         shell: bash
         run: |
           set -euo pipefail
-          mapfile -t files < <(git ls-files '*.py')
-          if (("${#files[@]}" == 0)); then
-            echo "PARTIAL: no tracked Python files found"
+          python -m compileall -q .
+          if [ -d tests ]; then
+            if python -c "import pytest" >/dev/null 2>&1; then
+              python -m pytest -q
+            else
+              python -m unittest discover -s tests -v
+            fi
           else
-            python -m py_compile "${files[@]}"
-            echo "PASS: Python syntax (${#files[@]} files)"
+            echo "PARTIAL: no tests/ directory; Python syntax checked only"
           fi
 
       - name: Check repository whitespace
         run: git diff --check
 
   security-baseline:
-    name: Dependency and secret hygiene baseline
+    name: Dependency, secret and artifact hygiene
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -129,7 +131,9 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          if git ls-files | grep -E '(^|/)(\.env|id_rsa|id_ed25519|credentials\.json|secrets\.json)$'; then
+          suspicious="$(git ls-files | grep -E '(^|/)(\.env($|\.)|id_rsa|id_ed25519|credentials\.json|secrets\.json)$' | grep -Ev '(^|/)\.env\.(example|template)$' || true)"
+          if [ -n "$suspicious" ]; then
+            printf '%s\n' "$suspicious"
             echo "FAIL: suspicious secret-like filename tracked; inspect manually"
             exit 1
           fi
@@ -139,38 +143,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          artifacts="$(git ls-files | grep -E '(^|/)(target|node_modules|__pycache__|\.pytest_cache|\.mypy_cache|\.ruff_cache|\.venv)/|\.py[co]
-
-  go-core:
-    name: Go core and catalog validator
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
-        with:
-          go-version-file: go.mod
-          cache: true
-      - name: Format check
-        shell: bash
-        run: |
-          set -euo pipefail
-          mapfile -d '' -t files < <(git ls-files -z -- '*.go')
-          if (("${#files[@]}" == 0)); then
-            echo "PARTIAL: no tracked Go files found"
-          else
-            unformatted="$(printf '%s\0' "${files[@]}" | xargs -0 -r gofmt -l)"
-            if [ -n "$unformatted" ]; then
-              printf '%s\n' "$unformatted"
-              echo "FAIL: Go files require gofmt"
-              exit 1
-            fi
-            echo "PASS: gofmt (${#files[@]} files)"
-          fi
-      - name: Run Go unit tests
-        run: go test ./...
-      - name: Validate the committed resource catalog
-        run: go run ./cmd/catalog-validator data/resources.csv
- || true)"
+          artifacts="$(git ls-files | grep -E '(^|/)(target|build|dist|out|bin|obj|node_modules|__pycache__|\.pytest_cache|\.mypy_cache|\.ruff_cache|\.venv)/|\.py[co]$' || true)"
           if [ -n "$artifacts" ]; then
             printf '%s\n' "$artifacts"
             echo "FAIL: generated build/cache artifacts are tracked"
@@ -179,7 +152,7 @@ jobs:
           echo "PASS: no tracked build/cache artifacts"
 
   go-core:
-    name: Go core and catalog validator
+    name: Go formatting, tests and catalog validation
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -191,19 +164,21 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          mapfile -d '' -t files < <(git ls-files -z -- '*.go')
-          if (("${#files[@]}" == 0)); then
+          files="$(git ls-files '*.go')"
+          if [ -z "$files" ]; then
             echo "PARTIAL: no tracked Go files found"
           else
-            unformatted="$(printf '%s\0' "${files[@]}" | xargs -0 -r gofmt -l)"
+            unformatted="$(gofmt -l $files)"
             if [ -n "$unformatted" ]; then
               printf '%s\n' "$unformatted"
               echo "FAIL: Go files require gofmt"
               exit 1
             fi
-            echo "PASS: gofmt (${#files[@]} files)"
+            echo "PASS: gofmt"
           fi
       - name: Run Go unit tests
         run: go test ./...
+      - name: Run Go static analysis
+        run: go vet ./...
       - name: Validate the committed resource catalog
         run: go run ./cmd/catalog-validator data/resources.csv
