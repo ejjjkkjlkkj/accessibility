@@ -1,11 +1,27 @@
 module accessibility_event;
 
+import std.array : replicate;
+import std.algorithm.searching : canFind;
+
 enum Role : ubyte {
     unknown = 0,
-    window = 1,
-    button = 2,
-    textField = 3,
-    heading = 4
+    application = 1,
+    window = 2,
+    group = 3,
+    text = 4,
+    button = 5,
+    checkbox = 6,
+    radio = 7,
+    textbox = 8,
+    link = 9,
+    heading = 10,
+    list = 11,
+    listItem = 12,
+    table = 13,
+    row = 14,
+    cell = 15,
+    menu = 16,
+    menuItem = 17
 }
 
 struct AccessibilityEvent {
@@ -16,18 +32,19 @@ struct AccessibilityEvent {
 
 bool isValid(const ref AccessibilityEvent event) {
     return event.abiVersion == 1 &&
-        event.role >= Role.unknown &&
-        event.role <= Role.heading &&
-        event.name.length <= 256;
+        event.role <= Role.menuItem &&
+        event.name.length <= 4096 && !event.name.canFind('\0');
 }
 
 unittest {
+    assert(cast(ubyte)Role.button == 5);
+    assert(cast(ubyte)Role.menuItem == 17);
     auto valid = AccessibilityEvent(1, Role.button, "Save");
     assert(isValid(valid));
     auto invalid = AccessibilityEvent(2, Role.button, "Save");
     assert(!isValid(invalid));
-    auto tooLongName = new char[257];
-    tooLongName[] = 'x';
-    auto tooLong = AccessibilityEvent(1, Role.button, cast(string) tooLongName);
+    auto tooLong = AccessibilityEvent(1, Role.button, cast(string) replicate("x", 4097));
     assert(!isValid(tooLong));
+    auto embeddedNul = AccessibilityEvent(1, Role.button, "bad\0name");
+    assert(!isValid(embeddedNul));
 }
