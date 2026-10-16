@@ -300,5 +300,4 @@ mod tests {
         assert_eq!(nodes.len(), MAX_ACCESSIBLE_TREE_DEPTH + 2);
         assert!(!validate_tree(&nodes));
     }
-
 }
