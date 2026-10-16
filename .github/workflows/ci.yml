@@ -103,7 +103,7 @@ jobs:
               sys.exit(1)
           print("PASS: Markdown relative links")
 
-      - name: Compile Python and run available test suite
+      - name: Validate tracked Python syntax and run available test suite
         shell: bash
         run: |
           set -euo pipefail
