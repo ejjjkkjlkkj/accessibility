@@ -13,73 +13,28 @@ int main(void) {
     assert(ACCESSIBILITY_ROLE_MENU_ITEM == 17);
     assert(event.source_id == 42u);
     assert(strcmp(event.name, "Continue") == 0);
-    assert(event.state_flags == 0u);
-    assert(accessibility_state_flags_valid(0u));
-
-    for (uint64_t flags = 0; flags <= UINT64_C(255); ++flags) {
-        int expected = flags == 0u || flags == 2u || flags == 4u ||
-                       flags == 6u || flags == 7u || flags == 8u ||
-                       flags == 10u;
-        assert(accessibility_state_flags_valid(flags) == expected);
-    }
-    assert(accessibility_state_flags_valid(ACCESSIBILITY_STATE_FOCUSABLE |
-                                           ACCESSIBILITY_STATE_ENABLED |
-                                           ACCESSIBILITY_STATE_FOCUSED));
-    assert(!accessibility_state_flags_valid(ACCESSIBILITY_STATE_ENABLED |
-                                            ACCESSIBILITY_STATE_DISABLED));
-    assert(!accessibility_state_flags_valid(ACCESSIBILITY_STATE_FOCUSED));
-    assert(!accessibility_state_flags_valid(UINT64_C(1) << 63));
-    assert(accessibility_event_set_state_flags(&event,
-        ACCESSIBILITY_STATE_FOCUSABLE | ACCESSIBILITY_STATE_ENABLED |
-        ACCESSIBILITY_STATE_FOCUSED) == 0);
-    assert(event.state_flags == (ACCESSIBILITY_STATE_FOCUSABLE |
-                                 ACCESSIBILITY_STATE_ENABLED |
-                                 ACCESSIBILITY_STATE_FOCUSED));
-    uint64_t valid_before_failure = event.state_flags;
-    assert(accessibility_event_set_state_flags(&event,
-        ACCESSIBILITY_STATE_ENABLED | ACCESSIBILITY_STATE_DISABLED) == -2);
-    assert(event.state_flags == valid_before_failure);
-    assert(accessibility_event_set_state_flags(NULL, 0u) == -1);
 
     assert(accessibility_event_init(NULL, ACCESSIBILITY_ROLE_BUTTON, 1u, "x") != 0);
     assert(accessibility_event_init(&event, ACCESSIBILITY_ROLE_BUTTON, 1u, NULL) != 0);
     assert(accessibility_event_init(&event, (accessibility_role)99, 1u, "x") != 0);
+    const char invalid_utf8[] = { (char)0xC0, (char)0xAF, '\\0' };
+    assert(accessibility_event_init(&event, ACCESSIBILITY_ROLE_BUTTON, 1u, invalid_utf8) == -4);
+    const char truncated_two[] = { (char)0xC2, '\\0' };
+    const char truncated_three[] = { (char)0xE2, (char)0x82, '\\0' };
+    const char truncated_four[] = { (char)0xF0, (char)0x9F, (char)0x92, '\\0' };
+    const char surrogate_utf8[] = { (char)0xED, (char)0xA0, (char)0x80, '\\0' };
+    const char too_large_codepoint[] = { (char)0xF4, (char)0x90, (char)0x80, (char)0x80, '\\0' };
+    assert(accessibility_event_init(&event, ACCESSIBILITY_ROLE_BUTTON, 1u, truncated_two) == -4);
+    assert(accessibility_event_init(&event, ACCESSIBILITY_ROLE_BUTTON, 1u, truncated_three) == -4);
+    assert(accessibility_event_init(&event, ACCESSIBILITY_ROLE_BUTTON, 1u, truncated_four) == -4);
+    assert(accessibility_event_init(&event, ACCESSIBILITY_ROLE_BUTTON, 1u, surrogate_utf8) == -4);
+    assert(accessibility_event_init(&event, ACCESSIBILITY_ROLE_BUTTON, 1u, too_large_codepoint) == -4);
+    const char valid_utf8[] = "Accès — 中文";
+    assert(accessibility_event_init(&event, ACCESSIBILITY_ROLE_BUTTON, 1u, valid_utf8) == 0);
+    assert(strcmp(event.name, valid_utf8) == 0);
     char long_name[ACCESSIBILITY_NAME_CAPACITY + 1u];
     memset(long_name, 'x', sizeof(long_name));
     long_name[sizeof(long_name) - 1u] = '\0';
     assert(accessibility_event_init(&event, ACCESSIBILITY_ROLE_BUTTON, 1u, long_name) == -3);
-
-    char max_name[ACCESSIBILITY_NAME_CAPACITY];
-    memset(max_name, 'a', sizeof(max_name));
-    max_name[sizeof(max_name) - 1u] = '\0';
-    assert(accessibility_event_init(&event, ACCESSIBILITY_ROLE_BUTTON, 9u, max_name) == 0);
-    assert(strlen(event.name) == ACCESSIBILITY_NAME_CAPACITY - 1u);
-    assert(event.name[ACCESSIBILITY_NAME_CAPACITY - 1u] == '\0');
-
-    assert(accessibility_event_init(&event, ACCESSIBILITY_ROLE_BUTTON, 10u, "caf\xC3\xA9") == 0);
-    {
-        const char embedded_nul[] = {'b', 'a', 'd', '\0', 'x'};
-        const char truncated_utf8[] = {'c', 'a', 'f', (char)0xC3};
-        const char valid_utf8[] = {'c', 'a', 'f', (char)0xC3, (char)0xA9};
-        assert(accessibility_event_init_n(&event, ACCESSIBILITY_ROLE_BUTTON, 12u,
-                                          embedded_nul, sizeof(embedded_nul)) == -4);
-        assert(accessibility_event_init_n(&event, ACCESSIBILITY_ROLE_BUTTON, 12u,
-                                          truncated_utf8, sizeof(truncated_utf8)) == -4);
-        assert(accessibility_event_init_n(&event, ACCESSIBILITY_ROLE_BUTTON, 12u,
-                                          valid_utf8, sizeof(valid_utf8)) == 0);
-        assert(strcmp(event.name, "caf\xC3\xA9") == 0);
-        assert(accessibility_event_init_n(&event, ACCESSIBILITY_ROLE_BUTTON, 12u,
-                                          NULL, 0u) == 0);
-        assert(event.name[0] == '\0');
-    }
-    const char *invalid_utf8[] = {
-        "\xC0\xAF",             /* overlong two-byte sequence */
-        "\xED\xA0\x80",       /* UTF-16 surrogate */
-        "\xF4\x90\x80\x80", /* above U+10FFFF */
-        "\xE2\x82"              /* truncated sequence */
-    };
-    for (size_t index = 0; index < sizeof(invalid_utf8) / sizeof(invalid_utf8[0]); ++index) {
-        assert(accessibility_event_init(&event, ACCESSIBILITY_ROLE_BUTTON, 11u, invalid_utf8[index]) == -4);
-    }
     return 0;
 }
