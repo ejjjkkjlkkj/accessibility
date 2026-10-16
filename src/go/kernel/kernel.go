@@ -3,4 +3,7 @@
 package main
 
 // KernelMain documents the intended handoff symbol for a future specialized toolchain.
-func KernelMain() { for {} }
+func KernelMain() {
+	for {
+	}
+}
