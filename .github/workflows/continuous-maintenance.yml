@@ -41,8 +41,8 @@ jobs:
         shell: bash
         run: |
           set -uo pipefail
-          mkdir -p .maintenance-report
-          report=.maintenance-report/report.txt
+          mkdir -p maintenance-report
+          report=maintenance-report/report.txt
           {
             echo "Repository: ${GITHUB_REPOSITORY}"
             echo "Commit: ${GITHUB_SHA}"
@@ -70,8 +70,17 @@ jobs:
             rust_manifest_count=0
             while IFS= read -r -d '' manifest; do
               rust_manifest_count=$((rust_manifest_count + 1))
-              echo "Rust crate tests: $manifest" | tee -a "$report"
-              if ! cargo test --manifest-path "$manifest" >>"$report" 2>&1; then failed=1; fi
+              if [[ "$manifest" == *"/src/rust-uefi/Cargo.toml" ]]; then
+                echo "Rust UEFI target build: $manifest" | tee -a "$report"
+                if ! rustup target add x86_64-unknown-uefi >>"$report" 2>&1; then
+                  failed=1
+                elif ! cargo build --manifest-path "$manifest" --target x86_64-unknown-uefi --release >>"$report" 2>&1; then
+                  failed=1
+                fi
+              else
+                echo "Rust crate tests: $manifest" | tee -a "$report"
+                if ! cargo test --manifest-path "$manifest" >>"$report" 2>&1; then failed=1; fi
+              fi
             done < <(find . -path './.git' -prune -o -path './target' -prune -o -name Cargo.toml -print0)
             if [ "$rust_manifest_count" -eq 0 ]; then
               echo "PARTIAL: no Cargo.toml found; Rust tests not discovered" | tee -a "$report"
@@ -89,6 +98,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: accessibility-maintenance-${{ github.run_id }}
-          path: .maintenance-report/
+          path: maintenance-report/
           if-no-files-found: warn
           retention-days: 30
