@@ -43,9 +43,33 @@ jobs:
             echo "## Python syntax check"
           } | tee audit-report/report.md
 
-          python -m compileall -q . >>audit-report/report.md 2>&1
+          python - <<'PY' >>audit-report/report.md 2>&1
+          import ast
+          import pathlib
+          import subprocess
+          import sys
+
+          result = subprocess.run(
+              ["git", "ls-files", "-z", "--", "*.py"],
+              check=True,
+              stdout=subprocess.PIPE,
+          )
+          paths = [pathlib.Path(item.decode("utf-8")) for item in result.stdout.split(b"\0") if item]
+          failures = []
+          for path in paths:
+              try:
+                  ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+              except (OSError, UnicodeError, SyntaxError) as exc:
+                  failures.append(f"FAIL: {path}: {exc}")
+              else:
+                  print(f"PASS: {path}")
+          if failures:
+              print("\n".join(failures))
+              sys.exit(1)
+          print(f"PASS: syntax checked for {len(paths)} tracked Python files")
+          PY
           py_rc=$?
-          echo "- Python compileall exit code: ${py_rc}" | tee -a audit-report/report.md
+          echo "- Tracked Python syntax exit code: ${py_rc}" | tee -a audit-report/report.md
 
           echo >> audit-report/report.md
           echo "## Whitespace / conflict-marker check" | tee -a audit-report/report.md
