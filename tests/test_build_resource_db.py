@@ -16,6 +16,31 @@ class CheckUrlTests(unittest.TestCase):
         self.assertFalse(result["reachable"])
         self.assertEqual(result["error"], "invalid_http_url")
 
+    def test_rejects_local_ip_and_localhost_without_network(self):
+        for url in (
+            "http://127.0.0.1/",
+            "https://[::1]/",
+            "http://localhost/",
+            "https://service.internal/",
+            "https://printer.local/",
+        ):
+            with self.subTest(url=url):
+                result = builder.check_url(url)
+                self.assertFalse(result["reachable"])
+                self.assertEqual(result["error"], "invalid_http_url")
+
+    def test_rejects_url_userinfo_and_invalid_ports_without_network(self):
+        for url in (
+            "https://user:pass@example.org/",
+            "https://example.org:0/",
+            "https://example.org:65536/",
+            "https://example.org:notaport/",
+        ):
+            with self.subTest(url=url):
+                result = builder.check_url(url)
+                self.assertFalse(result["reachable"])
+                self.assertEqual(result["error"], "invalid_http_url")
+
     @patch.object(builder.urllib.request, "urlopen")
     def test_successful_head_is_reachable(self, urlopen):
         response = MagicMock()
@@ -30,6 +55,19 @@ class CheckUrlTests(unittest.TestCase):
         self.assertEqual(result["http_status"], 200)
         self.assertEqual(result["final_url"], "https://example.org/")
         self.assertTrue(result["tls"])
+
+    @patch.object(builder.urllib.request, "urlopen")
+    def test_tls_reflects_final_url_after_http_redirect(self, urlopen):
+        response = MagicMock()
+        response.status = 200
+        response.geturl.return_value = "http://example.org/final"
+        response.__enter__.return_value = response
+        urlopen.return_value = response
+
+        result = builder.check_url("https://example.org/")
+
+        self.assertTrue(result["reachable"])
+        self.assertFalse(result["tls"])
 
     @patch.object(builder.urllib.request, "urlopen")
     def test_head_405_retries_with_bounded_range_get(self, urlopen):
