@@ -42,6 +42,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          rm -f agent-status.md
           AGENT=''
           for candidate in tools/accessibility-agent tools/own-model-agent; do
             if [ -x "$candidate" ]; then AGENT="$candidate"; break; fi
@@ -51,7 +52,7 @@ jobs:
           else
             echo 'BLOCKED: repository-owned model CLI not implemented; no third-party model fallback.' >&2
             printf '%s\n' 'BLOCKED: own-model CLI/checkpoint unavailable; third-party model fallback prohibited.' > agent-status.md
-            exit 2
+            echo 'Deterministic validation will still run; this job will report BLOCKED afterward.'
           fi
 
       - name: Run repository tests
@@ -61,6 +62,17 @@ jobs:
           if [ -d tests ] || find . -maxdepth 3 -name 'test_*.py' -not -path './.git/*' -print -quit | grep -q .; then python -m pytest -q; fi
           while IFS= read -r manifest; do [ -z "$manifest" ] || cargo test --manifest-path "$manifest"; done < <(find . -maxdepth 5 -name Cargo.toml -not -path './.git/*' | sort)
           git diff --check
+
+
+      - name: Report unavailable repository-owned model
+        if: always()
+        shell: bash
+        run: |
+          if [ -f agent-status.md ] && grep -q '^BLOCKED:' agent-status.md; then
+            cat agent-status.md
+            echo 'BLOCKED: deterministic checks ran, but the repository-owned model is not implemented.'
+            exit 2
+          fi
 
       - name: Confirm no automatic publication
         run: |
