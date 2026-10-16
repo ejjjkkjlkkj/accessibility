@@ -2,7 +2,6 @@ name: Accessibility and ZERO CI
 
 on:
   push:
-    branches: [main, master]
   pull_request:
   workflow_dispatch:
   schedule:
@@ -17,7 +16,7 @@ concurrency:
 
 jobs:
   repository-audit:
-    name: Repository and documentation audit
+    name: Repository, documentation and Python tests
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -35,61 +34,95 @@ jobs:
       - name: Check whitespace errors
         run: git diff --check
 
+      - name: Validate JSON manifests
+        shell: python {0}
+        run: |
+          import json
+          import pathlib
+          import sys
+
+          candidates = [
+              pathlib.Path("projects/manifest.json"),
+              pathlib.Path("projects/nexora/accessibility-contract.json"),
+          ]
+          failures = []
+          for path in candidates:
+              if not path.is_file():
+                  failures.append(f"{path}: required JSON manifest is missing")
+                  continue
+              try:
+                  with path.open("r", encoding="utf-8") as stream:
+                      json.load(stream)
+              except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+                  failures.append(f"{path}: invalid JSON: {exc}")
+              else:
+                  print(f"PASS: valid JSON: {path}")
+          if failures:
+              print("\n".join(failures))
+              sys.exit(1)
+
       - name: Check Markdown relative links
         shell: python {0}
         run: |
-          import pathlib, re, sys
+          import pathlib
+          import re
+          import sys
+          from urllib.parse import unquote, urlsplit
+
           root = pathlib.Path(".")
           failures = []
           ignored = {".git", ".github"}
+          link_pattern = re.compile(r"!?(?:\[[^\]]*\])\(([^)]+)\)")
+
           for path in root.rglob("*.md"):
               if any(part in ignored for part in path.parts):
                   continue
-              text = path.read_text(encoding="utf-8", errors="replace")
-              for target in re.findall(r"!?(?:\[[^\]]*\])\(([^)]+)\)", text):
-                  target = target.strip().split()[0].strip("<>")
-                  if not target or target.startswith(("http://", "https://", "mailto:", "#", "data:")):
-                      continue
-                  target = target.split("#", 1)[0].split("?", 1)[0]
+              try:
+                  content = path.read_text(encoding="utf-8")
+              except (OSError, UnicodeError) as exc:
+                  failures.append(f"{path}: cannot read UTF-8 Markdown: {exc}")
+                  continue
+              for raw_target in link_pattern.findall(content):
+                  target = raw_target.strip()
                   if not target:
+                      failures.append(f"{path}: empty Markdown link target")
                       continue
-                  resolved = (path.parent / target).resolve()
+                  target = target.split(maxsplit=1)[0].strip("<>")
+                  parsed = urlsplit(target)
+                  if parsed.scheme or parsed.netloc or target.startswith("#"):
+                      continue
+                  local_path = unquote(parsed.path)
+                  if not local_path:
+                      continue
+                  resolved = (path.parent / local_path).resolve()
                   if not resolved.exists():
-                      failures.append(f"{path}: broken relative link: {target}")
+                      failures.append(f"{path}: broken relative link: {local_path}")
+
           if failures:
               print("\n".join(failures))
               sys.exit(1)
           print("PASS: Markdown relative links")
 
-      - name: Inventory implementation and tests
+      - name: Compile Python and run available test suite
         shell: bash
         run: |
           set -euo pipefail
-          echo "Repository inventory (no claim of hardware validation):"
-          find . -maxdepth 3 -type f \( -name Cargo.toml -o -name pyproject.toml -o -name pytest.ini -o -name CMakeLists.txt -o -name Makefile \) -not -path './.git/*' -print
-          if [ -f Cargo.toml ]; then
-            if command -v cargo >/dev/null 2>&1; then
-              cargo test --workspace --locked
-            else
-              echo "BLOCKED: Cargo manifest found but toolchain unavailable"
-              exit 1
-            fi
-          else
-            echo "PARTIAL: no root Cargo.toml; no Rust workspace test was inferred"
-          fi
-          if [ -f pyproject.toml ] || [ -d tests ]; then
-            python -m compileall -q .
+          python -m compileall -q .
+          if [ -d tests ]; then
             if python -c "import pytest" >/dev/null 2>&1; then
               python -m pytest -q
             else
-              echo "PARTIAL: Python sources compiled; pytest is not installed"
+              python -m unittest discover -s tests -v
             fi
           else
-            echo "PARTIAL: no root Python project/tests detected"
+            echo "PARTIAL: no tests/ directory; Python syntax checked only"
           fi
 
+      - name: Check repository whitespace
+        run: git diff --check
+
   security-baseline:
-    name: Dependency and secret hygiene baseline
+    name: Dependency, secret and artifact hygiene
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -97,14 +130,28 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          if git ls-files | grep -E '(^|/)(\.env|id_rsa|id_ed25519|credentials\.json|secrets\.json)$'; then
+          suspicious="$(git ls-files | grep -E '(^|/)(\.env($|\.)|id_rsa|id_ed25519|credentials\.json|secrets\.json)$' | grep -Ev '(^|/)\.env\.(example|template)$' || true)"
+          if [ -n "$suspicious" ]; then
+            printf '%s\n' "$suspicious"
             echo "FAIL: suspicious secret-like filename tracked; inspect manually"
             exit 1
           fi
           echo "PASS: no common secret-like filenames detected"
 
+      - name: Reject tracked build and interpreter cache artifacts
+        shell: bash
+        run: |
+          set -euo pipefail
+          artifacts="$(git ls-files | grep -E '(^|/)(target|build|dist|out|bin|obj|node_modules|__pycache__|\.pytest_cache|\.mypy_cache|\.ruff_cache|\.venv)/|\.py[co]$' || true)"
+          if [ -n "$artifacts" ]; then
+            printf '%s\n' "$artifacts"
+            echo "FAIL: generated build/cache artifacts are tracked"
+            exit 1
+          fi
+          echo "PASS: no tracked build/cache artifacts"
+
   go-core:
-    name: Go core and catalog validator
+    name: Go formatting, tests and catalog validation
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -112,7 +159,25 @@ jobs:
         with:
           go-version-file: go.mod
           cache: true
+      - name: Format check
+        shell: bash
+        run: |
+          set -euo pipefail
+          files="$(git ls-files '*.go')"
+          if [ -z "$files" ]; then
+            echo "PARTIAL: no tracked Go files found"
+          else
+            unformatted="$(gofmt -l $files)"
+            if [ -n "$unformatted" ]; then
+              printf '%s\n' "$unformatted"
+              echo "FAIL: Go files require gofmt"
+              exit 1
+            fi
+            echo "PASS: gofmt"
+          fi
       - name: Run Go unit tests
         run: go test ./...
+      - name: Run Go static analysis
+        run: go vet ./...
       - name: Validate the committed resource catalog
         run: go run ./cmd/catalog-validator data/resources.csv
