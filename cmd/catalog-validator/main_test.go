@@ -86,16 +86,16 @@ func TestValidateRejectsEmptyRequiredFields(t *testing.T) {
 }
 
 func TestValidateRejectsMissingRequiredHeader(t *testing.T) {
-	header := "id,name,domain,url,category,layer,official_status\\n"
-	row := "a,Example,example.org,https://example.org/,docs,web,candidate\\n"
+	header := "id,name,domain,url,category,layer,official_status\n"
+	row := "a,Example,example.org,https://example.org/,docs,web,candidate\n"
 	if err := validate(strings.NewReader(header + row)); err == nil {
 		t.Fatal("expected missing required header to fail")
 	}
 }
 
 func TestValidateRejectsDuplicateHeadersAfterTrimming(t *testing.T) {
-	header := "id,name, name ,domain,url,category,layer,official_status,notes\\n"
-	row := "a,Example,Shadow,example.org,https://example.org/,docs,web,candidate,test\\n"
+	header := "id,name, name ,domain,url,category,layer,official_status,notes\n"
+	row := "a,Example,Shadow,example.org,https://example.org/,docs,web,candidate,test\n"
 	if err := validate(strings.NewReader(header + row)); err == nil {
 		t.Fatal("expected whitespace-normalized duplicate header to fail")
 	}
@@ -108,6 +108,7 @@ func TestValidateRejectsURLDomainMismatch(t *testing.T) {
 	}{
 		{domain: "example.org", rawURL: "https://evil.test/"},
 		{domain: "example.org", rawURL: "https://example.org.evil.test/"},
+		{domain: "org", rawURL: "https://example.org/"},
 	} {
 		row := "a,Example," + test.domain + "," + test.rawURL + ",docs,web,candidate,test\n"
 		if err := validate(strings.NewReader(validHeader + row)); err == nil {
@@ -129,5 +130,20 @@ func TestValidateRejectsMalformedURL(t *testing.T) {
 		if err := validate(strings.NewReader(validHeader + row)); err == nil {
 			t.Errorf("expected malformed URL to fail: %q", rawURL)
 		}
+	}
+}
+
+func TestValidateRejectsInvalidDomainSyntax(t *testing.T) {
+	for _, domain := range []string{"org", "-example.org", "example..org", "example.org/path", "bad domain.org", "example-.org"} {
+		row := "a,Example," + domain + ",https://example.org/,docs,web,candidate,test\n"
+		if err := validate(strings.NewReader(validHeader + row)); err == nil {
+			t.Errorf("expected invalid domain to fail: %q", domain)
+		}
+	}
+}
+
+func TestValidateRejectsEmptyInput(t *testing.T) {
+	if err := validate(strings.NewReader("")); err == nil {
+		t.Fatal("expected empty input to fail")
 	}
 }
