@@ -108,6 +108,7 @@ func TestValidateRejectsURLDomainMismatch(t *testing.T) {
 	}{
 		{domain: "example.org", rawURL: "https://evil.test/"},
 		{domain: "example.org", rawURL: "https://example.org.evil.test/"},
+		{domain: "org", rawURL: "https://example.org/"},
 	} {
 		row := "a,Example," + test.domain + "," + test.rawURL + ",docs,web,candidate,test\n"
 		if err := validate(strings.NewReader(validHeader + row)); err == nil {
@@ -128,6 +129,15 @@ func TestValidateRejectsMalformedURL(t *testing.T) {
 		row := "a,Example,example.org," + rawURL + ",docs,web,candidate,test\n"
 		if err := validate(strings.NewReader(validHeader + row)); err == nil {
 			t.Errorf("expected malformed URL to fail: %q", rawURL)
+		}
+	}
+}
+
+func TestValidateRejectsInvalidDomainSyntax(t *testing.T) {
+	for _, domain := range []string{"org", "-example.org", "example..org", "example.org/path", "bad domain.org", "example-.org"} {
+		row := "a,Example," + domain + ",https://example.org/,docs,web,candidate,test\n"
+		if err := validate(strings.NewReader(validHeader + row)); err == nil {
+			t.Errorf("expected invalid domain to fail: %q", domain)
 		}
 	}
 }
