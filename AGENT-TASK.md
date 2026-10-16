@@ -1,6 +1,6 @@
 # Autonomous engineering queue — Accessibility / ZERO
 
-This task file is the persistent work queue for the local Ollama agent team. Work only on the current dedicated feature branch. Each iteration must inspect the relevant implementation and tests, select one small, high-value item, implement it, add regression coverage, run the repository's real test suite, and report evidence through the JSONL log. The runner publishes only test-passing commits to this feature branch; it never merges or releases.
+This task file is the persistent work queue for the local Ollama agent team. Work only on the current dedicated feature branch. Each iteration must inspect the relevant implementation and tests, select one small, high-value item, implement it, add regression coverage, run the repository's real test suite, and report evidence through the JSONL log. The runner creates test-passing local commits only; pushing requires explicit opt-in. It never merges or releases.
 
 ## Priority order
 
