@@ -4,12 +4,34 @@ import (
 	"encoding/csv"
 	"fmt"
 	"io"
+	"net"
 	"net/url"
 	"os"
 	"strings"
 )
 
 var required = []string{"id", "name", "domain", "url", "category", "layer", "official_status", "notes"}
+
+func validDomain(domain string) bool {
+	domain = strings.TrimSuffix(strings.ToLower(domain), ".")
+	if domain == "" || len(domain) > 253 || strings.Contains(domain, "..") {
+		return false
+	}
+	if net.ParseIP(domain) != nil {
+		return true
+	}
+	for _, label := range strings.Split(domain, ".") {
+		if len(label) == 0 || len(label) > 63 || label[0] == '-' || label[len(label)-1] == '-' {
+			return false
+		}
+		for _, r := range label {
+			if !((r >= 'a' && r <= 'z') || (r >= '0' && r <= '9') || r == '-') {
+				return false
+			}
+		}
+	}
+	return true
+}
 
 func validate(r io.Reader) error {
 	reader := csv.NewReader(r)
@@ -35,43 +57,44 @@ func validate(r io.Reader) error {
 		}
 	}
 	seen := map[string]bool{}
-	line := 1
+	record := 1
 	for {
 		row, err := reader.Read()
 		if err == io.EOF {
 			break
 		}
-		line++
+		record++
 		if err != nil {
-			return fmt.Errorf("CSV line %d: %w", line, err)
+			return fmt.Errorf("CSV record %d: %w", record, err)
 		}
 		if len(row) != len(header) {
-			return fmt.Errorf("CSV line %d: got %d fields, want %d", line, len(row), len(header))
+			return fmt.Errorf("CSV record %d: got %d fields, want %d", record, len(row), len(header))
 		}
-		value := func(key string) string {
-			return strings.TrimSpace(row[index[key]])
-		}
+		value := func(key string) string { return strings.TrimSpace(row[index[key]]) }
 		id := value("id")
 		if id == "" {
-			return fmt.Errorf("CSV line %d: empty id", line)
+			return fmt.Errorf("CSV record %d: empty id", record)
 		}
 		if seen[id] {
-			return fmt.Errorf("CSV line %d: duplicate id %q", line, id)
+			return fmt.Errorf("CSV record %d: duplicate id %q", record, id)
 		}
 		seen[id] = true
 		for _, key := range []string{"name", "domain", "url", "category", "layer", "official_status"} {
 			if value(key) == "" {
-				return fmt.Errorf("CSV line %d: empty %s", line, key)
+				return fmt.Errorf("CSV record %d: empty %s", record, key)
 			}
+		}
+		domain := strings.TrimSuffix(strings.ToLower(value("domain")), ".")
+		if !validDomain(domain) {
+			return fmt.Errorf("CSV record %d: invalid DNS domain %q", record, value("domain"))
 		}
 		parsedURL, err := url.Parse(value("url"))
 		if err != nil || (parsedURL.Scheme != "https" && parsedURL.Scheme != "http") || parsedURL.Hostname() == "" || parsedURL.User != nil {
-			return fmt.Errorf("CSV line %d: URL must be absolute HTTP(S), include a hostname, and contain no userinfo", line)
+			return fmt.Errorf("CSV record %d: URL must be absolute HTTP(S), include a hostname, and contain no userinfo", record)
 		}
-		domain := strings.TrimSuffix(strings.ToLower(value("domain")), ".")
 		hostname := strings.TrimSuffix(strings.ToLower(parsedURL.Hostname()), ".")
-		if hostname != domain && !strings.HasSuffix(hostname, "."+domain) {
-			return fmt.Errorf("CSV line %d: URL hostname %q does not match domain %q", line, hostname, domain)
+		if !validDomain(hostname) || (hostname != domain && !strings.HasSuffix(hostname, "."+domain)) {
+			return fmt.Errorf("CSV record %d: URL hostname %q does not match valid declared domain %q", record, hostname, domain)
 		}
 	}
 	if len(seen) == 0 {
