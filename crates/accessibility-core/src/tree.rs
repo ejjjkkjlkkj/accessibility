@@ -64,7 +64,7 @@ impl<'a> AccessibleNode<'a> {
 /// Validate unique IDs, exactly one root, parent references, acyclic ancestry,
 /// and the shared UTF-8 name limit. An empty slice is not a valid tree.
 pub fn validate_tree(nodes: &[AccessibleNode<'_>]) -> bool {
-    if nodes.is_empty() || nodes.len() > MAX_ACCESSIBLE_NODES {
+    if nodes.is_empty() || nodes.len() > MAX_ACCESSIBLE_TREE_NODES {
         return false;
     }
 
@@ -139,7 +139,6 @@ pub fn previous_focusable(nodes: &[AccessibleNode<'_>], before_id: Option<u64>) 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::vec::Vec;
 
     const TARGET: u64 = STATE_FOCUSABLE | STATE_ENABLED;
 
@@ -208,22 +207,16 @@ mod tests {
 
     #[test]
     fn rejects_trees_over_the_node_limit() {
-        let nodes: Vec<_> = (0..=MAX_ACCESSIBLE_NODES)
-            .map(|index| {
-                if index == 0 {
-                    AccessibleNode::new(1, None, Role::Window, 0, "Main")
-                } else {
-                    AccessibleNode::new(
-                        (index as u64) + 1,
-                        Some(1),
-                        Role::Group,
-                        0,
-                        "Node",
-                    )
-                }
-            })
-            .collect();
-        assert_eq!(nodes.len(), MAX_ACCESSIBLE_NODES + 1);
+        let mut nodes = [AccessibleNode::new(1, None, Role::Window, 0, "Main");
+            MAX_ACCESSIBLE_TREE_NODES + 1];
+        for (index, node) in nodes.iter_mut().enumerate() {
+            *node = if index == 0 {
+                AccessibleNode::new(1, None, Role::Window, 0, "Main")
+            } else {
+                AccessibleNode::new((index as u64) + 1, Some(1), Role::Group, 0, "Node")
+            };
+        }
+        assert_eq!(nodes.len(), MAX_ACCESSIBLE_TREE_NODES + 1);
         assert!(!validate_tree(&nodes));
     }
 
@@ -283,21 +276,15 @@ mod tests {
 
     #[test]
     fn rejects_trees_over_the_depth_limit() {
-        let nodes: Vec<_> = (0..=MAX_ACCESSIBLE_TREE_DEPTH + 1)
-            .map(|index| {
-                if index == 0 {
-                    AccessibleNode::new(1, None, Role::Window, 0, "Main")
-                } else {
-                    AccessibleNode::new(
-                        (index as u64) + 1,
-                        Some(index as u64),
-                        Role::Group,
-                        0,
-                        "Node",
-                    )
-                }
-            })
-            .collect();
+        let mut nodes = [AccessibleNode::new(1, None, Role::Window, 0, "root");
+            MAX_ACCESSIBLE_TREE_DEPTH + 2];
+        for (index, node) in nodes.iter_mut().enumerate() {
+            *node = if index == 0 {
+                AccessibleNode::new(1, None, Role::Window, 0, "root")
+            } else {
+                AccessibleNode::new((index as u64) + 1, Some(index as u64), Role::Group, 0, "Node")
+            };
+        }
         assert_eq!(nodes.len(), MAX_ACCESSIBLE_TREE_DEPTH + 2);
         assert!(!validate_tree(&nodes));
     }
