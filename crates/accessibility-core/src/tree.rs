@@ -12,7 +12,9 @@ pub const STATE_DISABLED: u64 = 1 << 3;
 pub const KNOWN_STATE_FLAGS: u64 = STATE_FOCUSED | STATE_FOCUSABLE | STATE_ENABLED | STATE_DISABLED;
 pub const MAX_NODE_NAME_UTF8_BYTES: usize = 4096;
 /// Hard bound to limit quadratic validation work on untrusted node slices.
-pub const MAX_ACCESSIBLE_NODES: usize = 1024;
+pub const MAX_ACCESSIBLE_TREE_NODES: usize = 512;
+/// Maximum parent-link depth accepted for untrusted trees.
+pub const MAX_ACCESSIBLE_TREE_DEPTH: usize = 64;
 
 /// Reject undefined or contradictory state combinations in a single semantic event.
 pub const fn state_flags_are_valid(state_flags: u64) -> bool {
@@ -104,6 +106,9 @@ pub fn validate_tree(nodes: &[AccessibleNode<'_>]) -> bool {
                 None => return false,
             };
             depth += 1;
+            if depth > MAX_ACCESSIBLE_TREE_DEPTH {
+                return false;
+            }
             if depth >= nodes.len() && parent.parent_id.is_some() {
                 return false;
             }
@@ -275,4 +280,26 @@ mod tests {
         ];
         assert!(!validate_tree(&unknown_bits));
     }
+
+    #[test]
+    fn rejects_trees_over_the_depth_limit() {
+        let nodes: Vec<_> = (0..=MAX_ACCESSIBLE_TREE_DEPTH + 1)
+            .map(|index| {
+                if index == 0 {
+                    AccessibleNode::new(1, None, Role::Window, 0, "Main")
+                } else {
+                    AccessibleNode::new(
+                        (index as u64) + 1,
+                        Some(index as u64),
+                        Role::Group,
+                        0,
+                        "Node",
+                    )
+                }
+            })
+            .collect();
+        assert_eq!(nodes.len(), MAX_ACCESSIBLE_TREE_DEPTH + 2);
+        assert!(!validate_tree(&nodes));
+    }
+
 }
