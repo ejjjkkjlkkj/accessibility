@@ -13,21 +13,24 @@ Dépôt de référence pour cartographier et développer les composants d'access
 ## Règles de preuve
 
 - PASS exige une commande reproductible, des logs et des résultats vérifiables.
-- PARTIAL, BLOCKED et NOT_VALIDATED restent distincts; une documentation seule ne prouve pas une fonctionnalité.
+- PARTIAL, BLOCKED et NOT_VALIDATED restent distincts ; une documentation seule ne prouve pas une fonctionnalité.
 - QEMU et les autres simulateurs ne constituent pas une preuve matérielle physique.
 - Aucune action firmware/NVRAM, aucun flash BIOS et aucun redémarrage automatique ne sont déclenchés par la CI.
-- Les workflows sont limités aux validations statiques et aux tests reproductibles en environnement hébergé; les preuves matérielles restent séparées.
+- Les workflows sont limités aux validations statiques et aux tests reproductibles en environnement hébergé ; les preuves matérielles restent séparées.
 
 ## Catalogue et feuille de route
 
-Les documents canoniques maintenus dans docs/ sont la cartographie des langages et les portes de release Screen Reader / UEFI / OS. Les IDs de langage doivent rester synchronisés avec ejjjkkjlkkj/ia; les statuts d'accessibilité et d'IA sont indépendants.
+Les documents canoniques maintenus dans `docs/` sont la cartographie des langages et les portes de release Screen Reader / UEFI / OS. Les IDs de langage doivent rester synchronisés avec `ejjjkkjlkkj/ia` ; les statuts d'accessibilité et d'IA sont indépendants.
 
 ## CI
 
-GitHub Actions vérifie les fichiers de documentation, la syntaxe JSON des manifestes présents et les liens Markdown locaux. Cette CI ne prétend pas prouver le fonctionnement d'un screen reader sur matériel réel.
+GitHub Actions vérifie les documents ZERO requis, les liens Markdown relatifs, les manifestes JSON, l'hygiène Git et les tests du cœur Go. Cette CI ne prétend pas prouver le fonctionnement d'un screen reader sur matériel réel.
 
+## Shared role identifiers
 
-## Shared role identifiers\n\nThe numeric role mapping for C, Rust, Go, D, Ada, Nim, Swift and Zig is defined in [Accessibility role codes v1](docs/ACCESSIBILITY-ROLE-CODES-V1.md). This is a logical role-code contract, not a claim that all binary layouts or platform adapters are already interchangeable.\n\n## NEXORA integration
+The numeric role mapping for C, Rust, Go, D, Ada, Nim, Swift and Zig is defined in [Accessibility role codes v1](docs/ACCESSIBILITY-ROLE-CODES-V1.md). This is a logical role-code contract, not a claim that all binary layouts or platform adapters are already interchangeable.
+
+## NEXORA integration
 
 The accessibility boundary for the experimental NEXORA language is documented in [the NEXORA accessibility contract](docs/NEXORA-ACCESSIBILITY-CONTRACT.md) and its machine-readable contract at `projects/nexora/accessibility-contract.json`. This is a contract only: it does not claim a working NEXORA screen reader, OS backend, or UEFI runtime.
 
