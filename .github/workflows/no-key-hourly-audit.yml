@@ -62,7 +62,7 @@ jobs:
             else
               while IFS= read -r manifest; do
                 echo "- Running cargo test --manifest-path ${manifest}" | tee -a audit-report/report.md
-                cargo test --manifest-path "${manifest}" >>audit-report/report.md 2>&1 || echo "- FAIL: ${manifest}" | tee -a audit-report/report.md
+                if ! cargo test --manifest-path "${manifest}" >>audit-report/report.md 2>&1; then echo "- FAIL: ${manifest}" | tee -a audit-report/report.md; test_rc=1; fi
               done < <(find . -maxdepth 4 -type f -name 'Cargo.toml' -not -path './.git/*' | sort)
             fi
           else
@@ -80,9 +80,11 @@ jobs:
           echo "## Scope limitation" | tee -a audit-report/report.md
           echo "This workflow does not call an LLM, modify source files, open PRs, or prove runtime/physical-device behavior. It is a scheduled deterministic audit, not an autonomous coding agent." | tee -a audit-report/report.md
 
-          if [ "${py_rc}" -ne 0 ] || [ "${diff_rc}" -ne 0 ]; then
+          if [ "${py_rc}" -ne 0 ] || [ "${diff_rc}" -ne 0 ] || [ "${test_rc}" -ne 0 ]; then
+            echo "FAIL: at least one audit/test command failed" | tee -a audit-report/report.md
             exit 1
           fi
+          echo "PASS: syntax, whitespace, and discovered tests completed successfully" | tee -a audit-report/report.md
 
       - name: Upload audit report
         if: always()
