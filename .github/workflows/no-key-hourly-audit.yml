@@ -90,6 +90,7 @@ jobs:
           if find . -maxdepth 4 -type f -name 'Cargo.toml' -not -path './.git/*' -print -quit | grep -q .; then
             if ! command -v cargo >/dev/null 2>&1; then
               echo "- Rust manifests found but cargo unavailable: BLOCKED" | tee -a audit-report/report.md
+              test_rc=1
             else
               while IFS= read -r manifest; do
                 echo "- Running cargo test --manifest-path ${manifest}" | tee -a audit-report/report.md
