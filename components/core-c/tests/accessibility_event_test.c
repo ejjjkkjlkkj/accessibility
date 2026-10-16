@@ -17,6 +17,11 @@ int main(void) {
     assert(accessibility_event_init(NULL, ACCESSIBILITY_ROLE_BUTTON, 1u, "x") != 0);
     assert(accessibility_event_init(&event, ACCESSIBILITY_ROLE_BUTTON, 1u, NULL) != 0);
     assert(accessibility_event_init(&event, (accessibility_role)99, 1u, "x") != 0);
+    const char invalid_utf8[] = { (char)0xC0, (char)0xAF, '\\0' };
+    assert(accessibility_event_init(&event, ACCESSIBILITY_ROLE_BUTTON, 1u, invalid_utf8) == -4);
+    const char valid_utf8[] = "Accès — 中文";
+    assert(accessibility_event_init(&event, ACCESSIBILITY_ROLE_BUTTON, 1u, valid_utf8) == 0);
+    assert(strcmp(event.name, valid_utf8) == 0);
     char long_name[ACCESSIBILITY_NAME_CAPACITY + 1u];
     memset(long_name, 'x', sizeof(long_name));
     long_name[sizeof(long_name) - 1u] = '\0';
