@@ -93,8 +93,22 @@ jobs:
               test_rc=1
             else
               while IFS= read -r manifest; do
-                echo "- Running cargo test --manifest-path ${manifest}" | tee -a audit-report/report.md
-                if ! cargo test --manifest-path "${manifest}" >>audit-report/report.md 2>&1; then echo "- FAIL: ${manifest}" | tee -a audit-report/report.md; test_rc=1; fi
+                if [[ "$manifest" == *"/src/rust-uefi/Cargo.toml" ]]; then
+                  echo "- Building UEFI crate for x86_64-unknown-uefi: ${manifest}" | tee -a audit-report/report.md
+                  if ! rustup target add x86_64-unknown-uefi >>audit-report/report.md 2>&1; then
+                    echo "- FAIL: UEFI target installation" | tee -a audit-report/report.md
+                    test_rc=1
+                  elif ! cargo build --manifest-path "${manifest}" --target x86_64-unknown-uefi --release >>audit-report/report.md 2>&1; then
+                    echo "- FAIL: ${manifest} UEFI target build" | tee -a audit-report/report.md
+                    test_rc=1
+                  fi
+                else
+                  echo "- Running cargo test --manifest-path ${manifest}" | tee -a audit-report/report.md
+                  if ! cargo test --manifest-path "${manifest}" >>audit-report/report.md 2>&1; then
+                    echo "- FAIL: ${manifest}" | tee -a audit-report/report.md
+                    test_rc=1
+                  fi
+                fi
               done < <(find . -maxdepth 4 -type f -name 'Cargo.toml' -not -path './.git/*' | sort)
             fi
           else
