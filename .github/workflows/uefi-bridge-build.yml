@@ -1,0 +1,117 @@
+name: UEFI hardware bridge EDK II build
+
+on:
+  push:
+    paths:
+      - "firmware/uefi-bridge/**"
+      - ".github/workflows/uefi-bridge-build.yml"
+  pull_request:
+    paths:
+      - "firmware/uefi-bridge/**"
+      - ".github/workflows/uefi-bridge-build.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: uefi-bridge-build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Compile read-only UEFI PCI inventory
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      EDK2_COMMIT: 2970e5699ba6267f3384ffab20f96647578aebc8
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install EDK II build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential uuid-dev acpica-tools nasm python3 python3-pip python3-venv libssl-dev libfdt-dev
+
+      - name: Fetch and verify pinned EDK II source
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --depth 1 --recurse-submodules --branch edk2-stable202608 https://github.com/tianocore/edk2.git "$RUNNER_TEMP/edk2"
+          actual="$(git -C "$RUNNER_TEMP/edk2" rev-parse HEAD)"
+          test "$actual" = "$EDK2_COMMIT"
+          git -C "$RUNNER_TEMP/edk2" submodule status --recursive
+
+      - name: Install pinned-source build requirements
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m venv "$RUNNER_TEMP/edk2-venv"
+          echo "$RUNNER_TEMP/edk2-venv/bin" >> "$GITHUB_PATH"
+          "$RUNNER_TEMP/edk2-venv/bin/python" -m pip install --upgrade pip
+          "$RUNNER_TEMP/edk2-venv/bin/python" -m pip install -r "$RUNNER_TEMP/edk2/pip-requirements.txt"
+
+      - name: Build EDK II BaseTools
+        run: make -C "$RUNNER_TEMP/edk2/BaseTools" -j2
+
+      - name: Stage read-only UEFI application
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/edk2/AccessibilityHardwareBridge"
+          cp firmware/uefi-bridge/HardwareBridge.c "$RUNNER_TEMP/edk2/AccessibilityHardwareBridge/"
+          cp firmware/uefi-bridge/HardwareBridge.inf "$RUNNER_TEMP/edk2/AccessibilityHardwareBridge/"
+          python - "$RUNNER_TEMP/edk2/MdeModulePkg/MdeModulePkg.dsc" "$RUNNER_TEMP/edk2/AccessibilityHardwareBridge.dsc" <<'PY'
+          import pathlib
+          import sys
+
+          source = pathlib.Path(sys.argv[1]).read_text(encoding="utf-8")
+          marker = "[Components]"
+          if source.count(marker) != 1:
+              raise SystemExit("Expected exactly one [Components] section in pinned EDK II DSC")
+          component = "  AccessibilityHardwareBridge/HardwareBridge.inf"
+          if component in source:
+              raise SystemExit("Refusing to duplicate the UEFI bridge component")
+          source = source.replace(marker, marker + "\n" + component, 1)
+          pathlib.Path(sys.argv[2]).write_text(source, encoding="utf-8", newline="\n")
+          PY
+
+      - name: Compile EFI application (no device execution)
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/edk2"
+          source ./edksetup.sh
+          build -p AccessibilityHardwareBridge.dsc -m AccessibilityHardwareBridge/HardwareBridge.inf -a X64 -t GCC5 -b RELEASE
+
+      - name: Package EFI build evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          artifact="$(find "$RUNNER_TEMP/edk2/Build" -type f -iname 'AccessibilityHardwareBridge.efi' -print -quit)"
+          test -n "$artifact"
+          mkdir -p "$GITHUB_WORKSPACE/firmware-artifacts"
+          cp "$artifact" "$GITHUB_WORKSPACE/firmware-artifacts/AccessibilityHardwareBridge.efi"
+          (
+            cd "$GITHUB_WORKSPACE/firmware-artifacts"
+            sha256sum AccessibilityHardwareBridge.efi > SHA256SUMS
+          )
+          {
+            echo "## EDK II compile-only evidence"
+            echo "- Pinned EDK II commit: $EDK2_COMMIT"
+            echo "- Artifact: `firmware-artifacts/AccessibilityHardwareBridge.efi`"
+            echo "- SHA-256:"
+            cat "$GITHUB_WORKSPACE/firmware-artifacts/SHA256SUMS"
+            echo "- Status: compiled EFI application; no target hardware execution was performed."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload EFI artifact and checksum
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: accessibility-uefi-pci-inventory-edk2-stable202608
+          path: |
+            firmware-artifacts/AccessibilityHardwareBridge.efi
+            firmware-artifacts/SHA256SUMS
+          if-no-files-found: error
+          retention-days: 14
