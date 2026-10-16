@@ -1,13 +1,10 @@
 name: Repository-owned autonomous development loop
 
 on:
-  schedule:
-    - cron: "17 * * * *"
   workflow_dispatch:
 
 permissions:
-  contents: write
-  pull-requests: write
+  contents: read
 
 concurrency:
   group: repository-owned-agent-${{ github.repository }}
@@ -15,14 +12,13 @@ concurrency:
 
 jobs:
   develop:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     timeout-minutes: 50
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Select persistent proposal branch
         shell: bash
@@ -65,15 +61,5 @@ jobs:
           while IFS= read -r manifest; do [ -z "$manifest" ] || cargo test --manifest-path "$manifest"; done < <(find . -maxdepth 5 -name Cargo.toml -not -path './.git/*' | sort)
           git diff --check
 
-      - name: Publish proposal for review
-        if: success()
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          if [ -z "$(git status --porcelain)" ]; then echo 'No changes to publish.'; exit 0; fi
-          git add -A
-          git commit -m 'chore(agent): own-model development cycle'
-          git push origin HEAD:agent/own-model-development
-          if ! gh pr view agent/own-model-development >/dev/null 2>&1; then gh pr create --base "${GITHUB_REPOSITORY_DEFAULT_BRANCH:-main}" --head agent/own-model-development --title 'Own-model development loop proposals' --body 'Repository automation; no third-party LLM fallback. Review before merging.'; fi
+      - name: Confirm no automatic publication
+        run: echo "PASS: local agent output is not committed or pushed automatically; review and publish explicitly."
