@@ -159,6 +159,21 @@ class OllamaEndpointValidationTests(unittest.TestCase):
                     local_agent_loop.validate_ollama_url(value)
 
 
+class CargoValidationCommandTests(unittest.TestCase):
+    def test_uefi_manifest_uses_target_build_not_host_tests(self):
+        manifest = local_agent_loop.ROOT / "src" / "rust-uefi" / "Cargo.toml"
+        command = local_agent_loop.cargo_command_for_manifest(manifest)
+        self.assertEqual(command[1], "build")
+        self.assertIn("--target", command)
+        self.assertIn("x86_64-unknown-uefi", command)
+        self.assertNotEqual(command[1], "test")
+
+    def test_regular_rust_manifest_uses_tests(self):
+        manifest = local_agent_loop.ROOT / "crates" / "accessibility-core" / "Cargo.toml"
+        command = local_agent_loop.cargo_command_for_manifest(manifest)
+        self.assertEqual(command[1], "test")
+
+
 class AgentLoopSchedulingTests(unittest.TestCase):
     def test_final_iteration_does_not_sleep(self):
         from unittest.mock import patch
