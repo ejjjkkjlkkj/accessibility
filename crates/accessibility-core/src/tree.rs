@@ -8,13 +8,15 @@ pub const STATE_FOCUSED: u64 = 1 << 0;
 pub const STATE_FOCUSABLE: u64 = 1 << 1;
 pub const STATE_ENABLED: u64 = 1 << 2;
 pub const STATE_DISABLED: u64 = 1 << 3;
-/// State bits accepted by semantic-tree contract v1.
+/// Bit mask of state flags defined by this ABI revision.
 pub const KNOWN_STATE_FLAGS: u64 = STATE_FOCUSED | STATE_FOCUSABLE | STATE_ENABLED | STATE_DISABLED;
 pub const MAX_NODE_NAME_UTF8_BYTES: usize = 4096;
-pub const MAX_TREE_NODES: usize = 512;
-pub const MAX_TREE_DEPTH: usize = 64;
+/// Hard bound to limit quadratic validation work on untrusted node slices.
+pub const MAX_ACCESSIBLE_TREE_NODES: usize = 512;
+/// Maximum parent-link depth accepted for untrusted trees.
+pub const MAX_ACCESSIBLE_TREE_DEPTH: usize = 64;
 
-/// Reject unknown or contradictory state combinations.
+/// Reject undefined or contradictory state combinations in a single semantic event.
 pub const fn state_flags_are_valid(state_flags: u64) -> bool {
     if state_flags & !KNOWN_STATE_FLAGS != 0 {
         return false;
@@ -45,7 +47,13 @@ impl<'a> AccessibleNode<'a> {
         state_flags: u64,
         name: &'a str,
     ) -> Self {
-        Self { id, parent_id, role, state_flags, name }
+        Self {
+            id,
+            parent_id,
+            role,
+            state_flags,
+            name,
+        }
     }
 
     pub const fn is_focus_target(&self) -> bool {
@@ -55,11 +63,10 @@ impl<'a> AccessibleNode<'a> {
     }
 }
 
-/// Validate a bounded, parent-before-child tree with unique IDs, exactly one
-/// root, valid parent references, and bounded UTF-8 names. Parent-before-child
-/// ordering makes cycles impossible without recursion or heap allocation.
+/// Validate unique IDs, exactly one root, parent references, acyclic ancestry,
+/// and the shared UTF-8 name limit. An empty slice is not a valid tree.
 pub fn validate_tree(nodes: &[AccessibleNode<'_>]) -> bool {
-    if nodes.is_empty() || nodes.len() > MAX_TREE_NODES {
+    if nodes.is_empty() || nodes.len() > MAX_ACCESSIBLE_TREE_NODES {
         return false;
     }
 
@@ -72,7 +79,7 @@ pub fn validate_tree(nodes: &[AccessibleNode<'_>]) -> bool {
         if !state_flags_are_valid(node.state_flags) {
             return false;
         }
-        if node.state_flags & STATE_FOCUSED != 0 {
+        if (node.state_flags & STATE_FOCUSED) != 0 {
             focused_nodes += 1;
         }
         for other in nodes.iter().skip(index + 1) {
@@ -80,28 +87,18 @@ pub fn validate_tree(nodes: &[AccessibleNode<'_>]) -> bool {
                 return false;
             }
         }
-        match node.parent_id {
-            None => {
-                roots += 1;
-                if index != 0 {
-                    return false;
-                }
-            }
-            Some(parent_id) => {
-                if parent_id == node.id
-                    || !nodes[..index].iter().any(|candidate| candidate.id == parent_id)
-                {
-                    return false;
-                }
-            }
+        if node.parent_id.is_none() {
+            roots += 1;
+        } else if node.parent_id == Some(node.id) {
+            return false;
         }
     }
     if roots != 1 || focused_nodes > 1 {
         return false;
     }
 
-    // Parent-before-child ordering prevents cycles; this additional bound limits
-    // traversal work for deep but otherwise valid trees.
+    // Every ancestry chain must terminate at the single root. The depth bound
+    // also rejects cycles without recursion or heap allocation.
     for node in nodes {
         let mut parent_id = node.parent_id;
         let mut depth = 0usize;
@@ -111,7 +108,10 @@ pub fn validate_tree(nodes: &[AccessibleNode<'_>]) -> bool {
                 None => return false,
             };
             depth += 1;
-            if depth > MAX_TREE_DEPTH {
+            if depth > MAX_ACCESSIBLE_TREE_DEPTH {
+                return false;
+            }
+            if depth >= nodes.len() && parent.parent_id.is_some() {
                 return false;
             }
             parent_id = parent.parent_id;
@@ -124,9 +124,16 @@ pub fn validate_tree(nodes: &[AccessibleNode<'_>]) -> bool {
 pub fn next_focusable(nodes: &[AccessibleNode<'_>], after_id: Option<u64>) -> Option<u64> {
     let start = match after_id {
         None => 0,
-        Some(id) => nodes.iter().position(|node| node.id == id)?.saturating_add(1),
+        Some(id) => nodes
+            .iter()
+            .position(|node| node.id == id)?
+            .saturating_add(1),
     };
-    nodes.iter().skip(start).find(|node| node.is_focus_target()).map(|node| node.id)
+    nodes
+        .iter()
+        .skip(start)
+        .find(|node| node.is_focus_target())
+        .map(|node| node.id)
 }
 
 /// Return the previous enabled, focusable node in slice order. No wraparound.
@@ -135,7 +142,12 @@ pub fn previous_focusable(nodes: &[AccessibleNode<'_>], before_id: Option<u64>) 
         None => nodes.len(),
         Some(id) => nodes.iter().position(|node| node.id == id)?,
     };
-    nodes.iter().take(end).rev().find(|node| node.is_focus_target()).map(|node| node.id)
+    nodes
+        .iter()
+        .take(end)
+        .rev()
+        .find(|node| node.is_focus_target())
+        .map(|node| node.id)
 }
 
 #[cfg(test)]
@@ -150,7 +162,13 @@ mod tests {
             AccessibleNode::new(1, None, Role::Window, 0, "Main"),
             AccessibleNode::new(2, Some(1), Role::Text, 0, "Title"),
             AccessibleNode::new(3, Some(1), Role::Button, TARGET, "Continue"),
-            AccessibleNode::new(4, Some(1), Role::Button, STATE_FOCUSABLE | STATE_DISABLED, "Disabled"),
+            AccessibleNode::new(
+                4,
+                Some(1),
+                Role::Button,
+                STATE_FOCUSABLE | STATE_DISABLED,
+                "Disabled",
+            ),
             AccessibleNode::new(5, Some(1), Role::Link, TARGET, "Help"),
         ];
         assert!(validate_tree(&nodes));
@@ -178,52 +196,6 @@ mod tests {
     }
 
     #[test]
-    fn rejects_forward_parent_references() {
-        let nodes = [
-            AccessibleNode::new(1, None, Role::Window, 0, "Main"),
-            AccessibleNode::new(2, Some(3), Role::Button, TARGET, "Child"),
-            AccessibleNode::new(3, Some(1), Role::Group, 0, "Parent"),
-        ];
-        assert!(!validate_tree(&nodes));
-    }
-
-    #[test]
-    fn rejects_tree_larger_than_fixed_bound() {
-        let nodes = [
-            AccessibleNode::new(1, None, Role::Window, 0, "Main");
-            MAX_TREE_NODES + 1
-        ];
-        assert!(!validate_tree(&nodes));
-    }
-
-    #[test]
-    fn rejects_invalid_state_flags_and_nul_names() {
-        assert!(!state_flags_are_valid(STATE_ENABLED | STATE_DISABLED));
-        assert!(!state_flags_are_valid(STATE_FOCUSED));
-        assert!(!state_flags_are_valid(1 << 63));
-        assert!(state_flags_are_valid(STATE_FOCUSABLE | STATE_ENABLED | STATE_FOCUSED));
-
-        let nul_name = [
-            AccessibleNode::new(1, None, Role::Window, 0, "Main"),
-            AccessibleNode::new(2, Some(1), Role::Button, TARGET, "Save\\0bad"),
-        ];
-        assert!(!validate_tree(&nul_name));
-    }
-
-    #[test]
-    fn rejects_tree_over_depth_limit() {
-        let mut nodes = [AccessibleNode::new(1, None, Role::Window, 0, "root"); MAX_TREE_DEPTH + 2];
-        for (index, node) in nodes.iter_mut().enumerate() {
-            *node = if index == 0 {
-                AccessibleNode::new(1, None, Role::Window, 0, "root")
-            } else {
-                AccessibleNode::new((index as u64) + 1, Some(index as u64), Role::Group, 0, "Node")
-            };
-        }
-        assert!(!validate_tree(&nodes));
-    }
-
-    #[test]
     fn rejects_cycles_and_oversize_names() {
         let cycle = [
             AccessibleNode::new(1, None, Role::Window, 0, ""),
@@ -234,5 +206,98 @@ mod tests {
         let long_name = "x".repeat(MAX_NODE_NAME_UTF8_BYTES + 1);
         let oversized = [AccessibleNode::new(1, None, Role::Window, 0, &long_name)];
         assert!(!validate_tree(&oversized));
+    }
+
+    #[test]
+    fn rejects_names_containing_nul() {
+        let nodes = [
+            AccessibleNode::new(1, None, Role::Window, 0, "Main"),
+            AccessibleNode::new(2, Some(1), Role::Button, TARGET, "Save\0malformed"),
+        ];
+        assert!(!validate_tree(&nodes));
+    }
+
+    #[test]
+    fn exhaustively_checks_all_low_byte_state_flag_combinations() {
+        for flags in 0u64..=255 {
+            let expected = matches!(flags, 0 | 2 | 4 | 6 | 7 | 8 | 10);
+            assert_eq!(state_flags_are_valid(flags), expected, "flags={flags:#x}");
+        }
+    }
+
+    #[test]
+    fn rejects_trees_over_the_node_limit() {
+        let mut nodes =
+            [AccessibleNode::new(1, None, Role::Window, 0, "Main"); MAX_ACCESSIBLE_TREE_NODES + 1];
+        for (index, node) in nodes.iter_mut().enumerate() {
+            *node = if index == 0 {
+                AccessibleNode::new(1, None, Role::Window, 0, "Main")
+            } else {
+                AccessibleNode::new((index as u64) + 1, Some(1), Role::Group, 0, "Node")
+            };
+        }
+        assert_eq!(nodes.len(), MAX_ACCESSIBLE_TREE_NODES + 1);
+        assert!(!validate_tree(&nodes));
+    }
+
+    #[test]
+    fn accepts_one_valid_focused_target() {
+        let nodes = [
+            AccessibleNode::new(1, None, Role::Window, 0, "Main"),
+            AccessibleNode::new(
+                2,
+                Some(1),
+                Role::Button,
+                STATE_FOCUSABLE | STATE_ENABLED | STATE_FOCUSED,
+                "Continue",
+            ),
+        ];
+        assert!(validate_tree(&nodes));
+    }
+
+    #[test]
+    fn rejects_contradictory_unknown_and_multiple_focus_states() {
+        let enabled_and_disabled = [
+            AccessibleNode::new(1, None, Role::Window, 0, "Main"),
+            AccessibleNode::new(2, Some(1), Role::Button, TARGET | STATE_DISABLED, "Bad"),
+        ];
+        assert!(!validate_tree(&enabled_and_disabled));
+
+        let focused_but_not_focusable = [
+            AccessibleNode::new(1, None, Role::Window, 0, "Main"),
+            AccessibleNode::new(2, Some(1), Role::Button, STATE_FOCUSED, "Bad"),
+        ];
+        assert!(!validate_tree(&focused_but_not_focusable));
+
+        let multiple_focused = [
+            AccessibleNode::new(1, None, Role::Window, 0, "Main"),
+            AccessibleNode::new(2, Some(1), Role::Button, TARGET | STATE_FOCUSED, "First"),
+            AccessibleNode::new(3, Some(1), Role::Button, TARGET | STATE_FOCUSED, "Second"),
+        ];
+        assert!(!validate_tree(&multiple_focused));
+
+        let unknown_bits = [AccessibleNode::new(1, None, Role::Window, 1 << 63, "Main")];
+        assert!(!validate_tree(&unknown_bits));
+    }
+
+    #[test]
+    fn rejects_trees_over_the_depth_limit() {
+        let mut nodes =
+            [AccessibleNode::new(1, None, Role::Window, 0, "root"); MAX_ACCESSIBLE_TREE_DEPTH + 2];
+        for (index, node) in nodes.iter_mut().enumerate() {
+            *node = if index == 0 {
+                AccessibleNode::new(1, None, Role::Window, 0, "root")
+            } else {
+                AccessibleNode::new(
+                    (index as u64) + 1,
+                    Some(index as u64),
+                    Role::Group,
+                    0,
+                    "Node",
+                )
+            };
+        }
+        assert_eq!(nodes.len(), MAX_ACCESSIBLE_TREE_DEPTH + 2);
+        assert!(!validate_tree(&nodes));
     }
 }
