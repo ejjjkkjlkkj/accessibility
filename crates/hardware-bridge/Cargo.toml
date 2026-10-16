@@ -1,0 +1,12 @@
+[package]
+name = "accessibility-hardware-bridge"
+version = "0.1.0"
+edition = "2021"
+description = "no_std, platform-neutral hardware inventory and resource contract for accessibility runtimes"
+
+[lib]
+path = "src/lib.rs"
+
+[features]
+default = []
+std = []
