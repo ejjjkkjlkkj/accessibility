@@ -202,14 +202,14 @@ jobs:
           release_tag="$GITHUB_REF_NAME"
           if [[ "$GITHUB_EVENT_NAME" == "workflow_dispatch" ]]; then
             release_tag="${{ inputs.release_tag }}"
-            if [[ ! "$release_tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]; then
-              echo "Invalid release tag: $release_tag" >&2
-              exit 2
-            fi
-            if gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$release_tag" >/dev/null 2>&1; then
-              echo "Refusing to reuse an existing tag; choose a new release_tag." >&2
-              exit 2
-            fi
+          fi
+          if [[ ! "$release_tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]; then
+            echo "Invalid release tag: $release_tag" >&2
+            exit 2
+          fi
+          if [[ "$GITHUB_EVENT_NAME" == "workflow_dispatch" ]] && gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$release_tag" >/dev/null 2>&1; then
+            echo "Refusing to reuse an existing tag; choose a new release_tag." >&2
+            exit 2
           fi
           args=(--draft --target "$GITHUB_SHA" --title "$release_tag" --notes-file release-artifacts/RELEASE-NOTES.md)
           if [[ "$release_tag" == *-alpha* || "$release_tag" == *-beta* || "$release_tag" == *-rc* ]]; then
