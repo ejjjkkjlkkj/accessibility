@@ -45,4 +45,5 @@ jobs:
           retention-days: 90
 
       - name: Publication policy
-        run: echo "PASS: generated database and reports are artifacts only; workflow never pushes to main."
+        run: |
+          echo "PASS: generated database and reports are artifacts only; workflow never pushes to main."
