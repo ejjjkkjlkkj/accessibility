@@ -42,7 +42,7 @@ const (
 )
 
 type Event struct {
-	Kind EventKind
+	Kind     EventKind
 	Role     string
 	Name     string
 	Value    string
