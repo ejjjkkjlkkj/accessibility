@@ -110,14 +110,19 @@ jobs:
 
   rust-semantic-core:
     name: Rust semantic-tree bounded validation
-    if: hashFiles('crates/accessibility-core/Cargo.toml') != ''
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v6
-      - name: Verify Rust toolchain
-        run: rustc --version && cargo --version
-      - name: Check Rust formatting
-        run: cargo fmt --manifest-path crates/accessibility-core/Cargo.toml -- --check
-      - name: Run Rust unit tests
-        run: cargo test --manifest-path crates/accessibility-core/Cargo.toml
+      - name: Format and test the Rust semantic core when present
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ ! -f crates/accessibility-core/Cargo.toml ]; then
+            echo "PARTIAL: this branch has no crates/accessibility-core/Cargo.toml"
+            exit 0
+          fi
+          rustc --version
+          cargo --version
+          cargo fmt --manifest-path crates/accessibility-core/Cargo.toml -- --check
+          cargo test --manifest-path crates/accessibility-core/Cargo.toml
