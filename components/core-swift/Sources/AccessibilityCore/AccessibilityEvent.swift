@@ -1,9 +1,22 @@
 public enum AccessibilityRole: UInt8, Sendable {
     case unknown = 0
-    case window = 1
-    case button = 2
-    case textField = 3
-    case heading = 4
+    case application = 1
+    case window = 2
+    case group = 3
+    case text = 4
+    case button = 5
+    case checkbox = 6
+    case radio = 7
+    case textbox = 8
+    case link = 9
+    case heading = 10
+    case list = 11
+    case listItem = 12
+    case table = 13
+    case row = 14
+    case cell = 15
+    case menu = 16
+    case menuItem = 17
 }
 
 public struct AccessibilityEvent: Sendable {
@@ -18,6 +31,6 @@ public struct AccessibilityEvent: Sendable {
     }
 
     public var isValid: Bool {
-        abiVersion == 1 && role != .unknown && name.utf8.count <= 256
+        abiVersion == 1 && name.utf8.count <= 4096 && !name.utf8.contains(0)
     }
 }
