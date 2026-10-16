@@ -18,6 +18,10 @@ on:
   pull_request:
     paths:
       - "agents/**"
+      - "crates/aerl-core/**"
+      - "docs/AERL*.md"
+      - "docs/HAKER-*.md"
+      - "docs/AI-ACCESSIBILITY-INTEGRATION-CONTRACT-V1.md"
       - "security/**"
       - "scripts/**"
       - "tests/**"
