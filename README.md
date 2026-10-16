@@ -44,6 +44,13 @@ The accessibility boundary for the experimental NEXORA language is documented in
 
 Le prototype Ollama local et ses garde-fous sont décrits dans [la documentation de l’agent local](docs/LOCAL-AGENT-24-7.md). Il reste **à exécuter et valider sur le poste cible**; l’ajout au dépôt ne prétend pas qu’un agent tourne en arrière-plan.
 
+## Audit local et preuves de validation
+
+- [AERL](docs/AERL.md) conserve des événements structurés dans une chaîne de hashes locale; sans checkpoint externe ou signature, cela ne garantit pas l'authenticité contre une réécriture complète.
+- [HAKER](docs/SECURITY-RED-TEAM.md) est un protocole d'audit défensif sur le dépôt et des fixtures autorisées. Le scanner statique signale des pistes heuristiques, pas des vulnérabilités confirmées.
+- `python scripts/aerl.py`, `python scripts/aerl_tool.py` et `python scripts/haker_audit.py` fournissent les commandes locales. Les commandes à durée bornée du runner AERL ont un délai par défaut de 300 secondes.
+- Le manifeste `agents/manifest.json` définit un contrat; il ne lance pas des agents autonomes et n'autorise pas les cibles externes.
+
 ## Manifestes et statuts
 
 - `projects/manifest.json` est le catalogue canonique des identifiants de langues et de leurs statuts généraux.
