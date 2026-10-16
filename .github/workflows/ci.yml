@@ -148,13 +148,18 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          unformatted="$(gofmt -l $(git ls-files '*.go'))"
-          if [ -n "$unformatted" ]; then
-            echo "$unformatted"
-            echo "FAIL: Go files require gofmt"
-            exit 1
+          mapfile -d '' -t files < <(git ls-files -z -- '*.go')
+          if (("${#files[@]}" == 0)); then
+            echo "PARTIAL: no tracked Go files found"
+          else
+            unformatted="$(printf '%s\0' "${files[@]}" | xargs -0 -r gofmt -l)"
+            if [ -n "$unformatted" ]; then
+              printf '%s\n' "$unformatted"
+              echo "FAIL: Go files require gofmt"
+              exit 1
+            fi
+            echo "PASS: gofmt (${#files[@]} files)"
           fi
-          echo "PASS: gofmt"
       - name: Run Go unit tests
         run: go test ./...
       - name: Validate the committed resource catalog
