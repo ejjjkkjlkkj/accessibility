@@ -134,7 +134,7 @@ class CheckUrlTests(unittest.TestCase):
         self.assertEqual(redirected.full_url, "https://www.example.org/final")
 
     def test_rejects_hostname_that_resolves_as_ip_literal_syntax(self):
-        for url in ("https://127.0.0.1/", "https://[::1]/", "https://example..org/"):
+        for url in ("https://127.0.0.1/", "https://[::1]/", "https://[:::]/", "https://example..org/"):
             with self.subTest(url=url):
                 self.assertFalse(builder.check_url(url)["reachable"])
 
