@@ -60,6 +60,7 @@ Cette liste reprend les pistes actuellement suivies dans les projets, mais ne co
 
 ## Exigences qui pourraient en découler pour ZERO
 À valider, pas à déclarer acquises :
+- architecture du jeu d'instructions (ZERO-ISA 64-bit Tier-0) indépendante de tout langage ou OS hôte ;
 - arithmétique définie et conversions explicites ;
 - valeurs initialisées garanties dans le sous-ensemble sûr ;
 - vérification statique de durée de vie et d'accès mémoire ;
