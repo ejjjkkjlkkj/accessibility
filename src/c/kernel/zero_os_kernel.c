@@ -95,12 +95,19 @@ void zero_os_kernel_speak_announcement(const char *msg) {
 
 extern void zero_gui_suite_init(uint32_t *framebuffer_base);
 extern void zero_gui_next_focus(void);
+extern void zero_net_security_init(void);
+extern uint8_t zero_net_inspect_packet(uint32_t src_ip, uint32_t dst_ip, uint16_t src_port, uint16_t dst_port, uint8_t protocol);
 
 /* Point d'Entrée Principal Freestanding du Noyau OS ZERO */
 void zero_os_main(void) {
     zero_os_kernel_init();
+    zero_net_security_init();
     zero_gui_suite_init((uint32_t *)0xE0000000); /* Adresse VRAM Framebuffer UEFI GOP */
-    zero_os_kernel_speak_announcement("ZERO OS Bare-Metal Boot Complete. Accessibility & GUI Active.");
+    zero_os_kernel_speak_announcement("ZERO OS Bare-Metal Boot Complete. Accessibility, Network Security & GUI Active.");
+
+    /* Simulation d'inspection de sécurité réseau */
+    zero_net_inspect_packet(0xC0A8010A, 0xC0A80101, 1024, 443, 6);  /* HTTPS -> ALLOW */
+    zero_net_inspect_packet(0x0A000001, 0xC0A80101, 2048, 22, 6);   /* SSH -> IDS BLOCK */
 
     /* Boucle Événementielle Freestanding */
     for (int loop = 0; loop < 5; loop++) {
