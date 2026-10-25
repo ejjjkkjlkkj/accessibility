@@ -93,13 +93,18 @@ void zero_os_kernel_speak_announcement(const char *msg) {
     g_os_kernel.audio.sample_rate = 22050;
 }
 
+extern void zero_gui_suite_init(uint32_t *framebuffer_base);
+extern void zero_gui_next_focus(void);
+
 /* Point d'Entrée Principal Freestanding du Noyau OS ZERO */
 void zero_os_main(void) {
     zero_os_kernel_init();
-    zero_os_kernel_speak_announcement("ZERO OS Bare-Metal Boot Complete. Accessibility Active.");
+    zero_gui_suite_init((uint32_t *)0xE0000000); /* Adresse VRAM Framebuffer UEFI GOP */
+    zero_os_kernel_speak_announcement("ZERO OS Bare-Metal Boot Complete. Accessibility & GUI Active.");
 
     /* Boucle Événementielle Freestanding */
     for (int loop = 0; loop < 5; loop++) {
         zero_os_kernel_on_key_event(0x0F); /* Simule touche Tabulation */
+        zero_gui_next_focus();
     }
 }
