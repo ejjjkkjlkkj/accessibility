@@ -1,0 +1,367 @@
+// Pilote HD Audio de Voxa, écrit pour ce projet : découverte PCI, réinitialisation du contrôleur, files de commandes CORB/RIRB,
+// recherche du chemin broche -> convertisseur dans le codec, lecture par DMA d'un tampon de 16 bits stéréo à 22 050 Hz.
+// Aucune API. Les tampons DMA sont dans la zone de travail (adresses physiques = adresses logiques sous UEFI).
+// État (mots de 8 octets à scratch + 0x200) : 0 base MMIO, 1 adresse du codec, 2 adresse PCI, 5 DAC, 7 broche, 8 écriture CORB,
+//                                            9 lecture RIRB, 12 groupe audio, 14 identifiant du fabricant du codec, 15 code d'erreur.
+// Disposition mémoire : CORB scratch+0x1000, RIRB +0x1400, BDL +0x2000, tampon audio +0x10000.
+
+fn hs(i: int) -> int { return peek(scratch() + 512 + i * 8); }
+fn hset(i: int, v: int) { poke(scratch() + 512 + i * 8, v); }
+
+fn r32(o: int) -> int { return peek32(hs(0) + o); }
+fn w32(o: int, v: int) { poke32(hs(0) + o, v); }
+fn r16(o: int) -> int { return peek16(hs(0) + o); }
+fn w16(o: int, v: int) { poke16(hs(0) + o, v); }
+fn r8(o: int) -> int { return peek8(hs(0) + o); }
+fn w8(o: int, v: int) { poke8(hs(0) + o, v); }
+
+// ---- PCI (mécanisme 1 : ports 0xCF8 = 3320 et 0xCFC = 3324)
+fn pci_adr(b: int, d: int, f: int) -> int { return 2147483648 + b * 65536 + d * 2048 + f * 256; }
+fn pci_lire(adr: int, reg: int) -> int { out32(3320, adr + reg); return in32(3324); }
+fn pci_ecrire(adr: int, reg: int, v: int) { out32(3320, adr + reg); out32(3324, v); }
+
+// Attend qu'un bit (poids p2b = 1, 2, 4, 128, 32768...) d'un registre 8 ou 16 bits prenne la valeur voulue ; renvoie 1 si obtenu.
+fn attendre_bit(o: int, taille: int, masque: int, voulu: int) -> int {
+    let n = 0;
+    while n < 1000 {
+        let v = 0;
+        if taille == 1 { v = r8(o); }
+        if taille == 2 { v = r16(o); }
+        if taille == 4 { v = r32(o); }
+        if (v / masque) % 2 == voulu { return 1; }
+        stall(100);
+        n = n + 1;
+    }
+    return 0;
+}
+
+// Réinitialise le contrôleur ; renvoie le masque des codecs détectés (STATESTS).
+fn hda_reset() -> int {
+    w32(8, 0);
+    if attendre_bit(8, 4, 1, 0) == 0 { return 0; }
+    stall(200);
+    w32(8, 1);
+    if attendre_bit(8, 4, 1, 1) == 0 { return 0; }
+    stall(2000);
+    return r16(14) % 256;
+}
+
+fn hda_corb_init() -> int {
+    w8(76, 0);
+    w8(92, 0);
+    hset(16, 128 + (r16(0) / 256 % 16) * 32);
+    let cs = r8(78);
+    let code = 0;
+    hset(17, 2);
+    if (cs / 32) % 2 == 1 { code = 1; hset(17, 16); }
+    if (cs / 64) % 2 == 1 { code = 2; hset(17, 256); }
+    w8(78, code);
+    let rs = r8(94);
+    let rcode = 0;
+    hset(18, 2);
+    if (rs / 32) % 2 == 1 { rcode = 1; hset(18, 16); }
+    if (rs / 64) % 2 == 1 { rcode = 2; hset(18, 256); }
+    w8(94, rcode);
+    let corb = scratch() + 4096;
+    let rirb = scratch() + 5120;
+    w32(64, corb % 4294967296);
+    w32(68, corb / 4294967296);
+    w32(80, rirb % 4294967296);
+    w32(84, rirb / 4294967296);
+    w16(74, 32768);
+    if attendre_bit(74, 2, 32768, 1) == 0 { return 0; }
+    w16(74, 0);
+    if attendre_bit(74, 2, 32768, 0) == 0 { return 0; }
+    w16(72, 0);
+    w16(88, 32768);
+    w8(76, 2);
+    w8(92, 2);
+    hset(8, 0);
+    hset(9, 0);
+    return 1;
+}
+
+// Envoie un verbe, renvoie la réponse ou -1 si le codec ne répond pas.
+fn hda_cmd(v: int) -> int {
+    let wp = (hs(8) + 1) % hs(17);
+    poke32(scratch() + 4096 + wp * 4, v);
+    hset(8, wp);
+    w16(72, wp);
+    let n = 0;
+    while n < 2000 {
+        if r16(88) % 256 != hs(9) {
+            hset(9, (hs(9) + 1) % hs(18));
+            return peek32(scratch() + 5120 + hs(9) * 8);
+        }
+        stall(10);
+        n = n + 1;
+    }
+    return -1;
+}
+
+fn verbe12(nid: int, verbe: int, pl: int) -> int { return hs(1) * 268435456 + nid * 1048576 + verbe * 256 + pl; }
+fn verbe16(nid: int, v4: int, pl: int) -> int { return hs(1) * 268435456 + nid * 1048576 + v4 * 65536 + pl; }
+fn param(nid: int, id: int) -> int { return hda_cmd(verbe12(nid, 3840, id)); }
+fn p256(k: int) -> int {
+    if k == 0 { return 1; }
+    if k == 1 { return 256; }
+    if k == 2 { return 65536; }
+    return 16777216;
+}
+
+fn alimenter(nid: int) {
+    hda_cmd(verbe12(nid, 1797, 0));
+    stall(2000);
+}
+
+// Amplificateurs : valeur nominale (0 dB) lue dans les capacités ; sortie = 0xB000 + gain, entrée d'indice i = 0x7000 + i * 256 + gain.
+fn gain_nominal(nid: int, caps_id: int) -> int {
+    let v = param(nid, caps_id);
+    if v == 0 { v = param(hs(12), caps_id); }
+    return v % 128;
+}
+fn debloquer_sortie(nid: int) { hda_cmd(verbe16(nid, 3, 45056 + gain_nominal(nid, 18))); }
+fn debloquer_entree(nid: int, i: int) { hda_cmd(verbe16(nid, 3, 28672 + i * 256 + gain_nominal(nid, 13))); }
+
+// Configure un maillon du chemin trouvé : typ 4 broche, 2 mélangeur, 3 sélecteur ; i = connexion retenue.
+fn configurer(nid: int, typ: int, i: int) {
+    alimenter(nid);
+    if typ == 4 {
+        hda_cmd(verbe12(nid, 1799, 64));
+        hda_cmd(verbe12(nid, 1804, 2));
+        if param(nid, 18) / 2147483648 == 1 { debloquer_sortie(nid); }
+    }
+    if typ == 3 { hda_cmd(verbe12(nid, 1793, i)); }
+    if typ == 4 { hda_cmd(verbe12(nid, 1793, i)); }
+    if typ == 2 { debloquer_entree(nid, i); }
+}
+
+// Prépare un convertisseur : alimentation, amplificateur, format 22 050 Hz 16 bits stéréo, flux 1 canal 0.
+fn activer_dac(nid: int) {
+    alimenter(nid);
+    debloquer_sortie(nid);
+    hda_cmd(verbe16(nid, 2, 16657));
+    hda_cmd(verbe12(nid, 1798, 16));
+}
+
+// Cherche récursivement un convertisseur relié à nid ; configure le chemin au retour. Renvoie le convertisseur ou 0.
+fn chemin(nid: int, profondeur: int) -> int {
+    let typ = param(nid, 9) / 1048576 % 16;
+    if typ == 0 { activer_dac(nid); return nid; }
+    if profondeur > 5 { return 0; }
+    if typ != 4 { if typ != 2 { if typ != 3 { return 0; } } }
+    let nconn = param(nid, 14) % 128;
+    let i = 0;
+    while i < nconn {
+        let groupe = hda_cmd(verbe12(nid, 3842, i - i % 4));
+        let c = (groupe / p256(i % 4)) % 256;
+        let dac = chemin(c, profondeur + 1);
+        if dac != 0 { configurer(nid, typ, i); return dac; }
+        i = i + 1;
+    }
+    return 0;
+}
+
+// Parcourt le codec : cherche une broche de sortie (haut-parleur interne de préférence), relie un convertisseur. 1 si prêt.
+fn hda_decouvrir() -> int {
+    let vend = param(0, 0);
+    if vend == -1 { return 0; }
+    hset(14, vend);
+    let sub = param(0, 4);
+    let g = (sub / 65536) % 256;
+    let fin = g + sub % 256;
+    let afg = 0;
+    while g < fin { if param(g, 5) % 256 == 1 { afg = g; } g = g + 1; }
+    if afg == 0 { return 0; }
+    hset(12, afg);
+    alimenter(afg);
+    let w = param(afg, 4);
+    let n = (w / 65536) % 256;
+    let fin2 = n + w % 256;
+    let hp = 0;
+    let pin = 0;
+    while n < fin2 {
+        if param(n, 9) / 1048576 % 16 == 4 {
+            let cfg = hda_cmd(verbe12(n, 3868, 0));
+            if cfg / 1073741824 % 4 != 1 {
+                if cfg / 1048576 % 16 == 1 { pin = n; }
+                if cfg / 1048576 % 16 == 2 { hp = n; }
+            }
+        }
+        n = n + 1;
+    }
+    if pin == 0 { pin = hp; }
+    if pin == 0 { return 0; }
+    hset(7, pin);
+    let dac = chemin(pin, 0);
+    if dac == 0 { return 0; }
+    hset(5, dac);
+    return 1;
+}
+
+// Tente d'utiliser le contrôleur PCI d'adresse adr. 1 si un chemin de sortie est prêt.
+fn hda_essayer(adr: int) -> int {
+    let bar = pci_lire(adr, 16);
+    if bar == 4294967295 { return 0; }
+    if bar % 2 == 1 { return 0; }
+    let base = bar - bar % 16;
+    if (bar / 2) % 4 == 2 { base = base + pci_lire(adr, 20) * 4294967296; }
+    if base == 0 { hset(15, 1); return 0; }
+    hda_pm_d0(adr);
+    let cmd = pci_lire(adr, 4) % 65536;
+    if (cmd / 2) % 2 == 0 { cmd = cmd + 2; }
+    if (cmd / 4) % 2 == 0 { cmd = cmd + 4; }
+    pci_ecrire(adr, 4, cmd);
+    hset(0, base);
+    hset(2, adr);
+    let codecs = hda_reset();
+    if codecs == 0 { hset(15, 2); return 0; }
+    let c = 0;
+    while c < 8 {
+        if (codecs / pw2(c)) % 2 == 1 {
+            hset(1, c);
+            if hda_corb_init() == 0 { hset(15, 3); return 0; }
+            if hda_decouvrir() == 1 { hset(15, 0); return 1; }
+        }
+        c = c + 1;
+    }
+    hset(15, 4);
+    return 0;
+}
+
+// Cherche un contrôleur audio (classe 0x0403) utilisable. 1 si trouvé et prêt.
+fn hda_init() -> int {
+    if hda_passe(0) == 1 { return 1; }
+    return hda_passe(1);
+}
+
+// Passe 0 : contrôleurs hors processeur graphique (haut-parleurs du portable) ; passe 1 : les autres (sorties HDMI).
+fn hda_passe(p: int) -> int {
+    let b = 0;
+    while b < 8 {
+        let d = 0;
+        while d < 32 {
+            let f = 0;
+            while f < 8 {
+                let adr = pci_adr(b, d, f);
+                let id = pci_lire(adr, 0);
+                if id != 4294967295 {
+                    if pci_lire(adr, 8) / 256 == 262912 {
+                        let gpu = 0;
+                        if id % 65536 == 4098 { gpu = 1; }
+                        if gpu == p {
+                            if hda_essayer(adr) == 1 { return 1; }
+                        }
+                    }
+                }
+                f = f + 1;
+            }
+            d = d + 1;
+        }
+        b = b + 1;
+    }
+    return 0;
+}
+
+// Tampon audio : adresse des échantillons, 16 bits stéréo (gauche puis droite).
+fn hda_tampon() -> int { return scratch() + 65536; }
+
+// Joue octets octets du tampon (multiple de 128) puis arrête le flux. sd = décalage du premier flux de sortie (lu dans GCAP).
+fn hda_jouer(octets: int) -> int {
+    let sd = hs(16);
+    w8(sd, 0);
+    w8(sd, 1);
+    if attendre_bit(sd, 1, 1, 1) == 0 { return 0; }
+    w8(sd, 0);
+    if attendre_bit(sd, 1, 1, 0) == 0 { return 0; }
+    let bdl = scratch() + 8192;
+    let buf = hda_tampon();
+    poke32(bdl, buf % 4294967296);
+    poke32(bdl + 4, buf / 4294967296);
+    poke32(bdl + 8, octets);
+    poke32(bdl + 12, 1);
+    w32(sd + 8, octets);
+    w16(sd + 12, 0);
+    w16(sd + 18, 16657);
+    w32(sd + 24, bdl % 4294967296);
+    w32(sd + 28, bdl / 4294967296);
+    w8(sd + 2, 16);
+    w8(sd, 2);
+    // durée du tampon en microsecondes : octets / 4 octets par image * 1e6 / 22050
+    let us = octets / 4 * 1000000 / 22050;
+    stall(us);
+    let n = 0;
+    while n < 200 {
+        if r32(sd + 4) >= octets { n = 1000; }
+        stall(1000);
+        n = n + 1;
+    }
+    w8(sd, 0);
+    return 1;
+}
+
+fn pw2(n: int) -> int {
+    let r = 1;
+    while n > 0 { r = r * 2; n = n - 1; }
+    return r;
+}
+
+// Tonalité d'essai : 0,5 s de signal triangulaire (environ 441 Hz), pour vérifier que le chemin audio sort du son.
+fn hda_tonalite() {
+    let buf = hda_tampon();
+    let n = 11008;
+    let i = 0;
+    while i < n {
+        let ph = i % 50;
+        let v = 0;
+        if ph < 25 { v = ph * 640 - 8000; } else { v = (50 - ph) * 640 - 8000; }
+        poke16(buf + i * 4, v);
+        poke16(buf + i * 4 + 2, v);
+        i = i + 1;
+    }
+    hda_jouer(n * 4);
+}
+
+// Remet le périphérique PCI en alimentation normale (D0) s'il expose la capacité de gestion d'énergie.
+fn hda_pm_d0(adr: int) {
+    let st = pci_lire(adr, 4) / 65536;
+    if (st / 16) % 2 == 0 { return; }
+    let cp = pci_lire(adr, 52) % 256;
+    cp = cp - cp % 4;
+    let n = 0;
+    while cp >= 64 {
+        if n > 8 { return; }
+        let ent = pci_lire(adr, cp);
+        if ent % 256 == 1 {
+            let pm = pci_lire(adr, cp + 4);
+            if pm % 4 != 0 { pci_ecrire(adr, cp + 4, pm - pm % 4); stall(20000); }
+            return;
+        }
+        cp = (ent / 256) % 256;
+        cp = cp - cp % 4;
+        n = n + 1;
+    }
+}
+
+// Vrai si aucun contrôleur audio n'a laissé de code d'échec (donc aucun contrôleur n'a été trouvé du tout) et que hda_init() a échoué.
+fn hda_init_manque() -> int {
+    if hs(15) == 0 { if hs(0) == 0 { return 1; } }
+    return 0;
+}
+
+// Variantes de la ligne GPIO du codec (certains portables commandent l'amplificateur des haut-parleurs par une broche GPIO).
+// 0 aucune action ; 1 GPIO1 à l'état haut ; 2 GPIO0 haut ; 3 GPIO0 et GPIO1 hauts. Sans effet si le codec n'a pas de GPIO.
+fn hda_gpio(mode: int) {
+    let afg = hs(12);
+    if afg == 0 { return; }
+    if mode == 0 { return; }
+    if param(afg, 17) % 256 == 0 { return; }
+    let m = 0;
+    if mode == 1 { m = 2; }
+    if mode == 2 { m = 1; }
+    if mode == 3 { m = 3; }
+    hda_cmd(verbe12(afg, 1814, m));
+    hda_cmd(verbe12(afg, 1815, m));
+    hda_cmd(verbe12(afg, 1813, m));
+    stall(20000);
+}

@@ -1,0 +1,10 @@
+[package]
+name = "voxa-dis"
+version = "0.1.0"
+edition = "2021"
+description = "Voxa Dis : desassembleur maison (x86-64/x86-32 pour les modules UEFI, 8051 pour le micrologiciel du controleur embarque). Lecture seule."
+
+[dependencies]
+
+[profile.release]
+opt-level = 3

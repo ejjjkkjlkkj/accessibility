@@ -1,0 +1,12 @@
+{
+  "nom": "voix",
+  "description": "La voix passe par le pilote HD Audio apres ExitBootServices (modele du controleur) : le PCM contient du signal",
+  "ecran": "1024x640",
+  "touches": "E0,50,E0,50,E0,50,1C,E0,4F,1C,1C",
+  "avec_audio": true,
+  "audio_non_nul": true,
+  "max_pas": "8000000000",
+  "serie_ordre": ["controleur HD Audio initialise apres la sortie des services UEFI", "Tester le son"],
+  "arret_attendu": "extinction",
+  "delai_s": 900
+}

@@ -1,0 +1,7 @@
+[package]
+name = "voxa-kernel"
+version = "0.1.0"
+edition = "2021"
+description = "Fondations du noyau Voxa : carte mémoire UEFI et allocateur de pages (no_std, sans allocation)."
+
+[dependencies]

@@ -1,0 +1,7 @@
+[package]
+name = "silicon-core"
+version = "0.1.0"
+edition = "2021"
+description = "Silicon Screen Reader : modèle sémantique, navigation et file d'annonces, sans système d'exploitation (no_std, sans allocation)."
+
+[dependencies]

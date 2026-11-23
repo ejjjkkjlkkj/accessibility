@@ -1,0 +1,21 @@
+[package]
+name = "voxa-live-rs"
+version = "0.1.0"
+edition = "2021"
+description = "Voxa Live en Rust : application UEFI no_std qui embarque le cœur silicon-core. Cible : x86_64-unknown-uefi."
+
+[dependencies]
+silicon-core = { path = "../silicon-core" }
+voxa-speech = { path = "../voxa-speech" }
+voxa-kernel = { path = "../voxa-kernel" }
+voxa-hii = { path = "../voxa-hii" }
+
+[profile.release]
+panic = "abort"
+opt-level = "s"
+lto = true
+codegen-units = 1
+debug = false
+
+[profile.dev]
+panic = "abort"

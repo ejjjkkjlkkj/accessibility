@@ -1,0 +1,12 @@
+[package]
+name = "voxa-agent-train"
+version = "0.1.0"
+edition = "2021"
+description = "Entrainement et evaluation du modele d'intentions de Voxa Agent (Rust, hote, graine fixee). Phrases ecrites par nous ; jeu de test jamais utilise avant la decision."
+
+[dependencies]
+voxa-agent = { path = "../voxa-agent" }
+voxa-neural = { path = "../voxa-neural" }
+
+[profile.release]
+opt-level = 3

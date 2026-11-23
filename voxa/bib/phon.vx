@@ -1,0 +1,728 @@
+// Du texte à la voix : conversion de n'importe quel texte français (points de code Unicode) en notation phonétique de la voix de Voxa.
+// Mots : règles de prononciation du français. Nombres : lus en toutes lettres (jusqu'à 999 999 999 ; au-delà, chiffre par chiffre).
+// Sigles et codes (lettres majuscules courtes, mélanges lettres + chiffres) : épelés lettre par lettre.
+// Zone de travail : scratch + 790000 (mots d'état), + 790400 (mot en cours, codes normalisés). Texte source : points de code sur 16 bits.
+// Limites connues : pas de liaisons, noms propres étrangers prononcés « à la française », quelques mots irréguliers faux.
+
+fn ph(i: int) -> int { return peek(scratch() + 790000 + i * 8); }
+fn phset(i: int, v: int) { poke(scratch() + 790000 + i * 8, v); }
+fn mw() -> int { return scratch() + 790400; }
+fn lt(i: int) -> int {
+    if i < 0 { return 0; }
+    if i >= ph(2) { return 0; }
+    return peek8(mw() + i);
+}
+
+// Ajoute des phonèmes à la sortie, sans espace.
+fn ep(s: int) {
+    let i = 0;
+    while peek8(s + i) != 0 {
+        if ph(0) < 220 { poke8(ph(1) + ph(0), peek8(s + i)); phset(0, ph(0) + 1); }
+        i = i + 1;
+    }
+    poke8(ph(1) + ph(0), 0);
+}
+// Sépare les mots.
+fn sp() {
+    if ph(0) > 0 { if ph(0) < 220 { poke8(ph(1) + ph(0), 32); phset(0, ph(0) + 1); poke8(ph(1) + ph(0), 0); } }
+}
+fn emit(s: int) { ep(s); sp(); }
+
+fn est_v(c: int) -> int {
+    if c == 97 { return 1; }
+    if c == 101 { return 1; }
+    if c == 105 { return 1; }
+    if c == 111 { return 1; }
+    if c == 117 { return 1; }
+    if c == 121 { return 1; }
+    if c >= 1 { if c <= 9 { return 1; } }
+    if c == 11 { return 1; }
+    if c == 12 { return 1; }
+    if c == 13 { return 1; }
+    return 0;
+}
+fn doux(x: int) -> int {
+    if x == 101 { return 1; }
+    if x == 105 { return 1; }
+    if x == 121 { return 1; }
+    if x >= 1 { if x <= 3 { return 1; } }
+    if x == 6 { return 1; }
+    if x == 11 { return 1; }
+    if x == 12 { return 1; }
+    return 0;
+}
+fn apres_nasale(j: int) -> int {
+    let b = lt(j);
+    if b == 0 { return 1; }
+    if est_v(b) == 1 { return 0; }
+    if b == 110 { return 0; }
+    if b == 109 { return 0; }
+    return 1;
+}
+fn nas(i: int) -> int {
+    let a = lt(i + 1);
+    if a == 110 { return apres_nasale(i + 2); }
+    if a == 109 { return apres_nasale(i + 2); }
+    return 0;
+}
+
+// ---- Règles contextuelles (v1) : chacune renvoie l'indice suivant si elle a émis des phonèmes, 0 sinon ----
+fn muta(c: int) -> int {
+    if c == 112 { return 1; }
+    if c == 98 { return 1; }
+    if c == 116 { return 1; }
+    if c == 100 { return 1; }
+    if c == 99 { return 1; }
+    if c == 103 { return 1; }
+    if c == 102 { return 1; }
+    if c == 118 { return 1; }
+    return 0;
+}
+fn liquide(c: int) -> int {
+    if c == 114 { return 1; }
+    if c == 108 { return 1; }
+    return 0;
+}
+fn regle_i(i: int) -> int {
+    let n = ph(2);
+    let p = lt(i - 1);
+    let a = lt(i + 1);
+    let b = lt(i + 2);
+    if p == 0 { return 0; }
+    if est_v(p) == 1 { return 0; }
+    if a == 101 {
+        if b == 110 { if apres_nasale(i + 3) == 1 { ep("jI"); return i + 3; } ep("j"); return i + 1; }
+        if b == 114 { if lt(i + 3) == 0 { ep("je"); return i + 3; } }
+        if b == 100 { if lt(i + 3) == 0 { ep("je"); return i + 3; } }
+        if b == 117 { ep("j2"); return i + 3; }
+        if b == 0 { if n > 2 { ep("i"); return i + 2; } }
+        ep("j");
+        return i + 1;
+    }
+    if a == 108 { if b == 108 { ep("ij"); return i + 3; } return 0; }
+    if est_v(a) == 1 { ep("j"); return i + 1; }
+    return 0;
+}
+fn regle_a(i: int) -> int {
+    let a = lt(i + 1);
+    let b = lt(i + 2);
+    if a == 105 {
+        if b == 108 {
+            if lt(i + 3) == 108 { ep("aj"); return i + 4; }
+            if lt(i + 3) == 0 { ep("aj"); return i + 3; }
+        }
+    }
+    if a == 6 { ep("E"); return i + 2; }
+    return 0;
+}
+fn regle_e(i: int) -> int {
+    let a = lt(i + 1);
+    let b = lt(i + 2);
+    if a == 105 {
+        if b == 108 {
+            if lt(i + 3) == 108 { ep("Ej"); return i + 4; }
+            if lt(i + 3) == 0 { ep("Ej"); return i + 3; }
+        }
+        if b == 110 { if apres_nasale(i + 3) == 1 { ep("I"); return i + 3; } }
+        return 0;
+    }
+    if a == 117 {
+        if b == 120 { if lt(i + 3) == 0 { ep("2"); return i + 3; } }
+        return 0;
+    }
+    if a == 109 {
+        if b == 112 { if lt(i + 3) == 115 { if lt(i + 4) == 0 { ep("Q"); return i + 4; } } }
+        return 0;
+    }
+    if a == 120 { ep("E"); return i + 1; }
+    if a == 114 {
+        if b == 105 { if lt(i + 3) == 101 { if lt(i + 4) == 0 { return i + 1; } } }
+    }
+    if a != 0 {
+        if est_v(a) == 0 {
+            if b != 0 {
+                if est_v(b) == 0 {
+                    if muta(a) == 1 { if liquide(b) == 1 { ep("@"); return i + 1; } }
+                }
+            }
+        }
+    }
+    return 0;
+}
+fn regle_o(i: int) -> int {
+    let a = lt(i + 1);
+    let b = lt(i + 2);
+    if a == 117 { if b == 105 { ep("wi"); return i + 3; } return 0; }
+    if a == 121 { if est_v(b) == 1 { ep("waj"); return i + 2; } }
+    if a == 115 {
+        if b == 0 { ep("o"); return i + 1; }
+        if b == 101 { if lt(i + 3) == 0 { ep("o"); return i + 1; } }
+    }
+    if b == 0 {
+        if a == 116 { ep("o"); return i + 1; }
+        if a == 100 { ep("o"); return i + 1; }
+        if a == 112 { ep("o"); return i + 1; }
+    }
+    return 0;
+}
+fn regle_u(i: int) -> int {
+    let p = lt(i - 1);
+    if p == 0 { return 0; }
+    if est_v(p) == 1 { return 0; }
+    if lt(i + 1) == 105 { if lt(i + 2) == 110 { return 0; } if lt(i + 2) == 109 { return 0; } ep("H"); return i + 1; }
+    return 0;
+}
+
+// Prononciation d'un mot normalisé (mw, longueur ph(2)).
+fn g2p() {
+    let n = ph(2);
+    let i = 0;
+    while i < n {
+        let c = lt(i);
+        let a = lt(i + 1);
+        let b = lt(i + 2);
+        let p = lt(i - 1);
+        let s = i + 1;
+        if c == 97 {
+            let r = regle_a(i);
+            if r > 0 { s = r; }
+            else if a == 117 { ep("o"); s = i + 2; }
+            else if a == 105 {
+                if b == 110 { if apres_nasale(i + 3) == 1 { ep("I"); s = i + 3; } else { ep("E"); s = i + 2; } }
+                else if b == 109 { if apres_nasale(i + 3) == 1 { ep("I"); s = i + 3; } else { ep("E"); s = i + 2; } }
+                else { ep("E"); s = i + 2; }
+            }
+            else if nas(i) == 1 { ep("Q"); s = i + 2; }
+            else { ep("a"); }
+        }
+        else if c == 1 { ep("e"); }
+        else if c == 2 { ep("E"); }
+        else if c == 3 { ep("E"); }
+        else if c == 11 { ep("E"); }
+        else if c == 4 { ep("a"); }
+        else if c == 5 { ep("a"); }
+        else if c == 6 { ep("i"); }
+        else if c == 12 { ep("i"); }
+        else if c == 7 { ep("o"); }
+        else if c == 8 { ep("y"); }
+        else if c == 9 { ep("y"); }
+        else if c == 10 { ep("s"); }
+        else if c == 13 { ep("9"); if a == 117 { s = i + 2; } }
+        else if c == 101 {
+            let r = regle_e(i);
+            if r > 0 { s = r; }
+            else if a == 97 {
+                if b == 117 { ep("o"); s = i + 3; } else { ep("@"); }
+            }
+            else if a == 117 {
+                if b == 0 { ep("2"); }
+                else if b == 115 { if lt(i + 3) == 0 { ep("2"); } else { ep("9"); } }
+                else if b == 122 { ep("2"); }
+                else { ep("9"); }
+                s = i + 2;
+            }
+            else if a == 105 { ep("E"); s = i + 2; }
+            else if nas(i) == 1 { ep("Q"); s = i + 2; }
+            else if a == 114 { if b == 0 { ep("e"); s = i + 2; } else if est_v(b) == 1 { ep("@"); } else { ep("E"); } }
+            else if a == 122 { if b == 0 { ep("e"); s = i + 2; } else if est_v(b) == 1 { ep("@"); } else { ep("E"); } }
+            else if a == 115 {
+                if b == 0 { if n > 3 { s = i + 2; } else { ep("E"); s = i + 2; } }
+                else if est_v(b) == 1 { ep("@"); }
+                else { ep("E"); }
+            }
+            else if a == 116 {
+                if b == 0 { if n == 2 { ep("e"); } else { ep("E"); } s = i + 2; }
+                else if est_v(b) == 1 { ep("@"); }
+                else { ep("E"); }
+            }
+            else if a == 0 {
+                if n == 2 { ep("@"); }
+                else if n == 1 { ep("@"); }
+            }
+            else if est_v(a) == 0 {
+                if est_v(b) == 1 { ep("@"); } else { ep("E"); }
+            }
+            else { ep("@"); }
+        }
+        else if c == 105 {
+            let r = regle_i(i);
+            if r > 0 { s = r; }
+            else if nas(i) == 1 { ep("I"); s = i + 2; }
+            else { ep("i"); }
+        }
+        else if c == 111 {
+            let r = regle_o(i);
+            if r > 0 { s = r; }
+            else if a == 101 { if b == 117 { ep("9"); s = i + 3; } else { ep("O"); } }
+            else
+            if a == 117 { ep("u"); s = i + 2; }
+            else if a == 105 {
+                if b == 110 { if apres_nasale(i + 3) == 1 { ep("wI"); s = i + 3; } else { ep("wa"); s = i + 2; } }
+                else { ep("wa"); s = i + 2; }
+            }
+            else if nas(i) == 1 { ep("U"); s = i + 2; }
+            else if a == 0 { ep("o"); }
+            else { ep("O"); }
+        }
+        else if c == 117 {
+            let r = regle_u(i);
+            if r > 0 { s = r; }
+            else if nas(i) == 1 { ep("I"); s = i + 2; }
+            else { ep("y"); }
+        }
+        else if c == 121 { if est_v(p) == 1 { if est_v(a) == 1 { ep("j"); } else { ep("i"); } } else { ep("i"); } }
+        else if a == c {
+            if est_v(c) == 0 { if c == 99 { if doux(b) == 1 { ep("k"); } } s = i + 1; }
+        }
+        else if c == 98 { ep("b"); }
+        else if c == 99 {
+            if a == 104 { ep("S"); s = i + 2; }
+            else if doux(a) == 1 { ep("s"); }
+            else if a == 0 { if p == 110 { s = i + 1; } else { ep("k"); } }
+            else { ep("k"); }
+        }
+        else if c == 100 { if a == 0 { if n < 3 { ep("d"); } } else { ep("d"); } }
+        else if c == 102 { ep("f"); }
+        else if c == 103 {
+            if a == 110 { ep("nj"); s = i + 2; }
+            else if a == 117 { if doux(b) == 1 { ep("g"); s = i + 2; } else { ep("g"); } }
+            else if doux(a) == 1 { ep("Z"); }
+            else if a == 0 { if n > 2 { if p == 110 { s = i + 1; } else { ep("g"); } } else { ep("g"); } }
+            else if a == 116 { if b == 0 { if p == 110 { s = i + 1; } else { ep("g"); } } else { ep("g"); } }
+            else { ep("g"); }
+        }
+        else if c == 104 { s = i + 1; }
+        else if c == 106 { ep("Z"); }
+        else if c == 107 { ep("k"); }
+        else if c == 108 { ep("l"); }
+        else if c == 109 { if a == 110 { if est_v(p) == 1 { s = i + 1; } else { ep("m"); } } else { ep("m"); } }
+        else if c == 110 { ep("n"); }
+        else if c == 112 {
+            if a == 104 { ep("f"); s = i + 2; }
+            else if a == 0 { if n > 3 { s = i + 1; } else { ep("p"); } }
+            else if a == 115 { if b == 0 { if p == 109 { s = i + 1; } else { ep("p"); } } else { ep("p"); } }
+            else { ep("p"); }
+        }
+        else if c == 113 { if a == 117 { ep("k"); s = i + 2; } else { ep("k"); } }
+        else if c == 114 { ep("R"); }
+        else if c == 115 {
+            if a == 99 { if doux(b) == 1 { ep("s"); s = i + 2; } else { ep("s"); } }
+            else if a == 0 { if n < 3 { ep("s"); } }
+            else if est_v(p) == 1 { if est_v(a) == 1 { ep("z"); } else { ep("s"); } }
+            else { ep("s"); }
+        }
+        else if c == 116 {
+            if a == 105 { if b == 111 { if p != 115 { ep("sj"); s = i + 2; } else { ep("t"); } } else { ep("t"); } }
+            else if a == 104 { ep("t"); s = i + 2; }
+            else if a == 0 { if n < 3 { ep("t"); } }
+            else { ep("t"); }
+        }
+        else if c == 118 { ep("v"); }
+        else if c == 119 { ep("w"); }
+        else if c == 120 { if a == 0 { if n < 3 { ep("ks"); } } else { ep("ks"); } }
+        else if c == 122 { if a == 0 { if p != 101 { ep("z"); } } else { ep("z"); } }
+        i = s;
+    }
+    sp();
+}
+
+// Nom d'une lettre.
+fn nom_lettre(c: int) -> int {
+    if c == 97 { return "a"; }
+    if c == 98 { return "be"; }
+    if c == 99 { return "se"; }
+    if c == 100 { return "de"; }
+    if c == 101 { return "2"; }
+    if c == 102 { return "Ef"; }
+    if c == 103 { return "Ze"; }
+    if c == 104 { return "aS"; }
+    if c == 105 { return "i"; }
+    if c == 106 { return "Zi"; }
+    if c == 107 { return "ka"; }
+    if c == 108 { return "El"; }
+    if c == 109 { return "Em"; }
+    if c == 110 { return "En"; }
+    if c == 111 { return "o"; }
+    if c == 112 { return "pe"; }
+    if c == 113 { return "ky"; }
+    if c == 114 { return "ER"; }
+    if c == 115 { return "Es"; }
+    if c == 116 { return "te"; }
+    if c == 117 { return "y"; }
+    if c == 118 { return "ve"; }
+    if c == 119 { return "dubl@ve"; }
+    if c == 120 { return "iks"; }
+    if c == 121 { return "igREk"; }
+    if c == 122 { return "zEd"; }
+    return "";
+}
+
+fn nom_chiffre(d: int) -> int {
+    if d == 0 { return "zeRo"; }
+    if d == 1 { return "I"; }
+    if d == 2 { return "d2"; }
+    if d == 3 { return "tRwa"; }
+    if d == 4 { return "katR"; }
+    if d == 5 { return "sIk"; }
+    if d == 6 { return "sis"; }
+    if d == 7 { return "sEt"; }
+    if d == 8 { return "Hit"; }
+    return "n9f";
+}
+
+fn nom_dix(k: int) -> int {
+    if k == 0 { return "dis"; }
+    if k == 1 { return "UZ"; }
+    if k == 2 { return "duz"; }
+    if k == 3 { return "tREz"; }
+    if k == 4 { return "katORz"; }
+    if k == 5 { return "kIz"; }
+    if k == 6 { return "sEz"; }
+    if k == 7 { return "disEt"; }
+    if k == 8 { return "dizHit"; }
+    return "dizn9f";
+}
+
+fn nom_dizaine(t: int) -> int {
+    if t == 2 { return "vIt"; }
+    if t == 3 { return "tRQt"; }
+    if t == 4 { return "kaRQt"; }
+    if t == 5 { return "sIkQt"; }
+    if t == 6 { return "swasQt"; }
+    return "katRvI";
+}
+
+// Nombre de 1 à 99.
+fn dire_99(n: int) {
+    if n == 0 { return; }
+    if n < 10 { emit(nom_chiffre(n)); return; }
+    if n < 20 { emit(nom_dix(n - 10)); return; }
+    let t = n / 10;
+    let u = n % 10;
+    if t == 7 {
+        emit(nom_dizaine(6));
+        if u == 1 { emit("e"); }
+        emit(nom_dix(u));
+        return;
+    }
+    if t == 9 {
+        emit(nom_dizaine(8));
+        emit(nom_dix(u));
+        return;
+    }
+    emit(nom_dizaine(t));
+    if u == 1 { if t < 8 { emit("e"); } }
+    if u > 0 { emit(nom_chiffre(u)); }
+}
+
+// Nombre de 1 à 999.
+fn dire_999(n: int) {
+    let h = n / 100;
+    if h == 1 { emit("sQ"); }
+    if h > 1 { emit(nom_chiffre(h)); emit("sQ"); }
+    dire_99(n % 100);
+}
+
+fn dire_nombre(n: int) {
+    if n == 0 { emit("zeRo"); return; }
+    let m = n / 1000000;
+    if m > 0 {
+        dire_999(m);
+        emit("miljU");
+    }
+    let k = (n / 1000) % 1000;
+    if k == 1 { emit("mil"); }
+    if k > 1 { dire_999(k); emit("mil"); }
+    dire_999(n % 1000);
+}
+
+// Le mot courant doit-il être épelé ? (code mêlant lettres et chiffres, sigle en majuscules, ou reste d un jeton déjà coupé)
+fn epele_p() -> int {
+    let n = ph(2);
+    if ph(6) == 1 { return 1; }
+    if ph(3) > 0 { return 1; }
+    if ph(5) == n { if n < 6 { return 1; } }
+    if ph(5) == n { if n > 1 { if est_v(lt(1)) == 0 { if est_v(lt(0)) == 0 { return 1; } } } }
+    if n == 1 { if ph(5) == 1 { return 1; } }
+    return 0;
+}
+
+// Mot courant égal à la chaîne s (lettres minuscules ASCII) ?
+fn egal(s: int) -> int {
+    let n = ph(2);
+    let i = 0;
+    while i < n {
+        if peek8(s + i) != lt(i) { return 0; }
+        i = i + 1;
+    }
+    if peek8(s + n) != 0 { return 0; }
+    return 1;
+}
+
+// Mots dont la prononciation ne suit pas les règles (unités, marques, exceptions).
+fn exception() -> int {
+    if egal("mhz") == 1 { emit("mEgaERts"); return 1; }
+    if egal("ghz") == 1 { emit("gigaERts"); return 1; }
+    if egal("hz") == 1 { emit("ERts"); return 1; }
+    if egal("mo") == 1 { emit("mEgaoktE"); return 1; }
+    if egal("go") == 1 { emit("gigaoktE"); return 1; }
+    if egal("ko") == 1 { emit("kilooktE"); return 1; }
+    if egal("to") == 1 { emit("teRaoktE"); return 1; }
+    if egal("mt") == 1 { emit("mEgatRQsfER"); return 1; }
+    if egal("bus") == 1 { emit("bys"); return 1; }
+    if egal("mars") == 1 { emit("maRs"); return 1; }
+    if egal("femme") == 1 { emit("fam"); return 1; }
+    if egal("dix") == 1 { emit("dis"); return 1; }
+    if egal("six") == 1 { emit("sis"); return 1; }
+    if egal("seconde") == 1 { emit("s@gUd"); return 1; }
+    if egal("internet") == 1 { emit("ItERnEt"); return 1; }
+    if egal("hier") == 1 { emit("jER"); return 1; }
+    if egal("hiver") == 1 { emit("ivER"); return 1; }
+    if egal("photo") == 1 { emit("foto"); return 1; }
+    if egal("jeudi") == 1 { emit("Z2di"); return 1; }
+    if egal("ville") == 1 { emit("vil"); return 1; }
+    if egal("mille") == 1 { emit("mil"); return 1; }
+    if egal("village") == 1 { emit("vilaZ"); return 1; }
+    if egal("tranquille") == 1 { emit("tRQkil"); return 1; }
+    if egal("sept") == 1 { emit("sEt"); return 1; }
+    if egal("huit") == 1 { emit("Hit"); return 1; }
+    if egal("ryzen") == 1 { emit("RizEn"); return 1; }
+    if egal("wifi") == 1 { emit("wifi"); return 1; }
+    return 0;
+}
+
+// Mot courant : jeton complet. Le type est choisi selon son contenu : nombre, code (épelé) ou mot.
+// ph(3) nombre de chiffres, ph(4) nombre de lettres, ph(5) nombre de majuscules.
+fn dire_jeton() {
+    let n = ph(2);
+    if n == 0 { return; }
+    if ph(4) == 0 {
+        if n < 7 {
+            let v = 0;
+            let i = 0;
+            while i < n { v = v * 10 + (lt(i) - 48); i = i + 1; }
+            dire_nombre(v);
+            return;
+        }
+        let i = 0;
+        while i < n { emit(nom_chiffre(lt(i) - 48)); i = i + 1; }
+        return;
+    }
+    if exception() == 1 { return; }
+    if epele_p() == 1 {
+        let i = 0;
+        while i < n {
+            let c = lt(i);
+            if c >= 48 {
+                if c <= 57 {
+                    i = dire_chiffres(i);
+                } else {
+                    if c < 97 { g2p_un(c); } else { emit(nom_lettre(c)); }
+                    i = i + 1;
+                }
+            } else {
+                g2p_un(c);
+                i = i + 1;
+            }
+        }
+        return;
+    }
+    g2p();
+}
+
+// Lit la suite de chiffres qui commence à l indice i du mot courant : comme un nombre (jusqu à 4 chiffres), sinon chiffre par chiffre. Renvoie l indice suivant.
+fn dire_chiffres(i: int) -> int {
+    let j = i;
+    while j < ph(2) {
+        if lt(j) < 48 { return fin_chiffres(i, j); }
+        if lt(j) > 57 { return fin_chiffres(i, j); }
+        j = j + 1;
+    }
+    return fin_chiffres(i, j);
+}
+fn fin_chiffres(i: int, j: int) -> int {
+    let lu = 0;
+    if j - i <= 4 {
+        lu = 1;
+        if lt(i) == 48 { if j - i > 1 { lu = 0; } }
+    }
+    if lu == 1 {
+        let v = 0;
+        let k = i;
+        while k < j { v = v * 10 + lt(k) - 48; k = k + 1; }
+        dire_nombre(v);
+    } else {
+        let k = i;
+        while k < j { emit(nom_chiffre(lt(k) - 48)); k = k + 1; }
+    }
+    return j;
+}
+
+// Lettre accentuée isolée dans un code : on la dit comme sa voyelle.
+fn g2p_un(c: int) {
+    if c == 1 { emit("e"); return; }
+    if c == 10 { emit("se"); return; }
+    emit("2");
+}
+
+// Normalise un point de code : 0 séparateur, -1 apostrophe (collée), 1 à 13 lettres accentuées, 97 à 122 lettres, 48 à 57 chiffres.
+fn norm(cp: int) -> int {
+    if cp >= 97 { if cp <= 122 { return cp; } }
+    if cp >= 65 { if cp <= 90 { return cp + 32; } }
+    if cp >= 48 { if cp <= 57 { return cp; } }
+    if cp == 39 { return -1; }
+    if cp == 8217 { return -1; }
+    if cp == 233 { return 1; }
+    if cp == 201 { return 1; }
+    if cp == 232 { return 2; }
+    if cp == 200 { return 2; }
+    if cp == 234 { return 3; }
+    if cp == 202 { return 3; }
+    if cp == 224 { return 4; }
+    if cp == 226 { return 5; }
+    if cp == 238 { return 6; }
+    if cp == 244 { return 7; }
+    if cp == 251 { return 8; }
+    if cp == 249 { return 9; }
+    if cp == 231 { return 10; }
+    if cp == 235 { return 11; }
+    if cp == 239 { return 12; }
+    if cp == 339 { return 13; }
+    return 0;
+}
+fn est_maj(cp: int) -> int {
+    if cp >= 65 { if cp <= 90 { return 1; } }
+    if cp >= 192 { if cp <= 221 { return 1; } }
+    return 0;
+}
+
+// Convertit le texte src[deb..fin] (points de code sur 16 bits) en phonétique dans out ; s'arrête après un point, deux-points,
+// point-virgule ou retour à la ligne, ou quand la sortie dépasse 60 caractères. Renvoie l'indice où reprendre.
+fn phon_texte(src: int, deb: int, fin: int, out: int) -> int {
+    phset(0, 0);
+    phset(1, out);
+    poke8(out, 0);
+    let i = deb;
+    while i < fin {
+        let cp = peek16(src + i * 2);
+        let k = norm(cp);
+        if k == 0 {
+            i = i + 1;
+            if cp == 92 { emit("QtislaS"); }
+            if cp == 95 { emit("tiRe dy bA"); }
+            if cp == 47 {
+                let seconde = 0;
+                if i < fin { if norm(peek16(src + i * 2)) == 115 { if i + 1 >= fin { seconde = 1; } else { if norm(peek16(src + i * 2 + 2)) == 0 { seconde = 1; } } } }
+                if seconde == 1 { emit("paR sEgUd"); i = i + 1; } else { emit("baR"); }
+            }
+            if cp == 64 { emit("aRobaz"); }
+            if cp == 37 { emit("puRsQ"); }
+            if cp == 46 { if i < fin { if i > deb + 1 { if norm(peek16(src + i * 2)) > 0 { if norm(peek16(src + i * 2 - 4)) > 0 { emit("pwI"); cp = 0; } } } } }
+            if cp == 46 { if ph(0) > 0 { return i; } }
+            if cp == 58 { if ph(0) > 0 { return i; } }
+            if cp == 59 { if ph(0) > 0 { return i; } }
+            if cp == 10 { if ph(0) > 0 { return i; } }
+        } else {
+            if ph(0) > 24 { return i; }
+            phset(2, 0);
+            phset(3, 0);
+            phset(4, 0);
+            phset(5, 0);
+            phset(6, 0);
+            let go = 1;
+            while go == 1 {
+                if i >= fin { go = 0; }
+                else {
+                    let cq = peek16(src + i * 2);
+                    let kq = norm(cq);
+                    if kq == 0 { go = 0; }
+                    else {
+                        if kq > 0 {
+                            if ph(2) >= 24 { go = 0; }
+                            else {
+                                poke8(mw() + ph(2), kq);
+                                phset(2, ph(2) + 1);
+                                if kq >= 48 { if kq <= 57 { phset(3, ph(3) + 1); } else { phset(4, ph(4) + 1); } } else { phset(4, ph(4) + 1); }
+                                phset(5, ph(5) + est_maj(cq));
+                                i = i + 1;
+                            }
+                        } else { i = i + 1; }
+                    }
+                }
+            }
+            if ph(2) > 8 {
+                let coupe = 0;
+                if ph(4) == 0 { coupe = 1; }
+                if epele_p() == 1 { coupe = 1; }
+                if coupe == 1 { i = i - (ph(2) - 8); phset(2, 8); phset(6, 1); }
+            }
+            dire_jeton();
+        }
+    }
+    return i;
+}
+
+// Convertit un texte UTF-8 (terminé par zéro) en points de code sur 16 bits ; renvoie le nombre de points de code.
+fn utf8_vers_u16(p: int, dst: int) -> int {
+    let n = 0;
+    while peek8(p) != 0 {
+        let b = peek8(p);
+        if b < 128 { poke16(dst + n * 2, b); p = p + 1; }
+        else if b < 224 { poke16(dst + n * 2, (b - 192) * 64 + (peek8(p + 1) - 128)); p = p + 2; }
+        else if b < 240 { poke16(dst + n * 2, (b - 224) * 4096 + (peek8(p + 1) - 128) * 64 + (peek8(p + 2) - 128)); p = p + 3; }
+        else { poke16(dst + n * 2, 63); p = p + 4; }
+        n = n + 1;
+    }
+    return n;
+}
+
+// ---- Épellation ----
+fn nom_accent(k: int) -> int {
+    if k == 1 { return "e aksQtegy"; }
+    if k == 2 { return "2 aksQgRav"; }
+    if k == 3 { return "2 aksQsiRkUflEks"; }
+    if k == 4 { return "a aksQgRav"; }
+    if k == 5 { return "a aksQsiRkUflEks"; }
+    if k == 6 { return "i aksQsiRkUflEks"; }
+    if k == 7 { return "o aksQsiRkUflEks"; }
+    if k == 8 { return "y aksQsiRkUflEks"; }
+    if k == 9 { return "y aksQgRav"; }
+    if k == 10 { return "se sedij"; }
+    if k == 11 { return "2 tRema"; }
+    if k == 12 { return "i tRema"; }
+    return "o e";
+}
+fn nom_symbole(cp: int) -> int {
+    if cp == 44 { return "virgyl"; }
+    if cp == 46 { return "pwI"; }
+    if cp == 58 { return "d2pwI"; }
+    if cp == 59 { return "pwIvirgyl"; }
+    if cp == 45 { return "tRe"; }
+    if cp == 47 { return "baR"; }
+    if cp == 40 { return "paRQtEzuvERt"; }
+    if cp == 41 { return "paRQtEzfERme"; }
+    if cp == 33 { return "pwIdEksklamasjU"; }
+    if cp == 63 { return "pwIdIteRogasjU"; }
+    if cp == 61 { return "egal"; }
+    if cp == 43 { return "plys"; }
+    return 0;
+}
+// Épelle src[deb..fin] lettre par lettre dans out ; renvoie l'indice où reprendre (par morceaux de 30 caractères phonétiques).
+fn phon_epeler(src: int, deb: int, fin: int, out: int) -> int {
+    phset(0, 0);
+    phset(1, out);
+    poke8(out, 0);
+    let i = deb;
+    while i < fin {
+        if ph(0) > 30 { return i; }
+        let cp = peek16(src + i * 2);
+        let k = norm(cp);
+        if k >= 97 { emit(nom_lettre(k)); }
+        else if k >= 48 { emit(nom_chiffre(k - 48)); }
+        else if k > 0 { emit(nom_accent(k)); }
+        else if k == -1 { emit("apOstRof"); }
+        else { let sy = nom_symbole(cp); if sy != 0 { emit(sy); } }
+        i = i + 1;
+    }
+    return i;
+}

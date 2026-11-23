@@ -1,0 +1,13 @@
+{
+  "nom": "demarrage-extinction",
+  "description": "Demarrage de l'ISO, menu, extinction ACPI apres double confirmation",
+  "ecran": "1024x640",
+  "touches": "E0,4F,1C,1C",
+  "max_pas": "800000000",
+  "serie_ordre": ["Voxa OS, jalon M0. Demarrage.", "Services de demarrage du firmware quittes", "Memoire utilisable", "ACPI revision 2", "FIN M0", "Menu principal, 11 elements", "Extinction demandee par l"],
+  "serie_absents": ["Panne du noyau"],
+  "arret_attendu": "extinction",
+  "image_non_vide": true,
+  "couleurs_min": 3,
+  "delai_s": 280
+}

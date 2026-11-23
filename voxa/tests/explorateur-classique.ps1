@@ -1,0 +1,43 @@
+# EXPLORATEUR AUTOMATIQUE (interfaces classiques) : ouvre les outils d'administration et panneaux integres de Windows, mesure leur accessibilite (lecture + navigation Tab), puis les referme.
+# SECURITE : liste blanche d'outils de CONSULTATION de Windows (Gestionnaire de peripheriques, Services, Observateur d'evenements, Gestion des disques, Panneau de configuration, proprietes systeme...) ;
+# ne envoie QUE la touche Tab ; ne clique rien ; ne valide rien ; ne ferme que les fenetres NOUVELLES qu'il a ouvertes ; aucun nom/valeur de controle n'est ecrit. ASCII.
+param([string]$Exe, [string]$Sortie = "$env:TEMP\WINPE-VOXA\audit\explorateur-classique.csv", [int]$MaxTab = 40, [string]$Seulement = "", [switch]$Detail)
+Add-Type -AssemblyName UIAutomationClient, UIAutomationTypes
+$AE = [Windows.Automation.AutomationElement]
+$cibles = @(
+ @('Gestionnaire de peripheriques', 'devmgmt.msc'), @('Gestion des disques', 'diskmgmt.msc'), @('Services', 'services.msc'), @('Observateur d evenements', 'eventvwr.msc'),
+ @('Gestion de l ordinateur', 'compmgmt.msc'), @('Planificateur de taches', 'taskschd.msc'), @('Moniteur de fiabilite et de performances', 'perfmon.msc'),
+ @('Gestionnaire des taches', 'taskmgr.exe'), @('Informations systeme', 'msinfo32.exe'), @('A propos de Windows', 'winver.exe'),
+ @('Proprietes systeme', 'sysdm.cpl'), @('Son', 'mmsys.cpl'), @('Connexions reseau', 'ncpa.cpl'), @('Programmes et fonctionnalites', 'appwiz.cpl'),
+ @('Region', 'intl.cpl'), @('Date et heure', 'timedate.cpl'), @('Options d alimentation', 'powercfg.cpl'), @('Souris', 'main.cpl'),
+ @('Panneau: Centre Reseau et partage', 'control.exe /name Microsoft.NetworkAndSharingCenter'), @('Panneau: Peripheriques et imprimantes', 'control.exe /name Microsoft.DevicesAndPrinters'),
+ @('Panneau: Centre accessibilite', 'control.exe /name Microsoft.EaseOfAccessCenter'), @('Panneau: Pare-feu', 'control.exe /name Microsoft.WindowsFirewall'),
+ @('Panneau: Comptes utilisateurs', 'control.exe /name Microsoft.UserAccounts'), @('Panneau: Clavier', 'control.exe /name Microsoft.Keyboard'),
+ @('Panneau: AutoPlay', 'control.exe /name Microsoft.AutoPlay'), @('Panneau: Programmes par defaut', 'control.exe /name Microsoft.DefaultPrograms'), @('Panneau: Options des dossiers', 'control.exe /name Microsoft.FolderOptions'), @('Panneau: Polices', 'control.exe /name Microsoft.Fonts'), @('Panneau: Indexation', 'control.exe /name Microsoft.IndexingOptions'), @('Panneau: Options Internet', 'control.exe /name Microsoft.InternetOptions'), @('Panneau: Personnalisation', 'control.exe /name Microsoft.Personalization'), @('Panneau: Recuperation', 'control.exe /name Microsoft.Recovery'), @('Panneau: Reconnaissance vocale', 'control.exe /name Microsoft.SpeechRecognition'), @('Panneau: Espaces de stockage', 'control.exe /name Microsoft.StorageSpaces'), @('Panneau: Centre de synchronisation', 'control.exe /name Microsoft.SyncCenter'), @('Panneau: Systeme', 'control.exe /name Microsoft.System'), @('Panneau: Barre des taches', 'control.exe /name Microsoft.Taskbar'), @('Panneau: Depannage', 'control.exe /name Microsoft.Troubleshooting'), @('Panneau: Securite Windows', 'control.exe /name Microsoft.WindowsDefender'), @('Panneau: Centre de mobilite', 'control.exe /name Microsoft.MobilityCenter'), @('Panneau: Zone de notification', 'control.exe /name Microsoft.NotificationAreaIcons'), @('Panneau: Outils d administration', 'control.exe /name Microsoft.AdministrativeTools'), @('Panneau: Stylet et tactile', 'control.exe /name Microsoft.PenAndTouch'), @('Panneau: Telephone et modem', 'control.exe /name Microsoft.PhoneAndModem'), @('Panneau: Affichage', 'control.exe /name Microsoft.Display'), @('Panneau: Chiffrement BitLocker', 'control.exe /name Microsoft.BitLockerDriveEncryption'), @('Panneau: Gestion des couleurs', 'control.exe /name Microsoft.ColorManagement'), @('Panneau: Historique des fichiers', 'control.exe /name Microsoft.FileHistory'),
+ @('Moniteur de ressources', 'resmon.exe'), @('Defragmenter', 'dfrgui.exe'), @('Table des caracteres', 'charmap.exe'), @('Configuration du systeme', 'msconfig.exe'), @('Pare-feu avance', 'wf.msc'), @('Strategie de securite locale', 'secpol.msc'), @('Certificats', 'certmgr.msc'), @('Clavier visuel', 'osk.exe'))
+function Fenetres { $h = @{}; foreach ($w in $AE::RootElement.FindAll('Children', [Windows.Automation.Condition]::TrueCondition)) { try { $n = $w.Current.Name; $id = ($w.GetRuntimeId() -join '.'); if (-not [string]::IsNullOrWhiteSpace($n)) { $h[$id] = $n } } catch {} }; $h }
+$g = { param($s, $k) if ($s -match "$k=(\d+)") { [int]$Matches[1] } else { -1 } }
+$lignes = @(); if ($Seulement -ne "") { $cibles = $cibles | Where-Object { $Seulement.Split(",") -contains $_[1] } }; if ($Detail) { $env:VOXA_DETAIL = "1" }
+foreach ($c in $cibles) {
+  $avant = Fenetres; $pidsAvant = @(Get-Process | ForEach-Object { $_.Id })
+  try { $cmd = $c[1] -split ' ', 2; if ($cmd.Count -gt 1) { Start-Process $cmd[0] -ArgumentList $cmd[1] } else { Start-Process $cmd[0] } } catch { $lignes += [pscustomobject]@{ outil = $c[1]; ouvert = $false }; continue }
+  $nouvelle = $null; for ($i = 0; $i -lt 16 -and -not $nouvelle; $i++) { Start-Sleep -Milliseconds 700; $apres = Fenetres; $nouvelle = $apres.GetEnumerator() | Where-Object { -not $avant.ContainsKey($_.Key) } | Select-Object -First 1 }
+  if (-not $nouvelle) { $lignes += [pscustomobject]@{ outil = $c[1]; ouvert = $false }; continue }
+  Start-Sleep -Seconds 2; $titre = $nouvelle.Value
+  # Garde-fou : la fenetre detectee doit appartenir a un processus SYSTEME attendu, sinon c'est une fenetre etrangere apparue en meme temps (application de l'utilisateur) : on l'ignore.
+  $procOk = $false; foreach ($w in $AE::RootElement.FindAll('Children', [Windows.Automation.Condition]::TrueCondition)) { try { if (($w.GetRuntimeId() -join '.') -eq $nouvelle.Key) { $pn = (Get-Process -Id $w.Current.ProcessId -ErrorAction Stop).ProcessName; $procOk = $pn -in 'mmc', 'Taskmgr', 'msinfo32', 'winver', 'rundll32', 'control', 'explorer', 'ApplicationFrameHost', 'SystemSettings', 'perfmon', 'dllhost', 'SystemPropertiesComputerName' } } catch {} }
+  if (-not $procOk) { $lignes += [pscustomobject]@{ outil = $c[1]; ouvert = $false }; continue }
+  $t = (& $Exe --parcours-tab ("=" + $titre) --max $MaxTab) -join ' '; $brut = @(& $Exe --audit-processus "*" --titre ("=" + $titre)); $a = ($brut | Where-Object { $_ -like 'AUDIT*' }) -join ' '; if ($Detail) { "DETAIL $($c[1]) :"; $brut | Where-Object { $_ -like 'RESTE*' } | Group-Object | ForEach-Object { "  $($_.Count) x $($_.Name)" } }
+  $lignes += [pscustomobject]@{ outil = $c[1]; ouvert = $true; attendus = (& $g $t 'attendus'); arrets = (& $g $t 'arrets'); distincts = (& $g $t 'distincts'); cycle = (& $g $t 'cycle'); arrets_sans_nom = (& $g $t 'sans_nom'); hors_fenetre = (& $g $t 'hors_fenetre')
+    interactifs = (& $g $a 'interactifs'); muets_natifs = (& $g $a 'sans_nom_propre'); combles = (& $g $a 'combles_par_le_lecteur'); toujours_muets = (& $g $a 'toujours_sans_nom') }
+  # fermeture de la ou des fenetres NOUVELLES uniquement
+  foreach ($w in $AE::RootElement.FindAll('Children', [Windows.Automation.Condition]::TrueCondition)) { try { $id = ($w.GetRuntimeId() -join '.'); if (-not $avant.ContainsKey($id)) { try { $w.GetCurrentPattern([Windows.Automation.WindowPattern]::Pattern).Close() } catch {} } } catch {} }
+  Start-Sleep -Seconds 2
+  Get-Process | Where-Object { $pidsAvant -notcontains $_.Id -and $_.ProcessName -in 'mmc', 'Taskmgr', 'msinfo32', 'winver', 'control', 'rundll32', 'SystemPropertiesComputerName', 'perfmon', 'resmon', 'dfrgui', 'charmap', 'msconfig', 'osk' } | Stop-Process -ErrorAction SilentlyContinue
+}
+$lignes | Export-Csv $Sortie -NoTypeInformation -Encoding UTF8
+$ok = $lignes | Where-Object { $_.ouvert }
+"OUTILS_DEMANDES=$($cibles.Count) OUVERTS_ET_MESURES=$($ok.Count) NON_OUVERTS=$(($lignes | Where-Object { -not $_.ouvert }).Count)"
+"CONTROLES_INTERACTIFS=$(($ok | Measure-Object interactifs -Sum).Sum) MUETS_NATIFS=$(($ok | Measure-Object muets_natifs -Sum).Sum) COMBLES=$(($ok | Measure-Object combles -Sum).Sum) TOUJOURS_MUETS=$(($ok | Measure-Object toujours_muets -Sum).Sum) ARRETS_SANS_NOM=$(($ok | Measure-Object arrets_sans_nom -Sum).Sum)"
+$cov = $ok | Where-Object { $_.attendus -gt 0 }; "AVEC_CONTROLES_FOCALISABLES=$($cov.Count) ; Tab complet (distincts >= attendus) : $(($cov | Where-Object { $_.distincts -ge $_.attendus }).Count) ; partiel : $(($cov | Where-Object { $_.distincts -lt $_.attendus }).Count)"
+"FENETRES_RESTANTES_A_VERIFIER : " + (((Fenetres).Values | Where-Object { $_ -match 'Gestionnaire|Services|Observateur|Panneau|Propri|Planificateur|Informations syst|Windows' } ) -join ' | ')

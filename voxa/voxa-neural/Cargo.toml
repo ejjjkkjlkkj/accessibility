@@ -1,0 +1,7 @@
+[package]
+name = "voxa-neural"
+version = "0.1.0"
+edition = "2021"
+description = "VOXA Neural : moteur d'inférence entier (int8) sans système d'exploitation, sans allocation. Moteur seulement : aucun modèle entraîné n'est fourni."
+
+[dependencies]

@@ -1,0 +1,10 @@
+[package]
+name = "voxa-vision"
+version = "0.1.0"
+edition = "2021"
+description = "Voxa Vision : lit l'ecran PAR LES PIXELS (aucune API d'accessibilite) : capture, segmentation en lignes et mots, reconnaissance par atlas de glyphes fabrique par nos soins."
+
+[dependencies]
+
+[profile.release]
+opt-level = 3

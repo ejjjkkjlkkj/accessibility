@@ -1,0 +1,7 @@
+[package]
+name = "voxa-train"
+version = "0.1.0"
+edition = "2021"
+description = "Outil d'entraînement et d'évaluation du modèle de phonétisation (hôte seulement : n'est pas du code embarqué)."
+
+[dependencies]

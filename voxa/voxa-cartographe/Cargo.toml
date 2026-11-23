@@ -1,0 +1,13 @@
+[package]
+name = "voxa-cartographe"
+version = "0.1.0"
+edition = "2021"
+description = "Voxa Cartographe : cartographie en lecture seule des fenêtres de Windows (UI Automation, session active) et des boîtes de dialogue classiques de binaires PE (images WinRE/Setup montées), avec détection des défauts d'accessibilité."
+
+[dependencies]
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+panic = "abort"

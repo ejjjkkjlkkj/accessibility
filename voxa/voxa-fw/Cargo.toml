@@ -1,0 +1,7 @@
+[package]
+name = "voxa-fw"
+version = "0.1.0"
+edition = "2021"
+description = "Outil maison, lecture seule : analyse d'une image firmware UEFI (volumes, fichiers, sections, décompression LZMA)."
+
+[dependencies]

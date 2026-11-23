@@ -1,0 +1,45 @@
+// Haut-parleur système (PNP0800, port 0x61) piloté par le minuteur PIT canal 2 (ports 0x42/0x43). Aucune API.
+// Déclaré par l'ACPI de cette machine ; son rendu physique reste à vérifier à l'oreille.
+
+// Joue une note de freq hertz pendant ms millisecondes (freq < 20 : silence de la même durée).
+fn ton(freq: int, ms: int) {
+    if freq < 20 { stall(ms * 1000); return; }
+    let d = 1193182 / freq;
+    if d > 65535 { d = 65535; }
+    out(67, 182);
+    out(66, d % 256);
+    out(66, d / 256);
+    let p = inb(97);
+    out(97, p - p % 4 + 3);
+    stall(ms * 1000);
+    let q = inb(97);
+    out(97, q - q % 4);
+}
+
+// Signaux courts reconnaissables (earcons).
+fn bip_ok() { ton(880, 80); ton(0, 30); ton(1320, 120); }
+fn bip_erreur() { ton(220, 250); }
+fn bip_nav() { ton(660, 40); }
+fn bip_alerte() { ton(1000, 100); ton(0, 60); ton(1000, 100); ton(0, 60); ton(1000, 100); }
+
+// Code d'erreur sonore : n bips moyens, séparés par un silence (n = 0 : un seul long bip grave).
+fn bip_code(n: int) {
+    stall(600000);
+    if n < 1 { ton(200, 700); return; }
+    let i = 0;
+    while i < n {
+        ton(700, 180);
+        ton(0, 220);
+        i = i + 1;
+    }
+}
+
+// Retour sonore de secours quand la voix est indisponible : n bips aigus courts (n = rang de l'élément, de 1 à 7).
+fn bip_rang(n: int) {
+    let i = 0;
+    while i < n {
+        ton(1200, 50);
+        ton(0, 70);
+        i = i + 1;
+    }
+}

@@ -1,0 +1,137 @@
+[
+  {
+    "nom": "demarrage-extinction",
+    "description": "Demarrage de l'ISO, menu, extinction ACPI apres double confirmation",
+    "ok": true,
+    "backend": "soft",
+    "nature": "emulation logicielle (interpreteur de processeur, SANS virtualisation materielle)",
+    "controles": [
+      {
+        "texte": "ISO amorcable selon l'analyse independante (El Torito UEFI, FAT, PE x86-64) : ",
+        "ok": true
+      },
+      {
+        "texte": "l'hyperviseur et le laboratoire lisent le meme BOOTX64.EFI (SHA-256 7acdf58041bb...)",
+        "ok": true
+      },
+      {
+        "texte": "aucune violation signalee par le firmware virtuel : []",
+        "ok": true
+      },
+      {
+        "texte": "arret attendu : extinction (obtenu : extinction )",
+        "ok": true
+      },
+      {
+        "texte": "serie, dans l'ordre : \"Voxa OS, jalon M0. Demarrage.\"",
+        "ok": true
+      },
+      {
+        "texte": "serie, dans l'ordre : \"Services de demarrage du firmware quittes\"",
+        "ok": true
+      },
+      {
+        "texte": "serie, dans l'ordre : \"Memoire utilisable\"",
+        "ok": true
+      },
+      {
+        "texte": "serie, dans l'ordre : \"ACPI revision 2\"",
+        "ok": true
+      },
+      {
+        "texte": "serie, dans l'ordre : \"FIN M0\"",
+        "ok": true
+      },
+      {
+        "texte": "serie, dans l'ordre : \"Menu principal, 11 elements\"",
+        "ok": true
+      },
+      {
+        "texte": "serie, dans l'ordre : \"Extinction demandee par l\"",
+        "ok": true
+      },
+      {
+        "texte": "serie, absent : \"Panne du noyau\"",
+        "ok": true
+      },
+      {
+        "texte": "capture 1024x640 : 7 couleurs distinctes (\u003e= 3)",
+        "ok": true
+      }
+    ]
+  },
+  {
+    "nom": "redemarrage-confirmation",
+    "description": "Redemarrer exige deux Entrees ; une seule ne fait rien",
+    "ok": true,
+    "backend": "soft",
+    "nature": "emulation logicielle (interpreteur de processeur, SANS virtualisation materielle)",
+    "controles": [
+      {
+        "texte": "ISO amorcable selon l'analyse independante (El Torito UEFI, FAT, PE x86-64) : ",
+        "ok": true
+      },
+      {
+        "texte": "l'hyperviseur et le laboratoire lisent le meme BOOTX64.EFI (SHA-256 7acdf58041bb...)",
+        "ok": true
+      },
+      {
+        "texte": "aucune violation signalee par le firmware virtuel : []",
+        "ok": true
+      },
+      {
+        "texte": "arret attendu : reinitialisation (obtenu : reinitialisation )",
+        "ok": true
+      },
+      {
+        "texte": "serie, dans l'ordre : \"Confirmer le red\"",
+        "ok": true
+      },
+      {
+        "texte": "serie, dans l'ordre : \"Redemarrage demande par l\"",
+        "ok": true
+      },
+      {
+        "texte": "capture 1024x640 : 7 couleurs distinctes (\u003e= 2)",
+        "ok": true
+      }
+    ]
+  },
+  {
+    "nom": "voix",
+    "description": "La voix passe par le pilote HD Audio apres ExitBootServices (modele du controleur) : le PCM contient du signal",
+    "ok": true,
+    "backend": "soft",
+    "nature": "emulation logicielle (interpreteur de processeur, SANS virtualisation materielle)",
+    "controles": [
+      {
+        "texte": "ISO amorcable selon l'analyse independante (El Torito UEFI, FAT, PE x86-64) : ",
+        "ok": true
+      },
+      {
+        "texte": "l'hyperviseur et le laboratoire lisent le meme BOOTX64.EFI (SHA-256 7acdf58041bb...)",
+        "ok": true
+      },
+      {
+        "texte": "aucune violation signalee par le firmware virtuel : []",
+        "ok": true
+      },
+      {
+        "texte": "arret attendu : extinction (obtenu : extinction )",
+        "ok": true
+      },
+      {
+        "texte": "serie, dans l'ordre : \"controleur HD Audio initialise apres la sortie des services UEFI\"",
+        "ok": true
+      },
+      {
+        "texte": "serie, dans l'ordre : \"Tester le son\"",
+        "ok": true
+      },
+      {
+        "texte": "audio (modele logiciel du controleur, ne prouve aucun son reel) : 2376896 echantillons, amplitude moyenne 247 (\u003e 50)",
+        "ok": true
+      }
+    ]
+  }
+]
