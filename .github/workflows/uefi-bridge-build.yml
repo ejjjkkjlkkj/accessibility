@@ -28,6 +28,11 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
+      - name: Use Python 3.12 for EDK II build tools (pylibfdt does not build on newer Python)
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
       - name: Install EDK II build dependencies
         run: |
           sudo apt-get update
