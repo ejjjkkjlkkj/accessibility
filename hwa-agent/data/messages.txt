@@ -1,0 +1,5 @@
+Bonjour. Le lecteur d'ecran est pret.
+Titre : menu principal.
+Invite : tapez une commande.
+Resultat : operation terminee.
+Erreur : fichier introuvable.
