@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "project": "HAKER",
+  "status": "INITIAL_TEST_CATALOG_NOT_EXECUTED",
+  "policy": {
+    "default_scope": "local_repository_and_synthetic_fixtures",
+    "network_tests_default": false,
+    "destructive_tests_default": false,
+    "require_explicit_scope_for_external_targets": true
+  },
+  "cases": [
+    {"id":"HK-INPUT-001","area":"parser","attack":"empty_input","expected":"controlled_diagnostic_no_crash","status":"NOT_IMPLEMENTED"},
+    {"id":"HK-INPUT-002","area":"parser","attack":"truncated_and_malformed_input","expected":"controlled_diagnostic_no_out_of_bounds_access","status":"NOT_IMPLEMENTED"},
+    {"id":"HK-ARITH-001","area":"arithmetic","attack":"integer_boundary_values","expected":"specified_result_or_explicit_error","status":"NOT_IMPLEMENTED"},
+    {"id":"HK-MEM-001","area":"memory","attack":"invalid_lengths_and_boundary_offsets","expected":"no_out_of_bounds_access","status":"NOT_IMPLEMENTED"},
+    {"id":"HK-RESOURCE-001","area":"resource_limits","attack":"bounded_input_growth","expected":"deterministic_limit_or_controlled_failure","status":"NOT_IMPLEMENTED"},
+    {"id":"HK-PROTO-001","area":"protocol","attack":"invalid_message_fields_and_lengths","expected":"reject_invalid_message_without_state_corruption","status":"NOT_IMPLEMENTED"},
+    {"id":"HK-REPRO-001","area":"reproducibility","attack":"replay_same_seed_and_corpus","expected":"same_test_inputs_and_comparable_results","status":"NOT_IMPLEMENTED"},
+    {"id":"HK-EVIDENCE-001","area":"reporting","attack":"missing_or_skipped_required_test","expected":"status_not_pass","status":"NOT_IMPLEMENTED"}
+  ]
+}
