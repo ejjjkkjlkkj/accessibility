@@ -1,3 +1,4 @@
+#![cfg(windows)]
 //! Voxa Cartographe : outil maison, LECTURE SEULE, qui cartographie l'accessibilité d'une interface Windows.
 //!   voxa-cartographe fenetres [--sortie fichier.jsonl]      toutes les fenêtres de premier niveau de la session ACTIVE (UI Automation) : contrôles, noms, atteignabilité clavier ;
 //!                                                           pour chaque contrôle muet, dit si le lecteur de secours Voxa sait le nommer (voisin, parent, identifiant…)
@@ -125,4 +126,9 @@ fn main() {
         Some("dialogues") => match a.get(2) { Some(p) if !p.starts_with("--") => dialogues(p, opt("--csv")), _ => eprintln!("usage : dialogues <fichier-ou-dossier> [--csv fichier]") },
         _ => eprintln!("usage : voxa-cartographe fenetres [--sortie f.jsonl] | dialogues <chemin> [--csv f.csv]"),
     }
+}
+
+#[cfg(not(windows))]
+fn main() {
+    eprintln!("outil Windows uniquement");
 }

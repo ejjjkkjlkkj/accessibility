@@ -1,3 +1,4 @@
+#![cfg(windows)]
 //! voxa-probe : sonde maison, LECTURE SEULE, sans aucune dépendance (appels directs à kernel32/advapi32 + instruction CPUID).
 //! N'écrit que dans le dossier de sortie demandé. Ne charge aucun pilote, ne modifie ni registre ni firmware.
 //! Usage : voxa-probe <dossier-de-sortie>
@@ -188,4 +189,9 @@ fn ssdt_registre(dir: &str, out: &mut String) {
             unsafe { RegCloseKey(k2) }; }
         unsafe { RegCloseKey(k1) }; }
     unsafe { RegCloseKey(root) }; let _ = writeln!(out, "SSDT lues depuis le registre : {n}");
+}
+
+#[cfg(not(windows))]
+fn main() {
+    eprintln!("outil Windows uniquement");
 }
