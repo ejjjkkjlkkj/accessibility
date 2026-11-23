@@ -10,6 +10,11 @@ extern "C" {
 
 #define ACCESSIBILITY_EVENT_ABI_VERSION 1u
 #define ACCESSIBILITY_NAME_CAPACITY 4097u
+#define ACCESSIBILITY_STATE_FOCUSED (UINT64_C(1) << 0)
+#define ACCESSIBILITY_STATE_FOCUSABLE (UINT64_C(1) << 1)
+#define ACCESSIBILITY_STATE_ENABLED (UINT64_C(1) << 2)
+#define ACCESSIBILITY_STATE_DISABLED (UINT64_C(1) << 3)
+#define ACCESSIBILITY_STATE_KNOWN_MASK UINT64_C(0x0F)
 
 typedef enum accessibility_role {
     ACCESSIBILITY_ROLE_UNKNOWN = 0,
@@ -40,11 +45,23 @@ typedef struct accessibility_event {
     char name[ACCESSIBILITY_NAME_CAPACITY];
 } accessibility_event;
 
-/* Initializes a deterministic, versioned event structure. Returns 0 on success. */
+/* Initializes a deterministic, versioned event structure.
+ * Returns 0 on success; -1 invalid pointers, -2 invalid role,
+ * -3 unterminated/oversized name, -4 embedded NUL or invalid UTF-8.
+ */
 int accessibility_event_init(accessibility_event *event,
                              accessibility_role role,
                              uint64_t source_id,
                              const char *name);
+/* Length-aware entry point: rejects embedded NUL and invalid UTF-8. */
+int accessibility_event_init_n(accessibility_event *event,
+                               accessibility_role role,
+                               uint64_t source_id,
+                               const char *name,
+                               size_t name_length);
+int accessibility_state_flags_valid(uint64_t state_flags);
+/* Set flags only after validation; failure leaves the event unchanged. */
+int accessibility_event_set_state_flags(accessibility_event *event, uint64_t state_flags);
 
 #ifdef __cplusplus
 }
