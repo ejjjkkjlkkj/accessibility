@@ -1,0 +1,74 @@
+name: AI agent teams contract
+
+on:
+  push:
+    branches: ["**"]
+    paths:
+      - "projects/ai-agent-teams/manifest.json"
+      - "docs/AI-AGENT-TEAMS-DARK-WHITE-GRAY.md"
+      - ".github/workflows/ai-agent-teams-contract.yml"
+  pull_request:
+    paths:
+      - "projects/ai-agent-teams/manifest.json"
+      - "docs/AI-AGENT-TEAMS-DARK-WHITE-GRAY.md"
+      - ".github/workflows/ai-agent-teams-contract.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ai-agent-teams-contract-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v6
+      - name: Validate agent team manifest and safety invariants
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          manifest_path = Path("projects/ai-agent-teams/manifest.json")
+          doc_path = Path("docs/AI-AGENT-TEAMS-DARK-WHITE-GRAY.md")
+          assert manifest_path.is_file(), "Agent team manifest missing"
+          assert doc_path.is_file(), "Agent team policy document missing"
+          data = json.loads(manifest_path.read_text(encoding="utf-8"))
+          assert data["schema_version"] == 1
+          assert data["component"] == "ai-agent-teams"
+          assert data["status"] in {"PASS", "FAIL", "PARTIAL", "BLOCKED", "NOT_VALIDATED"}
+          teams = {team["id"]: team for team in data["teams"]}
+          assert {"dark", "white", "gray"} <= set(teams), "All three teams are required"
+          all_ids = []
+          for team in data["teams"]:
+              assert team["agents"], f"Team {team['id']} must define agents"
+              all_ids.extend(agent["id"] for agent in team["agents"])
+              for agent in team["agents"]:
+                  assert agent["status"] in {"PASS", "FAIL", "PARTIAL", "BLOCKED", "NOT_VALIDATED"}
+          assert len(all_ids) == len(set(all_ids)), "Agent IDs must be unique"
+          policy = data["shared_policy"]
+          required_false = [
+              "agent_may_merge_to_main",
+              "agent_may_publish_release",
+              "agent_may_access_ci_secrets",
+              "agent_may_flash_firmware",
+              "agent_may_write_nvram",
+              "agent_may_reboot_physical_pc",
+              "raw_mmio_dma_or_port_io_allowed_by_default",
+              "untrusted_pull_requests_on_self_hosted_runner",
+              "simulation_is_physical_proof"
+          ]
+          for key in required_false:
+              assert policy[key] is False, f"Unsafe policy invariant: {key} must be false"
+          assert policy["authorized_targets_only"] is True
+          assert policy["least_privilege"] is True
+          assert policy["independent_verification_required"] is True
+          assert policy["human_approval_required_for_high_risk_actions"] is True
+          assert len(all_ids) >= 10, "Expected multiple specialized agents"
+          print(f"PASS: {len(teams)} teams, {len(all_ids)} agent definitions; safety invariants hold")
+          PY

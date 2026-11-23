@@ -1,0 +1,41 @@
+name: Security Agent Contract
+
+on:
+  push:
+    paths:
+      - "agents/**"
+      - "docs/SECURITY-RED-TEAM.md"
+      - "scripts/validate_security_contract.py"
+      - "tests/test_security_contract.py"
+      - ".github/workflows/security-agent-contract.yml"
+  pull_request:
+    paths:
+      - "agents/**"
+      - "docs/SECURITY-RED-TEAM.md"
+      - "scripts/validate_security_contract.py"
+      - "tests/test_security_contract.py"
+      - ".github/workflows/security-agent-contract.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Validate manifest JSON
+        run: python -m json.tool agents/manifest.json > /dev/null
+      - name: Validate security contract
+        run: python scripts/validate_security_contract.py
+      - name: Run security contract regression tests
+        run: python -m unittest discover -s tests -p "test_security_contract.py" -v
+      - name: Compile validator syntax
+        run: python -m py_compile scripts/validate_security_contract.py

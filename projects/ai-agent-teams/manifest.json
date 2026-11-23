@@ -1,0 +1,68 @@
+{
+  "schema_version": 1,
+  "project": "accessibility",
+  "component": "ai-agent-teams",
+  "status": "PARTIAL",
+  "teams": [
+    {
+      "id": "dark",
+      "name": "Dark Team",
+      "mission": "Authorized adversarial research, Red Team testing, safe reproduction and negative tests.",
+      "status": "NOT_VALIDATED",
+      "agents": [
+        {"id":"DARK-01","role":"authorized-red-team-auditor","write_scope":"test-fixtures-and-reproduction-only","status":"NOT_VALIDATED"},
+        {"id":"DARK-02","role":"bounded-fuzzing-and-negative-tests","write_scope":"test-fixtures-and-regression-cases-only","status":"NOT_VALIDATED"},
+        {"id":"DARK-03","role":"attack-surface-and-public-source-research","write_scope":"reports-only","status":"NOT_VALIDATED"}
+      ]
+    },
+    {
+      "id": "white",
+      "name": "White Team",
+      "mission": "Defensive engineering, targeted remediation, detection, regression tests and supply-chain protection.",
+      "status": "NOT_VALIDATED",
+      "agents": [
+        {"id":"WHITE-01","role":"remediation-engineer","write_scope":"dedicated-feature-branch","status":"NOT_VALIDATED"},
+        {"id":"WHITE-02","role":"system-hardware-defense-reviewer","write_scope":"dedicated-feature-branch","status":"NOT_VALIDATED"},
+        {"id":"WHITE-03","role":"supply-chain-and-ci-security","write_scope":"dedicated-feature-branch","status":"NOT_VALIDATED"},
+        {"id":"WHITE-04","role":"accessible-security-validation","write_scope":"dedicated-feature-branch","status":"NOT_VALIDATED"}
+      ]
+    },
+    {
+      "id": "gray",
+      "name": "Gray Team",
+      "mission": "Independent verification, evidence review, risk triage, coverage and release gates.",
+      "status": "NOT_VALIDATED",
+      "agents": [
+        {"id":"ORCH-01","role":"task-orchestrator","write_scope":"task-manifest-only","status":"NOT_VALIDATED"},
+        {"id":"GRAY-01","role":"independent-evidence-verifier","write_scope":"validation-reports-only","status":"NOT_VALIDATED"},
+        {"id":"GRAY-02","role":"risk-and-finding-triage","write_scope":"triage-records-only","status":"NOT_VALIDATED"},
+        {"id":"GRAY-03","role":"coverage-auditor","write_scope":"coverage-reports-only","status":"NOT_VALIDATED"},
+        {"id":"GRAY-04","role":"release-gate-reviewer","write_scope":"release-recommendation-only","status":"NOT_VALIDATED"}
+      ]
+    }
+  ],
+  "shared_policy": {
+    "authorized_targets_only": true,
+    "least_privilege": true,
+    "independent_verification_required": true,
+    "agent_may_merge_to_main": false,
+    "agent_may_publish_release": false,
+    "agent_may_access_ci_secrets": false,
+    "agent_may_flash_firmware": false,
+    "agent_may_write_nvram": false,
+    "agent_may_reboot_physical_pc": false,
+    "raw_mmio_dma_or_port_io_allowed_by_default": false,
+    "untrusted_pull_requests_on_self_hosted_runner": false,
+    "simulation_is_physical_proof": false,
+    "human_approval_required_for_high_risk_actions": true,
+    "model_output_is_untrusted_until_validated": true
+  },
+  "evidence_statuses": ["PASS", "FAIL", "PARTIAL", "BLOCKED", "NOT_VALIDATED"],
+  "evidence_classes": ["STATIC_ANALYSIS", "UNIT_TEST", "HOSTED_CI", "LOCAL_RUNNER", "SIMULATION", "PHYSICAL_HARDWARE"],
+  "activation_requirements": [
+    "A real agent runtime and explicit tool bindings must be configured.",
+    "Least-privilege permissions must be tested per agent.",
+    "Agent actions and evidence must be logged without exposing secrets.",
+    "A different agent or human must verify code changes and test claims."
+  ]
+}

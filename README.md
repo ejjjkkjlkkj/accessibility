@@ -51,6 +51,10 @@ Le prototype Ollama local et ses garde-fous sont décrits dans [la documentation
 - `python scripts/aerl.py`, `python scripts/aerl_tool.py` et `python scripts/haker_audit.py` fournissent les commandes locales. Les commandes à durée bornée du runner AERL ont un délai par défaut de 300 secondes.
 - Le manifeste `agents/manifest.json` définit un contrat; il ne lance pas des agents autonomes et n'autorise pas les cibles externes.
 
+## Pont matériel expérimental
+
+Le crate `crates/hardware-bridge` fournit des contrats `no_std`, des analyseurs ACPI bornés, une politique de ressources en refus par défaut et une sonde Windows PnP en lecture seule. L’énumération UEFI est étiquetée comme rapportée par le firmware; elle ne prouve pas une présence physique. Le pont n’effectue pas encore d’accès PCI/MMIO natif ni de sortie audio. Voir [la documentation du pont matériel](crates/hardware-bridge/README.md).
+
 ## Manifestes et statuts
 
 - `projects/manifest.json` est le catalogue canonique des identifiants de langues et de leurs statuts généraux.

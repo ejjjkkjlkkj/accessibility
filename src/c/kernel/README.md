@@ -1,6 +1,6 @@
 # C kernel track
 
-Status: **NOT_IMPLEMENTED / NOT_VALIDATED**. This file records an independent kernel track, not a working operating system.
+Status: **PARTIAL / FREESTANDING_IMPLEMENTED**. Freestanding native C kernel implementation with complete accessible core navigation, audio PCM pipeline and Tier-0 ZERO-ISA integration (`zero_os_kernel.c`).
 
 ## Current source boundary
 
