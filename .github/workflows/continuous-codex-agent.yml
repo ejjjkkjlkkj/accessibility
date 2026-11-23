@@ -1,0 +1,73 @@
+name: Local Ollama accessibility engineering loop
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: local-ollama-agent-${{ github.repository }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  local-agent:
+    name: Run one local-model cycle without publishing
+    runs-on: self-hosted
+    timeout-minutes: 45
+    steps:
+      - name: Checkout selected feature branch
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      - name: Verify branch and clean worktree
+        shell: bash
+        run: |
+          set -euo pipefail
+          branch="$(git branch --show-current)"
+          case "$branch" in
+            main|master|"") echo "BLOCKED: use a dedicated feature branch"; exit 1 ;;
+          esac
+          if [ -n "$(git status --porcelain)" ]; then
+            echo "BLOCKED: checkout is not clean"
+            exit 1
+          fi
+          test -s AGENT-TASK.md
+          test -s tools/local_agent_loop.py
+          echo "PASS: dedicated branch and required local-agent files found"
+
+      - name: Verify local Ollama endpoint
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:11434/api/tags', timeout=5).read(100000)"
+          echo "PASS: local Ollama endpoint responds; no hosted model/API key is used"
+
+      - name: Run exactly one local engineering cycle
+        env:
+          AGENT_AUTO_PUSH: "0"
+          AGENT_MAX_RUNS: "1"
+          AGENT_SLEEP_SECONDS: "60"
+          OLLAMA_URL: "http://127.0.0.1:11434"
+          OLLAMA_MODEL: "qwen3-coder:30b"
+          AGENT_WORKSPACE: ${{ github.workspace }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          before="$(git rev-parse HEAD)"
+          python tools/local_agent_loop.py
+          after="$(git rev-parse HEAD)"
+          if [ "$after" != "$before" ]; then
+            proposal_dir="$HOME/LocalCodingAgents/proposals"
+            mkdir -p "$proposal_dir"
+            proposal_path="$proposal_dir/accessibility-${GITHUB_RUN_ID}.patch"
+            git format-patch -1 "$after" --stdout > "$proposal_path"
+            echo "PASS: local commit created; no push performed"
+            echo "LOCAL_PROPOSAL_PATH=$proposal_path"
+          else
+            echo "PARTIAL: no verified patch was committed"
+          fi
+          git diff --check
+
