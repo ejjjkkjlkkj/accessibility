@@ -140,7 +140,6 @@ mod tests {
     extern crate std;
     use super::*;
     #[allow(dead_code)]
-    #[path = "../../../../src/voixlib.rs"]
     mod reference;
 
     fn rust(t: &str) -> std::vec::Vec<i16> {

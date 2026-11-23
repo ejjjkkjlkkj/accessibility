@@ -1,3 +1,4 @@
+#![cfg(windows)]
 //! Voxa Vision : lecture de l'ecran par les pixels, sans UI Automation, sans MSAA, sans cadre d'accessibilite.
 //! Seuls des appels systeme de bas niveau sont utilises : copie d'ecran (GDI BitBlt) et dessin de caracteres (GDI TextOut) pour FABRIQUER notre propre atlas de glyphes.
 //! Utilisation : voxa-vision --autotest | --ecran x y l h | --premier-plan [--compter]
@@ -144,3 +145,8 @@ fn main() { unsafe {
     if a.iter().any(|x| x == "--compter") { println!("LIGNES={} MOTS={} CONFIANCE_MOY={:.2}", lignes.len(), lignes.iter().map(|l| l.2.split(' ').count()).sum::<usize>(), lignes.iter().map(|l| l.3).sum::<f32>() / lignes.len().max(1) as f32); }
     else { for (lx, ly, t, c) in lignes { println!("{},{}: {} ({:.2})", lx, ly, t, c); } }
 } }
+
+#[cfg(not(windows))]
+fn main() {
+    eprintln!("outil Windows uniquement");
+}

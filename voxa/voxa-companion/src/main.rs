@@ -1,3 +1,4 @@
+#![cfg(windows)]
 //! Voxa Companion : lecteur de SECOURS pour Windows, WinRE et Windows Setup, en Rust sans dépendance externe.
 //! Il ne remplace pas Narrator : il le complète là où il manque, ne répond plus ou n'est pas lancé.
 //!   voxa-companion --once [--parler]            affiche (et dit) l'élément qui a le focus, puis quitte
@@ -294,4 +295,9 @@ mod tests {
         assert_eq!(humanise_id("{1A2B3C4D-0000-1111-2222-333344445555}"), ""); assert_eq!(humanise_id("3f2a9c1d77"), ""); assert_eq!(humanise_id("12345"), ""); assert_eq!(humanise_id(""), "");
         assert_eq!(humanise_id("SettingsPageTitle"), "settings page title"); assert_eq!(humanise_id("close.button"), "close button");
     }
+}
+
+#[cfg(not(windows))]
+fn main() {
+    eprintln!("outil Windows uniquement");
 }

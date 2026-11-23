@@ -1,3 +1,4 @@
+#![cfg(windows)]
 //! Voxa pour WinPE / Windows : le même cœur (silicon-core) et la même voix (voxa-speech) que Voxa Live, dans un programme natif Windows x64
 //! sans aucune dépendance externe (appels directs à kernel32 et winmm). Pensé pour être lancé par `startnet.cmd` dans un WinPE construit avec l'ADK.
 //!
@@ -208,4 +209,9 @@ fn main() {
     loop {
         match lire_touche_console() { Some(k) => { app.handle(k); app.flush(&mut platform); } None => unsafe { Sleep(20) } }
     }
+}
+
+#[cfg(not(windows))]
+fn main() {
+    eprintln!("outil Windows uniquement");
 }
