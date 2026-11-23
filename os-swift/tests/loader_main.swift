@@ -32,14 +32,14 @@ check("démarrage normal", BootLoader(root: d1).boot(), .kernel("graine\noyau.bi
 // 2. Noyau falsifié : la vérification échoue, retour sur secours
 let d2 = try fresh("falsifie")
 try Data([0x00]).write(to: URL(fileURLWithPath: d2 + "/graine/noyau.bin"))
-check("noyau falsifié -> secours", BootLoader(root: d2).boot(), .fallback("secours\env.bin"))
+check("noyau falsifié -> secours", BootLoader(root: d2).boot(), .fallback("secours\\env.bin"))
 
 // 3. Pas de clé kernel : retour sur secours
 let d3 = try fresh("sans_noyau")
 let cfgNoKernel = try String(contentsOfFile: "tests/boot.gbs", encoding: .utf8)
     .replacingOccurrences(of: "kernel", with: "noyau_absent")
 try cfgNoKernel.write(toFile: d3 + "/boot.gbs", atomically: true, encoding: .utf8)
-check("clé kernel absente -> secours", BootLoader(root: d3).boot(), .fallback("secours\env.bin"))
+check("clé kernel absente -> secours", BootLoader(root: d3).boot(), .fallback("secours\\env.bin"))
 
 // 4. Journal écrit pour le démarrage normal
 let log = try String(contentsOfFile: d1 + "/journal/boot.log", encoding: .utf8)
