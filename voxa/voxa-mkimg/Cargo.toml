@@ -1,0 +1,10 @@
+[package]
+name = "voxa-mkimg"
+version = "0.1.0"
+edition = "2021"
+description = "Fabrique une image disque demarrable UEFI (MBR de protection + GPT + partition systeme EFI FAT32) a partir de fichiers. Outil hote, aucune dependance, n'ecrit que le fichier de sortie demande."
+
+[dependencies]
+
+[profile.release]
+opt-level = 2

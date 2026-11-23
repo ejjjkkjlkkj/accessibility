@@ -1,0 +1,276 @@
+// Bibliothèque d'affichage direct de Voxa : texte agrandi à fort contraste écrit pixel par pixel dans le framebuffer
+// fourni par le firmware (GOP). Aucune API graphique. Police 5x7 dessinée pour ce projet (bib/police-5x7.txt) + accents français.
+// État (mots de 8 octets dans la zone de travail) : 0 base, 1 pas, 2 largeur, 3 hauteur, 4 couleur, 5 fond, 6 échelle,
+//                                                  7 curseur x, 8 curseur y, 9 marge, 10 police, 11 format de pixel.
+
+fn lire(i: int) -> int { return peek(scratch() + i * 8); }
+fn ecrire_etat(i: int, v: int) { poke(scratch() + i * 8, v); }
+
+fn p2(n: int) -> int {
+    let r = 1;
+    while n > 0 { r = r * 2; n = n - 1; }
+    return r;
+}
+
+// Prépare l'écran. Renvoie 1 si un framebuffer exploitable est disponible, 0 sinon.
+fn ecran_init() -> int {
+    ecrire_etat(0, fbinfo(0));
+    ecrire_etat(1, fbinfo(3));
+    ecrire_etat(2, fbinfo(1));
+    ecrire_etat(3, fbinfo(2));
+    ecrire_etat(11, fbinfo(4));
+    ecrire_etat(4, 16777215);
+    ecrire_etat(5, 0);
+    ecrire_etat(6, 4);
+    ecrire_etat(7, 16);
+    ecrire_etat(8, 16);
+    ecrire_etat(9, 16);
+    ecrire_etat(10, "@@POLICE@@");
+    if fbinfo(5) == 0 { return 0; }
+    if lire(0) == 0 { return 0; }
+    if lire(11) > 1 { return 0; }
+    return 1;
+}
+
+// Conversion 0xRRGGBB vers l'ordre des octets du framebuffer (format 1 = BGRX direct, format 0 = RGBX à échanger).
+fn convertir(c: int) -> int {
+    if lire(11) == 1 { return c; }
+    return (c % 256) * 65536 + ((c / 256) % 256) * 256 + (c / 65536) % 256;
+}
+
+fn couleurs(fg: int, fond: int) {
+    ecrire_etat(4, convertir(fg));
+    ecrire_etat(5, convertir(fond));
+}
+
+// Thèmes à fort contraste : 0 jaune sur noir, 1 blanc sur noir, 2 noir sur blanc, 3 noir sur jaune, 4 cyan sur noir.
+fn theme(n: int) {
+    if n == 0 { couleurs(16776960, 0); }
+    if n == 1 { couleurs(16777215, 0); }
+    if n == 2 { couleurs(0, 16777215); }
+    if n == 3 { couleurs(0, 16776960); }
+    if n == 4 { couleurs(65535, 0); }
+}
+
+fn echelle(k: int) { ecrire_etat(6, k); }
+
+fn remplir(adresse: int, n: int, c: int) {
+    while n > 0 {
+        poke32(adresse, c);
+        adresse = adresse + 4;
+        n = n - 1;
+    }
+}
+
+fn rect(x: int, y: int, w: int, h: int) {
+    if lire(0) == 0 { return; }
+    if x < 0 { w = w + x; x = 0; }
+    if y < 0 { h = h + y; y = 0; }
+    if x + w > lire(2) { w = lire(2) - x; }
+    if y + h > lire(3) { h = lire(3) - y; }
+    if w <= 0 { return; }
+    if h <= 0 { return; }
+    let c = lire(4);
+    let j = 0;
+    while j < h {
+        remplir(lire(0) + ((y + j) * lire(1) + x) * 4, w, c);
+        j = j + 1;
+    }
+}
+
+// Miroir du texte affiché (points de code sur 16 bits) : c est ce que lit le lecteur d écran. Longueur dans le mot scratch+799000, texte à scratch+800000.
+fn miroir_ajoute(cp: int) {
+    let n = peek(scratch() + 799000);
+    if n < 7000 { poke16(scratch() + 800000 + n * 2, cp); poke(scratch() + 799000, n + 1); }
+}
+fn miroir_vide() { poke(scratch() + 799000, 0); }
+
+// Efface seulement l écran (défilement automatique d une page trop longue) : le miroir lu par le lecteur d écran est CONSERVÉ,
+// pour que le texte déjà affiché soit encore lu.
+fn vider_ecran() {
+    let f = lire(4);
+    ecrire_etat(4, lire(5));
+    rect(0, 0, lire(2), lire(3));
+    ecrire_etat(4, f);
+    ecrire_etat(7, lire(9));
+    ecrire_etat(8, lire(9));
+}
+
+// Début d une nouvelle page : efface l écran ET le miroir de texte.
+fn effacer() {
+    miroir_vide();
+    vider_ecran();
+}
+
+fn hexv(c: int) -> int {
+    if c >= 65 { return c - 55; }
+    return c - 48;
+}
+
+fn ligne_police(code: int, r: int) -> int {
+    let a = lire(10) + (code - 32) * 14 + r * 2;
+    return hexv(peek8(a)) * 16 + hexv(peek8(a + 1));
+}
+
+// Marques au-dessus des lettres : 1 aigu, 2 grave, 3 circonflexe, 4 tréma ; deux rangées de 5 bits.
+fn marque_haut(accent: int, r: int) -> int {
+    if accent == 1 { if r == 0 { return 2; } return 4; }
+    if accent == 2 { if r == 0 { return 8; } return 4; }
+    if accent == 3 { if r == 0 { return 4; } return 10; }
+    if r == 0 { return 10; }
+    return 0;
+}
+
+// Cédille sous le c : rangées 9 et 10 de la cellule.
+fn marque_bas(r: int) -> int {
+    if r == 0 { return 4; }
+    return 12;
+}
+
+// Dessine un caractère de base (32 à 126) avec accent (0 aucun, 1 à 4 au-dessus, 5 cédille) dans une cellule 5x11 agrandie.
+fn glyphe(x: int, y: int, code: int, accent: int) {
+    let k = lire(6);
+    let haut = 0;
+    if code >= 97 { if code <= 122 { haut = 2; } }
+    let dec = 0;
+    if code == 103 { dec = 2; }
+    if code == 112 { dec = 2; }
+    if code == 113 { dec = 2; }
+    if code == 121 { dec = 2; }
+    let r = 0;
+    while r < 11 {
+        let bits = 0;
+        if r >= 2 + dec { if r < 9 + dec { bits = ligne_police(code, r - 2 - dec); } }
+        if accent >= 1 { if accent <= 4 { if r >= haut { if r < haut + 2 { bits = marque_haut(accent, r - haut); } } } }
+        if accent == 5 { if r >= 9 { bits = marque_bas(r - 9); } }
+        let c = 0;
+        while c < 5 {
+            if (bits / p2(4 - c)) % 2 == 1 { rect(x + c * k, y + r * k, k, k); }
+            c = c + 1;
+        }
+        r = r + 1;
+    }
+}
+
+// Décomposition des lettres accentuées usuelles : renvoie base * 16 + accent.
+fn decomp(cp: int) -> int {
+    if cp == 233 { return 101 * 16 + 1; }
+    if cp == 232 { return 101 * 16 + 2; }
+    if cp == 234 { return 101 * 16 + 3; }
+    if cp == 235 { return 101 * 16 + 4; }
+    if cp == 224 { return 97 * 16 + 2; }
+    if cp == 226 { return 97 * 16 + 3; }
+    if cp == 228 { return 97 * 16 + 4; }
+    if cp == 238 { return 105 * 16 + 3; }
+    if cp == 239 { return 105 * 16 + 4; }
+    if cp == 244 { return 111 * 16 + 3; }
+    if cp == 246 { return 111 * 16 + 4; }
+    if cp == 249 { return 117 * 16 + 2; }
+    if cp == 251 { return 117 * 16 + 3; }
+    if cp == 252 { return 117 * 16 + 4; }
+    if cp == 231 { return 99 * 16 + 5; }
+    if cp == 201 { return 69 * 16 + 1; }
+    if cp == 200 { return 69 * 16 + 2; }
+    if cp == 202 { return 69 * 16 + 3; }
+    if cp == 192 { return 65 * 16 + 2; }
+    if cp == 194 { return 65 * 16 + 3; }
+    if cp == 206 { return 73 * 16 + 3; }
+    if cp == 212 { return 79 * 16 + 3; }
+    if cp == 219 { return 85 * 16 + 3; }
+    if cp == 199 { return 67 * 16 + 5; }
+    if cp == 8217 { return 39 * 16; }
+    if cp == 171 { return 60 * 16; }
+    if cp == 187 { return 62 * 16; }
+    if cp == 8230 { return 46 * 16; }
+    if cp == 8212 { return 45 * 16; }
+    if cp == 8211 { return 45 * 16; }
+    if cp == 176 { return 111 * 16; }
+    return 63 * 16;
+}
+
+fn nouvelle_ligne() {
+    ecrire_etat(7, lire(9));
+    ecrire_etat(8, lire(8) + 13 * lire(6));
+    if lire(8) + 11 * lire(6) > lire(3) - lire(9) { vider_ecran(); }
+}
+
+// Écrit un point de code Unicode à la position du curseur, avec retour à la ligne automatique.
+fn car(cp: int) {
+    let k = lire(6);
+    miroir_ajoute(cp);
+    if cp == 10 { nouvelle_ligne(); return; }
+    if lire(7) + 6 * k > lire(2) - lire(9) { nouvelle_ligne(); }
+    let base = cp;
+    let acc = 0;
+    if cp > 126 { let d = decomp(cp); base = d / 16; acc = d % 16; }
+    if base < 32 { base = 63; }
+    glyphe(lire(7), lire(8), base, acc);
+    ecrire_etat(7, lire(7) + 6 * k);
+}
+
+// Nombre de caractères du mot qui commence en p (octets de continuation UTF-8 exclus).
+fn longueur_mot(p: int) -> int {
+    let n = 0;
+    let b = peek8(p);
+    while b != 0 {
+        if b == 32 { return n; }
+        if b == 10 { return n; }
+        if b < 128 { n = n + 1; }
+        if b >= 192 { n = n + 1; }
+        p = p + 1;
+        b = peek8(p);
+    }
+    return n;
+}
+
+// Écrit un texte UTF-8 terminé par un zéro, avec retour à la ligne par mots.
+fn afficher(p: int) {
+    if lire(0) == 0 { return; }
+    let mot = 0;
+    while peek8(p) != 0 {
+        let b = peek8(p);
+        if b == 32 { mot = 0; }
+        if b == 10 { mot = 0; }
+        if mot == 0 {
+            if b != 32 {
+                if b != 10 {
+                    mot = 1;
+                    if lire(7) + longueur_mot(p) * 6 * lire(6) > lire(2) - lire(9) { nouvelle_ligne(); }
+                }
+            }
+        }
+        if b < 128 { car(b); p = p + 1; }
+        else if b < 224 { car((b - 192) * 64 + (peek8(p + 1) - 128)); p = p + 2; }
+        else if b < 240 { car((b - 224) * 4096 + (peek8(p + 1) - 128) * 64 + (peek8(p + 2) - 128)); p = p + 3; }
+        else { car(63); p = p + 4; }
+    }
+}
+
+// Échange couleur de texte et couleur de fond (sélection en vidéo inversée).
+fn inverser() {
+    let a = lire(4);
+    ecrire_etat(4, lire(5));
+    ecrire_etat(5, a);
+}
+
+// Remplit une bande pleine largeur avec la couleur de fond courante.
+fn barre(y: int, h: int) {
+    let f = lire(4);
+    ecrire_etat(4, lire(5));
+    rect(0, y, lire(2), h);
+    ecrire_etat(4, f);
+}
+
+// Écrit un entier décimal (négatif accepté) à la position du curseur.
+fn afficher_nombre(n: int) {
+    if n < 0 { car(45); n = 0 - n; }
+    if n >= 10 { afficher_nombre(n / 10); }
+    car(48 + n % 10);
+}
+
+// Écrit un entier en hexadécimal (majuscules), sans préfixe.
+fn afficher_hex(n: int) {
+    if n >= 16 { afficher_hex(n / 16); }
+    let d = n % 16;
+    if d < 10 { car(48 + d); } else { car(55 + d); }
+}

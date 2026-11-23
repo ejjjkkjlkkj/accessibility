@@ -1,0 +1,15 @@
+[package]
+name = "voxa-winpe"
+version = "0.1.0"
+edition = "2021"
+description = "Voxa pour WinPE/Windows : menu parlé (cœur silicon-core + voix voxa-speech) sans dépendance externe ; sortie audio WinMM, secours par bips, mode d'essai sans console (--touches)."
+
+[dependencies]
+silicon-core = { path = "../silicon-core" }
+voxa-speech = { path = "../voxa-speech" }
+
+[profile.release]
+opt-level = "s"
+lto = true
+codegen-units = 1
+panic = "abort"

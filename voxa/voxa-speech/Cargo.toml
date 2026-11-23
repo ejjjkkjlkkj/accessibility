@@ -1,0 +1,10 @@
+[package]
+name = "voxa-speech"
+version = "0.1.0"
+edition = "2021"
+description = "Voxa Speech : texte français -> phonétique (règles) et synthèse à formants en arithmétique entière. no_std, sans allocation."
+
+build = "build.rs"
+license = "MIT"
+
+[dependencies]

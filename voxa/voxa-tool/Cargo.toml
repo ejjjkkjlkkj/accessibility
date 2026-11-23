@@ -1,0 +1,11 @@
+[package]
+name = "voxa-tool"
+version = "0.1.0"
+edition = "2021"
+description = "Voxa Tool : outil universel maison en lecture seule (firmware, images, pilotes, matériel)."
+
+[[bin]]
+name = "voxa-tool"
+path = "src/main.rs"
+
+[dependencies]

@@ -1,0 +1,13 @@
+[package]
+name = "voxa-companion"
+version = "0.1.0"
+edition = "2021"
+description = "Voxa Companion : lecteur de secours en Rust pour Windows / WinRE / Setup. Annonce l'élément qui a le focus (UI Automation) avec la voix du système, relance Narrator s'il est absent."
+
+[dependencies]
+
+[profile.release]
+opt-level = "s"
+lto = true
+codegen-units = 1
+panic = "abort"

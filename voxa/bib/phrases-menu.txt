@@ -1,0 +1,14 @@
+Voxa Live environnement accessible|vOksa lajv QviRonmQ aksEsibl
+Menu principal|m@ny pRIsipal
+Option un sur sept lire l'aide|OpsjU I syR sEt liR lEd
+Option deux sur sept changer la taille du texte|OpsjU d2 syR sEt SQZe la taj dy tEkst
+Option trois sur sept changer le contraste|OpsjU tRwa syR sEt SQZe l@ kUtRast
+Option quatre sur sept tester le son|OpsjU katRO syR sEt tEste l@ sU
+Option cinq sur sept informations sur le matériel|OpsjU sIk syR sEt IfORmasjU syR l@ mateRjEl
+Option six sur sept redémarrer l'ordinateur|OpsjU sis syR sEt R@demaRe lORdinat9R
+Option sept sur sept éteindre l'ordinateur|OpsjU sEt syR sEt etIdR lORdinat9R
+Redémarrage en cours|R@demaRaZ Q kuR
+Extinction en cours|EstIksjU Q kuR
+Aide|Ed
+flèches haut et bas pour choisir entrée pour valider|flES o e ba puR SwaziR QtRe puR valide
+bonjour Voxa|bUZuR vOksa

@@ -1,0 +1,7 @@
+[package]
+name = "voxa-hii"
+version = "0.1.0"
+edition = "2021"
+description = "Voxa HII : lit les ecrans de configuration d'un firmware UEFI (formulaires IFR + chaines) depuis les listes de paquets HII (no_std, sans allocation, lecture seule)."
+
+[dependencies]

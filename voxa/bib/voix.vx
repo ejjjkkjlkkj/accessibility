@@ -1,0 +1,429 @@
+// Synthétiseur de parole français de Voxa (formants, arithmétique entière), portage de src/voixlib.rs : mêmes échantillons.
+// Entrée : texte phonétique ASCII terminé par un zéro (voir VOXA-VOIX.md). Sortie : 16 bits stéréo à 22 050 Hz dans le tampon audio.
+// Nécessite bib/voix-donnees.vx (généré) ; n'utilise que de la mémoire de la zone de travail.
+// État (mots de 8 octets à scratch + 0x800) : 0..16 réglages globaux, 20 hasard, 21 g1, 22 g2, 23 gp, 24 np, 25 phase,
+//   28 nombre de points-clés, 29 temps courant, 30 voyelles vues, 31 total de voyelles, 32..41 paramètres courants,
+//   48..77 résonateurs 0 à 5 (5 mots chacun), 80 table cos, 81 table exp, 82 phonèmes, 83 nombre de phonèmes, 100..109 mise en forme.
+// Points-clés : scratch + 0x4000, 12 mots chacun (temps, 10 paramètres, drapeau « formants propres »).
+
+fn vg(i: int) -> int { return peek(scratch() + 2048 + i * 8); }
+fn vset(i: int, v: int) { poke(scratch() + 2048 + i * 8, v); }
+fn maxi(a: int, b: int) -> int { if a > b { return a; } return b; }
+fn mini(a: int, b: int) -> int { if a < b { return a; } return b; }
+fn borne(v: int, lo: int, hi: int) -> int { if v < lo { return lo; } if v > hi { return hi; } return v; }
+fn chiffre(p: int, i: int) -> int { return peek8(p + i) - 48; }
+fn n4(p: int, k: int) -> int {
+    let a = p + k * 4;
+    return chiffre(a, 0) * 1000 + chiffre(a, 1) * 100 + chiffre(a, 2) * 10 + chiffre(a, 3);
+}
+fn n5(p: int, k: int) -> int {
+    let a = p + k * 5;
+    return chiffre(a, 0) * 10000 + chiffre(a, 1) * 1000 + chiffre(a, 2) * 100 + chiffre(a, 3) * 10 + chiffre(a, 4);
+}
+fn ms(m: int) -> int { return m * 22050 / 1000; }
+
+// ---- résonateurs
+fn rb(r: int) -> int { return scratch() + 2048 + (48 + r * 5) * 8; }
+fn res_init(r: int) {
+    let b = rb(r);
+    poke(b, 4096);
+    poke(b + 8, 0);
+    poke(b + 16, 0);
+    poke(b + 24, 0);
+    poke(b + 32, 0);
+}
+fn res_regler(r: int, f: int, bw: int) {
+    let ex = n4(vg(81), borne(bw / 10, 0, 100));
+    let co = n4(vg(80), borne(f / 10, 0, 551)) - 4096;
+    let b = 2 * ex * co / 4096;
+    let c = 0 - ex * ex / 4096;
+    let base = rb(r);
+    poke(base, 4096 - b - c);
+    poke(base + 8, b);
+    poke(base + 16, c);
+}
+fn res_pas(r: int, x: int) -> int {
+    let base = rb(r);
+    let y = (peek(base) * x + peek(base + 8) * peek(base + 24) + peek(base + 16) * peek(base + 32)) / 4096;
+    y = borne(y, -200000, 200000);
+    poke(base + 32, peek(base + 24));
+    poke(base + 24, y);
+    return y;
+}
+fn bruit() -> int {
+    let r = (vg(20) * 1103515245 + 12345) % 2147483648;
+    vset(20, r);
+    return (r / 65536) % 65536 - 32768;
+}
+
+// ---- points-clés
+fn kfa(i: int) -> int { return scratch() + 16384 + i * 96; }
+fn kfp(i: int, v: int) { vset(100 + i, v); }
+fn kf_base(f0: int, f1: int, f2: int, f3: int) {
+    vset(100, f0);
+    vset(101, f1);
+    vset(102, f2);
+    vset(103, f3);
+    vset(104, 0);
+    vset(105, 0);
+    vset(106, 0);
+    vset(107, 0);
+    vset(108, 0);
+    vset(109, 0);
+}
+fn kf_push(t: int, formants: int) {
+    let i = vg(28);
+    if i >= 500 { return; }
+    let a = kfa(i);
+    poke(a, t);
+    let k = 0;
+    while k < 10 { poke(a + 8 + k * 8, vg(100 + k)); k = k + 1; }
+    poke(a + 88, formants);
+    vset(28, i + 1);
+}
+fn silence(d: int, f0: int) {
+    kf_base(f0, 0, 0, 0);
+    kf_push(vg(29), 0);
+    kf_push(vg(29) + d, 0);
+    vset(29, vg(29) + d);
+}
+
+// ---- phonèmes
+fn est_voy(c: int) -> int {
+    if c == 97 { return 1; }
+    if c == 101 { return 1; }
+    if c == 69 { return 1; }
+    if c == 105 { return 1; }
+    if c == 111 { return 1; }
+    if c == 79 { return 1; }
+    if c == 117 { return 1; }
+    if c == 121 { return 1; }
+    if c == 50 { return 1; }
+    if c == 57 { return 1; }
+    if c == 64 { return 1; }
+    if c == 81 { return 1; }
+    if c == 73 { return 1; }
+    if c == 85 { return 1; }
+    return 0;
+}
+fn phone_rec(c: int) -> int {
+    let p = vg(82);
+    let n = vg(83);
+    let i = 0;
+    while i < n {
+        if peek8(p + i * 37) == c { return p + i * 37; }
+        i = i + 1;
+    }
+    return 0;
+}
+fn pf(rec: int, k: int) -> int { return n5(rec + 2, k); }
+
+fn est_sonant(ty: int) -> int {
+    if ty == 86 { return 1; }
+    if ty == 71 { return 1; }
+    if ty == 76 { return 1; }
+    if ty == 78 { return 1; }
+    return 0;
+}
+fn est_fric(ty: int) -> int {
+    if ty == 70 { return 1; }
+    if ty == 90 { return 1; }
+    return 0;
+}
+// Le phonème courant est décrit dans l'état : 110 temps, 111 durée, 112 f0, 113 f1, 114 f2, 115 f3, 116 amplitude, 117 centre du bruit, 118 largeur, 119 type, 120 voisée.
+fn voix_phone(rec: int, accent: int) {
+    let ty = peek8(rec + 1);
+    let sym = peek8(rec);
+    let d0 = pf(rec, 0);
+    let dd = d0;
+    if accent == 1 { dd = d0 * vg(8) / 100; }
+    let dur = ms(dd * vg(0) / 100);
+    let f0 = vg(1) - vg(9) * vg(30) / maxi(vg(31), 1);
+    if accent == 1 { f0 = f0 + vg(10); }
+    if est_voy(sym) == 1 { vset(30, vg(30) + 1); }
+    let tc = vg(29);
+    vset(110, tc);
+    vset(111, dur);
+    vset(112, f0);
+    vset(113, pf(rec, 1));
+    vset(114, pf(rec, 2));
+    vset(115, pf(rec, 3));
+    vset(116, pf(rec, 4));
+    vset(117, pf(rec, 5));
+    vset(118, pf(rec, 6));
+    vset(119, ty);
+    if est_sonant(ty) == 1 { voix_sonant(); vset(29, tc + dur); }
+    if est_fric(ty) == 1 { voix_frication(); vset(29, tc + dur); }
+    if ty == 80 { vset(120, 0); voix_occlusive(); }
+    if ty == 66 { vset(120, 1); voix_occlusive(); }
+}
+// Voyelles, glissantes, liquides, nasales : deux points-clés (plateau) aux bornes de la partie stable.
+fn voix_sonant() {
+    let tc = vg(110);
+    let dur = vg(111);
+    kf_base(vg(112), vg(113), vg(114), vg(115));
+    kfp(4, vg(116));
+    kfp(5, 100);
+    if vg(117) > 0 { kfp(6, vg(117)); kfp(7, vg(118)); kfp(8, 12); }
+    kf_push(tc + dur * vg(15) / 100, 1);
+    kf_push(tc + dur * (100 - vg(15)) / 100, 1);
+}
+// Fricatives : bruit filtré ; les voisées (type 90) gardent leurs formants.
+fn voix_frication() {
+    let tc = vg(110);
+    let dur = vg(111);
+    let v = 0;
+    let a = 0;
+    let fo = 0;
+    if vg(119) == 90 { v = 70; a = 40; fo = 1; }
+    kf_base(vg(112), vg(113), vg(114), vg(115));
+    kfp(4, a);
+    kfp(5, v);
+    kfp(6, vg(117));
+    kfp(7, vg(118));
+    kfp(8, vg(116) * 2 * vg(5) / 100);
+    kf_push(tc, fo);
+    kf_push(tc + dur, fo);
+}
+// Occlusives : fermeture, explosion, aspiration (sourdes seulement). Fixe le temps courant à la fin.
+fn voix_occlusive() {
+    let tc = vg(110);
+    let f0 = vg(112);
+    let voisee = vg(120);
+    let ferm = ms(vg(11));
+    if voisee == 1 { ferm = ms(vg(12)); }
+    kf_base(f0, 250, 1200, 2400);
+    if voisee == 1 { kfp(4, 12); kfp(5, 100); }
+    kf_push(tc, 0);
+    kf_push(tc + ferm, 0);
+    kf_base(f0, 0, 0, 0);
+    kfp(4, 30);
+    kfp(6, vg(117));
+    kfp(7, vg(118));
+    kfp(8, vg(116) * 2 * vg(6) / 100);
+    kf_push(tc + ferm + 1, 0);
+    kf_push(tc + ferm + ms(vg(14)), 0);
+    let tt = tc + ferm + ms(vg(14));
+    if voisee == 0 {
+        kf_base(f0, 0, 0, 0);
+        kfp(4, 60);
+        kfp(9, 120);
+        kf_push(tt + 1, 0);
+        kf_push(tt + ms(vg(13)), 0);
+        tt = tt + ms(vg(13));
+    }
+    vset(29, tt);
+}
+
+fn fin_mot(p: int) -> int {
+    while peek8(p) != 0 {
+        if peek8(p) == 32 { return p; }
+        p = p + 1;
+    }
+    return p;
+}
+fn derniere_voy(p: int, q: int) -> int {
+    let r = -1;
+    let i = 0;
+    while p + i < q {
+        if est_voy(peek8(p + i)) == 1 { r = i; }
+        i = i + 1;
+    }
+    return r;
+}
+fn voix_mot(p: int, q: int) {
+    let dv = derniere_voy(p, q);
+    let i = 0;
+    while p + i < q {
+        let rec = phone_rec(peek8(p + i));
+        if rec != 0 {
+            let acc = 0;
+            if i == dv { acc = 1; }
+            voix_phone(rec, acc);
+        }
+        i = i + 1;
+    }
+}
+
+fn voix_init() {
+    let g = voix_globaux();
+    let k = 0;
+    while k < 17 { vset(k, n5(g, k)); k = k + 1; }
+    vset(80, voix_cos());
+    vset(81, voix_exp());
+    vset(82, voix_phones());
+    vset(83, voix_nphones());
+}
+
+fn voix_construire(t: int) {
+    vset(28, 0);
+    vset(29, 0);
+    vset(30, 0);
+    let n = 0;
+    let p = t;
+    while peek8(p) != 0 {
+        if est_voy(peek8(p)) == 1 { n = n + 1; }
+        p = p + 1;
+    }
+    vset(31, n);
+    silence(ms(30), vg(1));
+    p = t;
+    while peek8(p) != 0 {
+        if peek8(p) == 32 {
+            p = p + 1;
+        } else {
+            let q = fin_mot(p);
+            voix_mot(p, q);
+            let r = q;
+            while peek8(r) == 32 { r = r + 1; }
+            if peek8(r) != 0 { silence(ms(vg(16)), vg(1) - 10); }
+            p = r;
+        }
+    }
+    silence(ms(100), vg(1) - 20);
+}
+
+// Formants des points-clés sans formants propres : interpolés entre les voisins qui en ont.
+fn prec_f(i: int) -> int {
+    let j = i - 1;
+    while j >= 0 {
+        if peek(kfa(j) + 88) == 1 { return j; }
+        j = j - 1;
+    }
+    return -1;
+}
+fn suiv_f(i: int) -> int {
+    let j = i + 1;
+    while j < vg(28) {
+        if peek(kfa(j) + 88) == 1 { return j; }
+        j = j + 1;
+    }
+    return -1;
+}
+fn voix_formants() {
+    let n = vg(28);
+    let i = 0;
+    while i < n {
+        if peek(kfa(i) + 88) == 0 {
+            let a = prec_f(i);
+            let b = suiv_f(i);
+            let c = 1;
+            while c < 4 {
+                let v = 0;
+                if c == 1 { v = 500; }
+                if c == 2 { v = 1500; }
+                if c == 3 { v = 2500; }
+                if a != -1 {
+                    let pa = peek(kfa(a) + 8 + c * 8);
+                    if b != -1 {
+                        let pb = peek(kfa(b) + 8 + c * 8);
+                        let den = maxi(peek(kfa(b)) - peek(kfa(a)), 1);
+                        v = pa + (pb - pa) * (peek(kfa(i)) - peek(kfa(a))) / den;
+                    } else {
+                        v = pa;
+                    }
+                } else {
+                    if b != -1 { v = peek(kfa(b) + 8 + c * 8); }
+                }
+                poke(kfa(i) + 8 + c * 8, v);
+                c = c + 1;
+            }
+        }
+        i = i + 1;
+    }
+    i = 1;
+    while i < n {
+        if peek(kfa(i)) < peek(kfa(i - 1)) { poke(kfa(i), peek(kfa(i - 1))); }
+        i = i + 1;
+    }
+}
+
+// Paramètres interpolés à l'instant t (appelé tous les 32 échantillons) et réglage des résonateurs.
+fn voix_param(i: int, t: int, n: int) {
+    let a = kfa(i);
+    let b = kfa(mini(i + 1, n - 1));
+    let den = maxi(peek(b) - peek(a), 1);
+    let u = borne(t - peek(a), 0, den);
+    let k = 0;
+    while k < 10 {
+        let pa = peek(a + 8 + k * 8);
+        let pb = peek(b + 8 + k * 8);
+        vset(32 + k, pa + (pb - pa) * u / den);
+        k = k + 1;
+    }
+    let bw = vg(4);
+    res_regler(0, maxi(vg(33), 150), 70 * bw / 100);
+    res_regler(1, maxi(vg(34), 400), 90 * bw / 100);
+    res_regler(2, maxi(vg(35), 800), 130 * bw / 100);
+    res_regler(3, 3500, 200);
+    res_regler(4, 4500, 250);
+    if vg(40) > 0 { res_regler(5, maxi(vg(38), 200), maxi(vg(39), 100)); }
+}
+
+// Produit les échantillons ; renvoie leur nombre. Écrit buf + 4 * t (gauche) et + 2 (droite), 16 bits.
+fn voix_rendre(buf: int) -> int {
+    let n = vg(28);
+    let fin = peek(kfa(n - 1));
+    if fin > 150000 { fin = 150000; }
+    vset(20, 12345);
+    vset(21, 0);
+    vset(22, 0);
+    vset(23, 0);
+    vset(24, 0);
+    vset(25, 0);
+    let r = 0;
+    while r < 6 { res_init(r); r = r + 1; }
+    let k = 0;
+    while k < 10 { vset(32 + k, 0); k = k + 1; }
+    let i = 0;
+    let t = 0;
+    while t < fin {
+        let go = 1;
+        while go == 1 {
+            go = 0;
+            if i + 2 < n {
+                if t >= peek(kfa(i + 1)) { i = i + 1; go = 1; }
+            }
+        }
+        if t % 32 == 0 { voix_param(i, t, n); }
+        vset(25, vg(25) + 1);
+        let periode = 22050 / maxi(vg(32), 60);
+        let imp = 0;
+        if vg(25) >= periode { vset(25, vg(25) - periode); imp = 40000; }
+        let tl = maxi(vg(3), 1);
+        vset(21, vg(21) + (imp - vg(21)) / tl);
+        vset(22, vg(22) + (vg(21) - vg(22)) / tl);
+        let nz = bruit();
+        let src = vg(22);
+        if vg(2) > 0 {
+            src = (vg(22) - vg(23)) * vg(2);
+            vset(23, vg(22));
+        }
+        let x = src * vg(37) / 100 + nz * vg(41) / 400;
+        x = res_pas(0, x);
+        x = res_pas(1, x);
+        x = res_pas(2, x);
+        x = res_pas(3, x);
+        x = res_pas(4, x);
+        let y = x * vg(36) / 100;
+        if vg(40) > 0 {
+            let d = nz - vg(24);
+            let b = res_pas(5, d / 2 * vg(40) / 100);
+            y = y + b * maxi(vg(36), 30) / 100 / 2;
+        }
+        vset(24, nz);
+        let s = borne(y / maxi(vg(7), 1), -30000, 30000);
+        poke16(buf + t * 4, s);
+        poke16(buf + t * 4 + 2, s);
+        t = t + 1;
+    }
+    return fin;
+}
+
+// Synthétise le texte phonétique dans le tampon audio ; renvoie le nombre d'échantillons.
+fn voix_dire(texte: int) -> int {
+    voix_init();
+    voix_construire(texte);
+    voix_formants();
+    return voix_rendre(hda_tampon());
+}

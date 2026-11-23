@@ -1,0 +1,11 @@
+{
+  "nom": "redemarrage-confirmation",
+  "description": "Redemarrer exige deux Entrees ; une seule ne fait rien",
+  "ecran": "1024x640",
+  "touches": "E0,50,E0,50,E0,50,E0,50,E0,50,E0,50,E0,50,E0,50,E0,50,1C,1C",
+  "max_pas": "800000000",
+  "serie_ordre": ["Confirmer le red", "Redemarrage demande par l"],
+  "arret_attendu": "reinitialisation",
+  "image_non_vide": true,
+  "delai_s": 280
+}

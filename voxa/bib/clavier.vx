@@ -1,0 +1,82 @@
+// Clavier lu directement sur le contrôleur 8042 (ATK3001, ports 0x60 et 0x64 sur cette machine), sans pile clavier du firmware.
+// Jeu de codes 1 : bit 7 = relâchement. Disposition AZERTY française.
+
+// Renvoie un code de balayage, ou -1 si aucune touche n'attend.
+fn scan_lire() -> int {
+    if inb(100) % 2 == 1 { return inb(96); }
+    return -1;
+}
+
+// Code de balayage (appui) vers point de code Unicode en disposition AZERTY, 0 si inconnu.
+fn azerty(s: int) -> int {
+    if s == 2 { return 38; }
+    if s == 3 { return 233; }
+    if s == 4 { return 34; }
+    if s == 5 { return 39; }
+    if s == 6 { return 40; }
+    if s == 7 { return 45; }
+    if s == 8 { return 232; }
+    if s == 9 { return 95; }
+    if s == 10 { return 231; }
+    if s == 11 { return 224; }
+    if s == 12 { return 41; }
+    if s == 13 { return 61; }
+    if s == 16 { return 97; }
+    if s == 17 { return 122; }
+    if s == 18 { return 101; }
+    if s == 19 { return 114; }
+    if s == 20 { return 116; }
+    if s == 21 { return 121; }
+    if s == 22 { return 117; }
+    if s == 23 { return 105; }
+    if s == 24 { return 111; }
+    if s == 25 { return 112; }
+    if s == 30 { return 113; }
+    if s == 31 { return 115; }
+    if s == 32 { return 100; }
+    if s == 33 { return 102; }
+    if s == 34 { return 103; }
+    if s == 35 { return 104; }
+    if s == 36 { return 106; }
+    if s == 37 { return 107; }
+    if s == 38 { return 108; }
+    if s == 39 { return 109; }
+    if s == 44 { return 119; }
+    if s == 45 { return 120; }
+    if s == 46 { return 99; }
+    if s == 47 { return 118; }
+    if s == 48 { return 98; }
+    if s == 49 { return 110; }
+    if s == 50 { return 44; }
+    if s == 51 { return 59; }
+    if s == 52 { return 58; }
+    if s == 53 { return 33; }
+    if s == 57 { return 32; }
+    if s == 28 { return 10; }
+    return 0;
+}
+
+// Attend (brièvement) le code suivant du contrôleur ; -1 si rien n'arrive.
+fn attendre_scan() -> int {
+    let n = 0;
+    while n < 100000 {
+        let s = scan_lire();
+        if s != -1 { return s; }
+        n = n + 1;
+    }
+    return -1;
+}
+
+// Touche directe : code d'appui (1 à 127), 1000 + code pour les touches étendues (flèches...), -1 si rien ou relâchement.
+fn touche_directe() -> int {
+    let s = scan_lire();
+    if s == -1 { return -1; }
+    if s == 224 {
+        let t = attendre_scan();
+        if t == -1 { return -1; }
+        if t >= 128 { return -1; }
+        return 1000 + t;
+    }
+    if s >= 128 { return -1; }
+    return s;
+}

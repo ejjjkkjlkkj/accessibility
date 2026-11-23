@@ -1,0 +1,10 @@
+Processeur AMD Ryzen 7 5800H
+8 coeurs, 16 fils
+Mémoire installée 40960 Mo
+Barrette 1 : 8192 Mo
+Option cinq sur sept
+Informations sur le matériel
+Appuyez sur Entrée pour revenir au menu
+Redémarrer l'ordinateur
+Tester le son
+Bus PCI, 34 fonctions

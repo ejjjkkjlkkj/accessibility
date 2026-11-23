@@ -1,0 +1,26 @@
+[package]
+name = "voxa-os"
+version = "0.1.0"
+edition = "2021"
+description = "Voxa OS : systeme UEFI maison, reparti de zero. Jalon M0 : demarrage, sortie des services UEFI, console serie et ecran, ACPI, PCI par ECAM, memoire libre."
+
+[dependencies]
+voxa-kernel = { path = "../voxa-kernel" }
+silicon-core = { path = "../silicon-core" }
+voxa-hii = { path = "../voxa-hii" }
+voxa-agent = { path = "../voxa-agent" }
+voxa-speech = { path = "../voxa-speech" }
+
+[profile.release]
+panic = "abort"
+opt-level = "s"
+lto = true
+codegen-units = 1
+debug = false
+
+[profile.dev]
+panic = "abort"
+
+[features]
+# Test NEGATIF : appelle volontairement un service UEFI apres ExitBootServices ; l'emulateur doit le signaler comme violation.
+essai-violation = []

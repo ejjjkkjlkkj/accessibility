@@ -1,0 +1,8 @@
+[package]
+name = "voxa-agent"
+version = "0.1.0"
+edition = "2021"
+description = "Voxa Agent : assistant qui effectue des taches. Notre modele d'intentions (int8, voxa-neural) choisit un outil ; les outils a risque exigent une confirmation. no_std, sans allocation."
+
+[dependencies]
+voxa-neural = { path = "../voxa-neural" }

@@ -1,0 +1,7 @@
+[package]
+name = "voxa-probe"
+version = "0.1.0"
+edition = "2021"
+description = "Sonde maison Windows, LECTURE SEULE, sans dépendance : CPUID complet, toutes les tables ACPI, ressources de démarrage (BAR exacts) de chaque périphérique PCI."
+
+[dependencies]
