@@ -54,3 +54,6 @@ Thumbs.db
 haker-audit-report.json
 aerl-summary.json
 aerl-run-summary.json
+
+# Inventaire matériel local (contient le nom de la machine et des identifiants de périphériques)
+accessibility-hardware-inventory.json
