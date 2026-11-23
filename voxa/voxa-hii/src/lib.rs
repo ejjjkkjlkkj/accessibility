@@ -132,24 +132,24 @@ pub fn ligne(d: &[u8], n: usize) -> Option<Ligne> { parcourir(d, Some(n)).1 }
 mod tests {
     use super::*;
     fn fixture() -> Vec<u8> { std::fs::read(concat!(env!("CARGO_MANIFEST_DIR"), "/../tests/fixtures/hii-bios-308.bin")).expect("fixture HII") }
-    #[test] fn compte_identique_a_voxa_fw() { assert_eq!(nb_lignes(&fixture()), 1698); }
-    #[test] fn premiere_page_et_menu_principal() {
+    #[test] #[ignore = "capture BIOS de la machine non publiée"] fn compte_identique_a_voxa_fw() { assert_eq!(nb_lignes(&fixture()), 1698); }
+    #[test] #[ignore = "capture BIOS de la machine non publiée"] fn premiere_page_et_menu_principal() {
         let d = fixture(); let mut menus = std::vec::Vec::new();
         for i in 0..nb_lignes(&d) { let l = ligne(&d, i).unwrap(); if l.genre == Genre::Lien { menus.push(std::string::String::from_utf8_lossy(l.texte.as_bytes()).into_owned()); } }
         for m in ["Main", "Advanced", "Chipset", "Security", "Boot", "Save & Exit"] { assert!(menus.iter().any(|x| x == m), "menu {m} absent"); }
     }
-    #[test] fn pages_et_questions() {
+    #[test] #[ignore = "capture BIOS de la machine non publiée"] fn pages_et_questions() {
         let d = fixture(); let (mut pages, mut qs) = (0, 0);
         for i in 0..nb_lignes(&d) { match ligne(&d, i).unwrap().genre { Genre::Page => pages += 1, Genre::Choix | Genre::Case | Genre::Nombre | Genre::MotDePasse | Genre::Action | Genre::Date | Genre::Heure | Genre::TexteLibre | Genre::ListeOrdonnee | Genre::Lien => qs += 1, _ => {} } }
         assert_eq!(pages, 72); assert_eq!(qs, 565);
     }
-    #[test] fn tampon_hostile_ne_plante_pas() {
+    #[test] #[ignore = "capture BIOS de la machine non publiée"] fn tampon_hostile_ne_plante_pas() {
         assert_eq!(nb_lignes(&[]), 0); assert_eq!(nb_lignes(&[0u8; 100]), 0);
         let mut d = fixture(); for i in (0..d.len()).step_by(37) { d[i] ^= 0xA5; } let _ = nb_lignes(&d); // doit simplement terminer
         let d = fixture(); let _ = nb_lignes(&d[..d.len() / 2]);
     }
-    #[test] fn page_retrouvee_par_identifiant() { let d = fixture(); let i = indice_page(&d, 10001).expect("page Main"); let l = ligne(&d, i).unwrap(); assert_eq!(l.genre, Genre::Page); assert_eq!(l.texte.as_bytes(), b"Main"); assert!(indice_page(&d, 65000).is_none()); }
-    #[test] fn visiter_donne_les_memes_lignes_que_ligne_et_sait_s_arreter() {
+    #[test] #[ignore = "capture BIOS de la machine non publiée"] fn page_retrouvee_par_identifiant() { let d = fixture(); let i = indice_page(&d, 10001).expect("page Main"); let l = ligne(&d, i).unwrap(); assert_eq!(l.genre, Genre::Page); assert_eq!(l.texte.as_bytes(), b"Main"); assert!(indice_page(&d, 65000).is_none()); }
+    #[test] #[ignore = "capture BIOS de la machine non publiée"] fn visiter_donne_les_memes_lignes_que_ligne_et_sait_s_arreter() {
         let d = fixture(); let mut vues = std::vec::Vec::new(); visiter(&d, &mut |i, l| { vues.push((i, l.genre, l.texte.as_bytes().to_vec())); true });
         assert_eq!(vues.len(), 1698); for i in (0..1698).step_by(97) { let l = ligne(&d, i).unwrap(); assert_eq!(vues[i].0, i); assert_eq!(vues[i].1, l.genre); assert_eq!(vues[i].2, l.texte.as_bytes()); }
         let mut n = 0; visiter(&d, &mut |_, _| { n += 1; n < 5 }); assert_eq!(n, 5);
