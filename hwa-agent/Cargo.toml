@@ -1,0 +1,9 @@
+[package]
+name = "hwa2_agent"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+sha2 = { version = "0.11.1", default-features = false }
+uefi = { version = "0.41.0", features = ["alloc", "panic_handler"] }
+uefi-raw = "0.17.0"
