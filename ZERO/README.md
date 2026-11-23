@@ -28,6 +28,7 @@ ZERO ne doit pas être déclaré « meilleur » sur la base d'intentions. Chaque
 - Publier les résultats avec statuts PASS, FAIL, PARTIAL, BLOCKED ou NOT_VALIDATED.
 
 ## Fichiers
+- [ISA-SPECIFICATION.md](ISA-SPECIFICATION.md) : spécification canonique de l'architecture ISA ZERO 64-bit Tier-0 (du firmware au noyau d'OS complet, avec canal d'accessibilité matériel et accélération IA gigantesque).
 - [LANGUAGE-AUDIT.md](LANGUAGE-AUDIT.md) : périmètre, grille d'audit et familles de langages.
 - [REQUIREMENTS.md](REQUIREMENTS.md) : exigences initiales et critères d'acceptation.
 

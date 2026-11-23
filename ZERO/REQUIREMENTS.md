@@ -21,6 +21,7 @@ Chaque exigence doit devenir une spécification précise, un test automatisé et
 ## Accessibilité et IA
 - Z-A11Y-001 : diagnostics accessibles en texte structuré, avec codes stables et contexte d'erreur.
 - Z-AI-001 : définir les types numériques, dispositions mémoire et opérations de tenseurs sans prétendre fournir un accélérateur avant implémentation.
+- Z-ISA-001 : spécification complète du jeu d'instructions 64-bit native Tier-0 (du boot firmware/UEFI au noyau OS et instructions IA/HAC).
 - Z-TEST-001 : tests unitaires, tests de conformité, fuzzing du parseur et tests différentiels pour les backends.
 
 ## Critères d'acceptation
