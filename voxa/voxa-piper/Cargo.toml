@@ -1,0 +1,8 @@
+[package]
+name = "voxa-piper"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+description = "Adaptateur vocal de Voxa : appelle le binaire Piper (MIT) séparément, sans l'embarquer."
+
+[dependencies]
